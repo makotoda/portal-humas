@@ -57,7 +57,10 @@ Di GAS: jalankan `uji_()` dari editor untuk memverifikasi submit+status server t
   komentar blok — banner multiline meninggalkan `*/` yatim / pembuka menggantung yang
   memutilasi kode tersaji (sudah terjadi: `Tema is not defined` di produksi); (2) string
   tak boleh mengandung sekuens slash-asterisk — `'image/(asterisk)'` dirakit runtime lewat
-  `const IMG`. Preview `file://` TIDAK memunculkan bug ini; hanya muncul saat disajikan GAS.
+  `const IMG`; (3) stripper `//` mengenali string `'...'`/`"..."` tapi TIDAK backtick —
+  JANGAN menaruh URL `https://...` (atau `//` apa pun) di dalam template literal; pakai
+  konkatenasi string biasa (kasus nyata: `drivePreview` membuat login admin blank).
+  Preview `file://` TIDAK memunculkan bug ini; hanya muncul saat disajikan GAS.
 - **Storage di iframe GAS bisa melempar SecurityError** (cookie pihak ketiga diblokir) —
   semua akses localStorage/sessionStorage lewat wrapper `LS`/`SS` (try-catch), jangan akses
   langsung.
