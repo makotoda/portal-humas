@@ -528,7 +528,9 @@ function openTolak(tiket){ const dlg=$('#modal');
   dlg.showModal(); setTimeout(()=>$('#tolakAlasan').focus(),50); }
 function kirimTolak(tiket){ const a=$('#tolakAlasan').value.trim(); if(!a){toast('Isi alasan penolakan.','err');return;} doAksi(tiket,'tolak',{catatan:a}); }
 
-function drivePreview(url){ const m=String(url||'').match(/[-\w]{25,}/); return m?`https://drive.google.com/file/d/${m[0]}/preview`:''; }
+// GOTCHA GAS: stripper // GAS mengenali string '...' tapi TIDAK template literal —
+// jangan pernah menaruh URL (https:...) di dalam backtick. Pakai konkatenasi string.
+function drivePreview(url){ const m=String(url||'').match(/[-\w]{25,}/); return m?('https://drive.google.com/file/d/'+m[0]+'/preview'):''; }
 
 function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)return; const dlg=$('#modal');
   const files=(r.files||[]).map((f,i)=>{ const img=/(jpg|jpeg|png|gif|webp)/i.test(f.name||'')||/=w\d+/.test(f.url||'');
