@@ -65,5 +65,4 @@ Di GAS: jalankan `uji_()` dari editor untuk memverifikasi submit+status server t
   **Ganti kode seed sebelum go-live.** Eksekutor yang bisa di-assign = daftar nama di `Admins`.
 
 ## Belum dibangun (backlog — lihat docs/PROGRESS.md)
-Notifikasi Telegram/WA, kelola admin/eksekutor dari UI, sheet `MasterWilayah`/`Config`,
-upload berkas besar (resumable), filter tanggal.
+Notifikasi Telegram/WA, sheet `MasterWilayah`/`Config`, upload berkas besar (resumable).

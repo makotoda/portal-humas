@@ -229,6 +229,7 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
       </div>
       <div class="top-right">
         <div class="who"><b id="whoNama">—</b><div class="r" id="whoRole">—</div></div>
+        <button class="icon-btn" id="btnKelola" title="Kelola admin" style="display:none" onclick="openKelola()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 8h5M19.5 5.5v5"/></svg></button>
         <button class="icon-btn" id="btnExport" title="Ekspor CSV" onclick="exportCSV()"></button>
         <button class="icon-btn" id="btnTema" title="Ganti tema" onclick="Tema.toggle()"></button>
         <button class="icon-btn" title="Keluar" onclick="logout()"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M11 8l4 4-4 4M15 12H3"/></svg></button>
@@ -246,6 +247,8 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
       <select class="inp" id="fprov" onchange="applyFilter()"></select>
       <select class="inp" id="fstatus" onchange="applyFilter()"></select>
       <select class="inp" id="feks" onchange="applyFilter()"></select>
+      <input class="inp" type="date" id="fdari" title="Dari tanggal" onchange="applyFilter()" style="width:auto;flex:0 0 auto">
+      <input class="inp" type="date" id="fsampai" title="Sampai tanggal" onchange="applyFilter()" style="width:auto;flex:0 0 auto">
       <div class="viewtog">
         <button id="vTabel" class="aktif" onclick="setView('tabel')" title="Tabel"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
         <button id="vKanban" onclick="setView('kanban')" title="Kanban"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="10"/><rect x="17" y="4" width="4" height="13"/></svg></button>
@@ -282,7 +285,7 @@ const katJudul=(k)=>KATJUDUL[k]||k||'—';
 
 /* ---- state ---- */
 let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel';
-const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:''};
+const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:'',dari:'',sampai:''};
 
 /* ============ BACKEND (GAS / demo) ============ */
 const isGas=typeof google!=='undefined'&&google.script&&google.script.run;
@@ -335,12 +338,33 @@ const Demo={
     ];
   },
   adminLogin(k){ const m=this.codes[k]; if(!m) throw new Error('Kode akses salah.'); return m; },
+  _admKey:'pkh_demo_admins',
+  _admins(){ try{ const a=JSON.parse(localStorage.getItem(this._admKey)||'null'); if(a)return a; }catch(e){}
+    return [{nama:'Super Admin',kode:'super',role:'super'},{nama:'Admin Humas',kode:'admin',role:'admin'},
+            {nama:'I Made Editor',kode:'made1',role:'admin'},{nama:'Ni Kadek Redaksi',kode:'kadek',role:'admin'}]; },
+  _saveAdm(a){ localStorage.setItem(this._admKey,JSON.stringify(a)); this.eks=a.map(x=>x.nama); },
+  adminKelola(k,p){ const me=this.adminLogin(k); if(me.role!=='super')throw new Error('Hanya super admin yang boleh mengelola admin.');
+    let a=this._admins(); const sub=(p||{}).sub||'list';
+    if(sub==='tambah'){ if(!p.nama||!p.kode)throw new Error('Nama dan kode wajib diisi.');
+      if(p.kode.length<4)throw new Error('Kode minimal 4 karakter.');
+      if(a.some(x=>x.nama.toLowerCase()===p.nama.toLowerCase()))throw new Error('Nama admin sudah ada.');
+      if(a.some(x=>x.kode===p.kode))throw new Error('Kode sudah dipakai admin lain.');
+      a.push({nama:p.nama,kode:p.kode,role:p.role==='super'?'super':'admin'}); }
+    else if(sub==='hapus'){ const t=a.find(x=>x.nama===p.nama); if(!t)throw new Error('Admin tidak ditemukan.');
+      if(t.nama===me.nama)throw new Error('Tidak bisa menghapus akun sendiri.');
+      if(t.role==='super'&&a.filter(x=>x.role==='super').length<=1)throw new Error('Minimal harus ada satu super admin.');
+      a=a.filter(x=>x.nama!==p.nama); }
+    else if(sub==='ubahRole'){ const t=a.find(x=>x.nama===p.nama); if(!t)throw new Error('Admin tidak ditemukan.');
+      const role=p.role==='super'?'super':'admin';
+      if(t.role==='super'&&role!=='super'&&a.filter(x=>x.role==='super').length<=1)throw new Error('Minimal harus ada satu super admin.');
+      t.role=role; }
+    this._saveAdm(a); return a.map(x=>({nama:x.nama,role:x.role})); },
   adminData(k){ this.adminLogin(k);
     const rows=this._all().map(r=>({tiket:r.tiket,kategori:r.kategori,provinsi:r.provinsi,kabupaten:r.kabupaten,
       instansi:r.instansi||'',namaPenulis:r.namaPenulis||'',noWA:r.noWA||'',files:r.files||[],
       status:r.status||'Terkirim',eksekutor:r.eksekutor||'',keterangan:r.keterangan||'',
       dibuat:r.dibuat||new Date().toISOString(),diperbarui:r.diperbarui||r.dibuat||new Date().toISOString(),riwayat:r.riwayat||[]})).reverse();
-    return {roleAnda:this.codes[k],eksekutors:this.eks,stats:statsOf(rows),rows};
+    return {roleAnda:this.codes[k],eksekutors:this._admins().map(x=>x.nama),stats:statsOf(rows),rows};
   },
   adminAksi(k,p){ this.adminLogin(k); const a=this._all(); const rec=a.find(x=>x.tiket===p.tiket);
     if(!rec) throw new Error('Tiket tidak ditemukan.'); const now=new Date().toISOString();
@@ -384,7 +408,7 @@ function logout(){ KODE=null; sessionStorage.removeItem('pkh_kode'); location.re
 async function boot(me){
   $('#loginWrap').style.display='none'; $('#app').style.display='block';
   $('#whoNama').textContent=me.nama; $('#whoRole').textContent=me.role==='super'?'Super Admin':'Admin';
-  $('#btnExport').style.display=(me.role==='super')?'grid':'grid'; // ekspor utk semua admin
+  $('#btnKelola').style.display=(me.role==='super')?'grid':'none'; // kelola admin: khusus super
   await muat();
 }
 async function muat(){
@@ -404,12 +428,16 @@ function populasiFilter(){
   $('#feks').innerHTML=opt(DATA.eksekutors,'Semua eksekutor');
 }
 function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
-  filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value; render(); }
+  filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value;
+  filter.dari=$('#fdari').value; filter.sampai=$('#fsampai').value; render(); }
 function terfilter(){ return DATA.rows.filter(r=>{
   if(filter.kategori&&r.kategori!==filter.kategori)return false;
   if(filter.provinsi&&r.provinsi!==filter.provinsi)return false;
   if(filter.status&&(r.status||'Terkirim')!==filter.status)return false;
   if(filter.eksekutor&&r.eksekutor!==filter.eksekutor)return false;
+  if(filter.dari||filter.sampai){ const d=(r.dibuat||'').slice(0,10);
+    if(filter.dari&&d<filter.dari)return false;
+    if(filter.sampai&&d>filter.sampai)return false; }
   if(filter.q){ const blob=[r.tiket,r.instansi,r.namaPenulis,r.kabupaten,r.provinsi].join(' ').toLowerCase(); if(!blob.includes(filter.q))return false; }
   return true;
 }); }
@@ -536,6 +564,44 @@ function previewFile(tiket,i){ const r=DATA.rows.find(x=>x.tiket===tiket); const
   const p=drivePreview(f.url);
   box.innerHTML=p?`<iframe class="prev-frame" src="${p}"></iframe>`:`<a class="btn btn-ghost" href="${f.url}" target="_blank">Buka berkas</a>`;
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ============ KELOLA ADMIN (super) ============ */
+async function openKelola(){
+  try{ const daftar=await Backend.call('adminKelola',KODE,{sub:'list'}); renderKelola(daftar); }
+  catch(err){ toast(err.message||'Gagal memuat admin.','err'); }
+}
+function renderKelola(daftar){
+  const dlg=$('#modal'); const meNama=$('#whoNama').textContent;
+  const rows=daftar.map(a=>`
+    <div class="reason" style="align-items:center">
+      <span style="flex:1"><b>${a.nama}</b>${a.nama===meNama?' <span class="t-sub">(Anda)</span>':''}</span>
+      <select class="inp" style="width:auto;padding:6px 30px 6px 10px;font-size:12.5px"
+        onchange="aksiKelola('ubahRole',{nama:'${a.nama}',role:this.value})">
+        <option value="admin" ${a.role!=='super'?'selected':''}>Admin</option>
+        <option value="super" ${a.role==='super'?'selected':''}>Super</option></select>
+      <button class="btn btn-bad btn-sm" onclick="aksiKelola('hapus',{nama:'${a.nama}'})">Hapus</button>
+    </div>`).join('');
+  dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Kelola Admin &amp; Eksekutor</span>
+      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
+    <div class="sheet-b">
+      <p class="sec-title">Daftar admin (nama = eksekutor yang bisa ditugaskan)</p>
+      <div style="margin-bottom:18px">${rows||'<div class="t-sub">Kosong.</div>'}</div>
+      <p class="sec-title">Tambah admin baru</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <input class="inp" id="kaNama" placeholder="Nama">
+        <input class="inp" id="kaKode" placeholder="Kode akses (min. 4 karakter)">
+        <select class="inp" id="kaRole"><option value="admin">Admin</option><option value="super">Super</option></select>
+        <button class="btn btn-primary" onclick="aksiKelola('tambah',{nama:$('#kaNama').value.trim(),kode:$('#kaKode').value.trim(),role:$('#kaRole').value})">Tambah</button>
+      </div>
+    </div></div>`;
+  dlg.showModal();
+}
+async function aksiKelola(sub,extra){
+  try{ const daftar=await Backend.call('adminKelola',KODE,Object.assign({sub},extra));
+    renderKelola(daftar); DATA.eksekutors=daftar.map(a=>a.nama); populasiFilter();
+    toast({tambah:'Admin ditambahkan.',hapus:'Admin dihapus.',ubahRole:'Role diubah.'}[sub]||'Tersimpan.','ok');
+  }catch(err){ toast(err.message||'Gagal.','err'); }
 }
 
 /* ============ EXPORT CSV ============ */

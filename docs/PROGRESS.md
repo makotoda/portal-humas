@@ -1,8 +1,17 @@
 # PROGRESS — Portal Komunikasi Kehumasan
 
 ## Sedang dikerjakan
-- (kosong) — spine + dashboard admin selesai; kandidat berikutnya: notifikasi Telegram
-  atau pindah wilayah/ketentuan ke sheet Config.
+- (kosong) — spine + dashboard admin (termasuk kelola admin & filter tanggal) selesai;
+  kandidat berikutnya: notifikasi Telegram atau pindah wilayah/ketentuan ke sheet Config.
+
+## Selesai (admin lanjutan, 21 Jul 2026)
+- **Kelola Admin & Eksekutor dari UI** (khusus super admin, tombol di topbar):
+  daftar admin + ubah role + hapus + tambah (nama/kode/role). Guard server: bukan super →
+  ditolak, hapus akun sendiri → ditolak, super terakhir tak bisa dihapus/diturunkan,
+  kode unik min. 4 karakter. Kode tak pernah dikirim balik ke klien.
+  Backend `adminKelola` + demo mode; eksekutor otomatis ikut daftar admin.
+- **Filter tanggal** (dari/sampai) di bar filter — `<input type="date">` native, ikut
+  memfilter tabel/kanban/ekspor CSV. Terverifikasi: guard + filter lolos uji di preview.
 
 ## Selesai
 - **Dashboard admin (21 Jul 2026)** — file `admin.html` (route `?page=admin`), terverifikasi
@@ -37,12 +46,9 @@
 ## Backlog (urut prioritas)
 1. **Notifikasi** — Telegram/WA saat status berubah (pola bot Telegram); kelola daftar
    eksekutor dari UI (super admin) — sekarang eksekutor = daftar nama di sheet `Admins`.
-2. **Kelola admin dari UI** — super admin tambah/hapus admin & atur role (kini manual di
-   sheet `Admins`).
-3. **Sheet `MasterWilayah`/`Config`** — pindahkan wilayah & teks ketentuan ke sheet agar
+2. **Sheet `MasterWilayah`/`Config`** — pindahkan wilayah & teks ketentuan ke sheet agar
    editable tanpa ubah kode; lengkapi seluruh kabupaten/kota (514).
-4. **Upload berkas besar** — ganti base64 ke Drive Picker/resumable bila payload sering >50MB.
-5. **Filter tanggal** di dashboard (kini: kategori/provinsi/status/eksekutor/cari).
+3. **Upload berkas besar** — ganti base64 ke Drive Picker/resumable bila payload sering >50MB.
 
 ## Keputusan teknis penting
 - **Satu file frontend** (bukan template include GAS) supaya bisa dipreview lokal apa adanya

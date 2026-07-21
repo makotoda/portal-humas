@@ -66,7 +66,8 @@ Di Google Sites → Insert → Embed → **By URL** → tempel URL `/exec`. Mani
 - Buka `<URL /exec>?page=admin`. Login pakai **kode akses** (baris di sheet `Admins`).
   Saat pertama, sheet `Admins` di-seed 1 super admin dengan kode dari `CONFIG.ADMIN_SUPER_CODE`
   — **ganti kode ini sebelum dipakai** (edit Script Property `ADMIN_SUPER_CODE` atau baris sheet).
-- Tambah admin/eksekutor lain: tambah baris di sheet `Admins` (`Nama`, `Kode`, `Role`=`admin`/`super`).
+- Tambah admin/eksekutor lain: lewat tombol **Kelola Admin** di dashboard (khusus super admin),
+  atau manual tambah baris di sheet `Admins` (`Nama`, `Kode`, `Role`=`admin`/`super`).
 - Preview lokal `admin.html`: kode demo `super` atau `admin` (data contoh dari `localStorage`).
 
 ## Catatan

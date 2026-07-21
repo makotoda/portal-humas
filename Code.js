@@ -364,7 +364,76 @@ function adminAksi(kode, payload) {
   }
 }
 
+/**
+ * Kelola admin/eksekutor (KHUSUS super admin). payload.sub:
+ *  'list'  → daftar admin (tanpa kode)
+ *  'tambah'→ {nama, kode, role}
+ *  'hapus' → {nama}
+ *  'ubahRole' → {nama, role}
+ * Mengembalikan daftar admin terbaru [{nama, role}] — kode TIDAK pernah dikirim balik.
+ */
+function adminKelola(kode, payload) {
+  const me = cekAdmin_(kode);
+  if (!me) throw new Error('Akses ditolak. Kode salah.');
+  if (me.role !== 'super') throw new Error('Hanya super admin yang boleh mengelola admin.');
+  const p = payload || {};
+  const sub = String(p.sub || 'list');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = getSheet_(SHEET_ADMINS);
+    if (sub === 'tambah') {
+      const nama = String(p.nama || '').trim();
+      const kd = String(p.kode || '').trim();
+      const role = (p.role === 'super') ? 'super' : 'admin';
+      if (!nama || !kd) throw new Error('Nama dan kode wajib diisi.');
+      if (kd.length < 4) throw new Error('Kode minimal 4 karakter.');
+      const rows = adminRows_();
+      if (rows.some(r => r.nama.toLowerCase() === nama.toLowerCase())) throw new Error('Nama admin sudah ada.');
+      if (rows.some(r => r.kode === kd)) throw new Error('Kode sudah dipakai admin lain.');
+      sh.appendRow([nama, kd, role]);
+    } else if (sub === 'hapus') {
+      const nama = String(p.nama || '').trim();
+      const rows = adminRows_();
+      const t = rows.find(r => r.nama === nama);
+      if (!t) throw new Error('Admin tidak ditemukan.');
+      if (t.nama === me.nama) throw new Error('Tidak bisa menghapus akun sendiri.');
+      if (t.role === 'super' && rows.filter(r => r.role === 'super').length <= 1) throw new Error('Minimal harus ada satu super admin.');
+      const rn = findAdminRow_(nama);
+      if (rn) sh.deleteRow(rn);
+    } else if (sub === 'ubahRole') {
+      const nama = String(p.nama || '').trim();
+      const role = (p.role === 'super') ? 'super' : 'admin';
+      const rows = adminRows_();
+      const t = rows.find(r => r.nama === nama);
+      if (!t) throw new Error('Admin tidak ditemukan.');
+      if (t.role === 'super' && role !== 'super' && rows.filter(r => r.role === 'super').length <= 1)
+        throw new Error('Minimal harus ada satu super admin.');
+      const rn = findAdminRow_(nama);
+      if (rn) sh.getRange(rn, 3).setValue(role);
+    }
+    return adminRows_().map(r => ({ nama: r.nama, role: r.role })); // tanpa kode
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /* ---- helper admin ---- */
+function adminRows_() {
+  const sh = getSheet_(SHEET_ADMINS);
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, HEADERS_ADMIN.length).getValues()
+    .map(r => ({ nama: String(r[0]), kode: String(r[1]), role: String(r[2] || 'admin') }));
+}
+function findAdminRow_(nama) {
+  const sh = getSheet_(SHEET_ADMINS);
+  const last = sh.getLastRow();
+  if (last < 2) return 0;
+  const col = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (let i = 0; i < col.length; i++) if (String(col[i][0]) === nama) return i + 2;
+  return 0;
+}
 function findRow_(sheet, tiket) {
   const last = sheet.getLastRow();
   if (last < 2) return 0;
@@ -387,10 +456,7 @@ function riwayatMap_() {
 }
 
 function daftarEksekutor_() {
-  const sh = getSheet_(SHEET_ADMINS);
-  const last = sh.getLastRow();
-  if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 1).getValues().map(r => String(r[0])).filter(Boolean);
+  return adminRows_().map(r => r.nama).filter(Boolean);
 }
 
 function hitungStats_(list) {
