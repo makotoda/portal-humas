@@ -1,0 +1,11 @@
+# kredensial clasp (jangan pernah di-commit)
+.clasprc.json
+~/.clasprc.json
+# node (tak dipakai runtime, hanya bila install clasp lokal)
+node_modules/
+# scratch / preview lokal
+portal-preview.html
+*.log
+nul
+.DS_Store
+Thumbs.db

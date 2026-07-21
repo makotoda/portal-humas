@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="id" class="tema-gelap">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portal Komunikasi Kehumasan — Ditjen Bimas Hindu</title>
+<base target="_top">
+<style>
+/* ============================================================
+   PORTAL KOMUNIKASI KEHUMASAN — "Cinematic Glass" design system
+   Vanilla CSS, nol dependensi. Gelap = default; .tema-terang = override.
+   ============================================================ */
+:root{
+  --bg-0:#0A0D14; --bg-1:#0F131C; --bg-2:#161B27; --bg-3:#1E2432;
+  --glass:rgba(255,255,255,.045); --glass-2:rgba(255,255,255,.07);
+  --glass-brd:rgba(255,255,255,.13); --glass-hi:rgba(255,255,255,.28);
+  --ink:#EAECF2; --ink-dim:#9AA3B2; --ink-faint:#697084;
+  --gold:#F5B14C; --amber:#E8863A; --saffron:#FF9D3D;
+  --violet:#8B5CF6; --plum:#43206E;
+  --ok:#37D39A; --ok-bg:rgba(55,211,154,.13);
+  --warn:#F5B14C; --warn-bg:rgba(245,177,76,.13);
+  --bad:#E0755A; --bad-bg:rgba(224,117,90,.13);
+  --info:#5B9BFF; --info-bg:rgba(91,155,255,.13);
+  --radius:18px; --radius-sm:12px; --radius-lg:26px;
+  --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 10px 30px -12px rgba(0,0,0,.6), 0 30px 70px -30px rgba(0,0,0,.7);
+  --ease: cubic-bezier(.22,.61,.36,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
+  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --maxw: 1180px;
+}
+html.tema-terang{
+  --bg-0:#EEF1F7; --bg-1:#F5F7FB; --bg-2:#FFFFFF; --bg-3:#FFFFFF;
+  --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.9);
+  --glass-brd:rgba(20,28,48,.10); --glass-hi:rgba(255,255,255,.9);
+  --ink:#141A28; --ink-dim:#4A5468; --ink-faint:#8892A4;
+  --shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 8px 24px -12px rgba(30,40,70,.28), 0 24px 60px -28px rgba(30,40,70,.30);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font); color:var(--ink); background:var(--bg-0);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  line-height:1.55; overflow-x:hidden; min-height:100vh;
+}
+h1,h2,h3,h4{margin:0; line-height:1.12; letter-spacing:-.02em; font-weight:650}
+p{margin:0}
+a{color:inherit; text-decoration:none}
+button{font-family:inherit}
+img{max-width:100%; display:block}
+svg{width:18px; height:18px}          /* ukuran default utk ikon inline yg tak diberi rule khusus */
+.tabular{font-variant-numeric:tabular-nums}
+
+/* ---------- Background: gradient mesh + grain ---------- */
+.bg{position:fixed; inset:0; z-index:-2; overflow:hidden; background:
+   radial-gradient(120% 90% at 50% -10%, var(--bg-2), var(--bg-0) 55%)}
+.bg::before,.bg::after{content:""; position:absolute; inset:-25%; z-index:-1;
+  filter:blur(60px) saturate(120%); opacity:.85;
+  background:
+    radial-gradient(38% 42% at 22% 28%, rgba(245,177,76,.35), transparent 60%),
+    radial-gradient(34% 40% at 82% 20%, rgba(139,92,246,.32), transparent 62%),
+    radial-gradient(45% 48% at 68% 88%, rgba(232,134,58,.26), transparent 60%),
+    radial-gradient(40% 44% at 12% 82%, rgba(67,32,110,.34), transparent 62%);
+  animation:mesh 26s var(--ease) infinite alternate;
+}
+.bg::after{opacity:.5; animation-duration:34s; animation-direction:alternate-reverse}
+html.tema-terang .bg::before,html.tema-terang .bg::after{opacity:.5}
+@keyframes mesh{
+  0%{transform:translate3d(-3%,-2%,0) scale(1.05) rotate(0deg)}
+  100%{transform:translate3d(4%,3%,0) scale(1.12) rotate(8deg)}
+}
+.grain{position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.05; mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ---------- Shell / layout ---------- */
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+.topbar{position:sticky; top:0; z-index:40; backdrop-filter:blur(14px) saturate(140%);
+  -webkit-backdrop-filter:blur(14px) saturate(140%);
+  border-bottom:1px solid var(--glass-brd); background:linear-gradient(to bottom, rgba(10,13,20,.55), rgba(10,13,20,.15));}
+html.tema-terang .topbar{background:linear-gradient(to bottom, rgba(255,255,255,.7), rgba(255,255,255,.35))}
+.topbar .wrap{display:flex; align-items:center; gap:16px; height:64px}
+.brand{display:flex; align-items:center; gap:11px; cursor:pointer}
+.brand .mark{width:34px; height:34px; flex:0 0 34px; border-radius:10px;
+  background:conic-gradient(from 210deg, var(--gold), var(--amber), var(--violet), var(--gold));
+  display:grid; place-items:center; box-shadow:0 4px 14px -4px rgba(245,177,76,.6), inset 0 1px 0 var(--glass-hi)}
+.brand .mark svg{width:20px; height:20px}
+.brand .txt b{display:block; font-size:14px; letter-spacing:-.01em; line-height:1.15}
+.brand .txt span{display:block; font-size:11px; color:var(--ink-dim); letter-spacing:.02em}
+.nav{margin-left:auto; display:flex; align-items:center; gap:6px}
+.nav a{padding:9px 14px; border-radius:11px; font-size:13.5px; color:var(--ink-dim);
+  transition:.2s var(--ease); cursor:pointer}
+.nav a:hover{color:var(--ink); background:var(--glass)}
+.nav a.aktif{color:var(--ink); background:var(--glass-2); box-shadow:inset 0 0 0 1px var(--glass-brd)}
+.icon-btn{width:38px; height:38px; border-radius:11px; border:1px solid var(--glass-brd);
+  background:var(--glass); color:var(--ink); display:grid; place-items:center; cursor:pointer;
+  transition:.2s var(--ease)}
+.icon-btn:hover{background:var(--glass-2); transform:translateY(-1px)}
+.icon-btn svg{width:18px; height:18px}
+
+/* ---------- Views + transitions ---------- */
+.view{display:none; animation:viewIn .55s var(--ease-out) both}
+.view.aktif{display:block}
+@keyframes viewIn{from{opacity:0; transform:translateY(14px) scale(.994)} to{opacity:1; transform:none}}
+
+/* ---------- Hero ---------- */
+.hero{position:relative; padding:78px 0 34px; text-align:center}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-dim); padding:7px 14px; border-radius:100px;
+  border:1px solid var(--glass-brd); background:var(--glass); margin-bottom:22px}
+.eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 10px var(--ok)}
+.hero h1{font-size:clamp(34px,6vw,62px); font-weight:720; letter-spacing:-.035em;
+  background:linear-gradient(180deg, var(--ink), color-mix(in srgb, var(--ink) 62%, transparent));
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero h1 .hl{background:linear-gradient(115deg, var(--gold), var(--saffron) 45%, var(--violet));
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero .lede{max-width:620px; margin:20px auto 0; font-size:clamp(15px,2.2vw,18px); color:var(--ink-dim)}
+.cta-row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:30px}
+.btn{position:relative; display:inline-flex; align-items:center; gap:9px; padding:13px 22px;
+  border-radius:13px; font-size:14.5px; font-weight:600; cursor:pointer; border:1px solid transparent;
+  transition:.24s var(--ease); white-space:nowrap}
+.btn svg{width:17px; height:17px}
+.btn-primary{color:#1A1206; background:linear-gradient(120deg, var(--gold), var(--saffron));
+  box-shadow:0 10px 30px -10px rgba(245,177,76,.7), inset 0 1px 0 rgba(255,255,255,.4)}
+.btn-primary:hover{transform:translateY(-2px); box-shadow:0 16px 40px -12px rgba(245,177,76,.8), inset 0 1px 0 rgba(255,255,255,.5)}
+.btn-ghost{color:var(--ink); background:var(--glass); border-color:var(--glass-brd)}
+.btn-ghost:hover{background:var(--glass-2); transform:translateY(-2px)}
+.btn:active{transform:translateY(0) scale(.985)}
+
+/* live stats */
+.stats{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:40px}
+.stat{min-width:150px; padding:16px 20px; border-radius:var(--radius); text-align:left;
+  background:var(--glass); border:1px solid var(--glass-brd); box-shadow:var(--shadow); backdrop-filter:blur(8px)}
+.stat .n{font-size:26px; font-weight:700; letter-spacing:-.02em}
+.stat .l{font-size:12px; color:var(--ink-dim); margin-top:2px}
+.stat .n .u{font-size:14px; color:var(--ink-dim); font-weight:600; margin-left:3px}
+
+/* ---------- Section heading ---------- */
+.sec-head{text-align:center; max-width:640px; margin:0 auto 30px}
+.sec-head h2{font-size:clamp(24px,3.6vw,34px); font-weight:680; letter-spacing:-.03em}
+.sec-head p{color:var(--ink-dim); margin-top:10px; font-size:15px}
+.section{padding:56px 0}
+
+/* ---------- Kategori grid (3D tilt cards) ---------- */
+.grid-kat{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+.kat{position:relative; padding:22px; border-radius:var(--radius); cursor:pointer;
+  background:var(--glass); border:1px solid var(--glass-brd); box-shadow:var(--shadow);
+  transform-style:preserve-3d; transition:box-shadow .3s var(--ease), border-color .3s;
+  will-change:transform; overflow:hidden}
+.kat::before{content:""; position:absolute; inset:0; border-radius:inherit; opacity:0; transition:.3s;
+  background:radial-gradient(140px 140px at var(--mx,50%) var(--my,0%), rgba(245,177,76,.16), transparent 70%)}
+.kat:hover::before{opacity:1}
+.kat:hover{border-color:var(--glass-hi)}
+.kat .ico{width:46px; height:46px; border-radius:13px; display:grid; place-items:center; margin-bottom:15px;
+  background:linear-gradient(135deg, var(--glass-2), transparent); border:1px solid var(--glass-brd);
+  transform:translateZ(30px)}
+.kat .ico svg{width:23px; height:23px; stroke:var(--gold); fill:none; stroke-width:1.6}
+.kat h3{font-size:16.5px; font-weight:640; transform:translateZ(22px)}
+.kat p{font-size:13px; color:var(--ink-dim); margin-top:6px; transform:translateZ(14px)}
+.kat .go{margin-top:16px; display:inline-flex; align-items:center; gap:6px; font-size:12.5px;
+  color:var(--gold); font-weight:600; transform:translateZ(18px)}
+.kat .go svg{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2.2; transition:transform .25s var(--ease)}
+.kat:hover .go svg{transform:translateX(4px)}
+
+/* ---------- Form view ---------- */
+.form-head{display:flex; align-items:flex-start; gap:16px; margin:26px 0 22px}
+.back{flex:0 0 auto; margin-top:2px}
+.form-head .ico-lg{width:54px; height:54px; border-radius:15px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--glass-2),transparent); border:1px solid var(--glass-brd)}
+.form-head .ico-lg svg{width:26px; height:26px; stroke:var(--gold); fill:none; stroke-width:1.6}
+.form-head h2{font-size:24px; font-weight:680}
+.form-head p{color:var(--ink-dim); font-size:14px; margin-top:4px}
+
+.card{background:var(--glass); border:1px solid var(--glass-brd); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow); backdrop-filter:blur(10px); padding:24px}
+.grid-form{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.field{display:flex; flex-direction:column; gap:7px}
+.field.full{grid-column:1 / -1}
+.field label{font-size:13px; font-weight:550; color:var(--ink-dim)}
+.field label .req{color:var(--bad); margin-left:2px}
+.inp{width:100%; padding:12px 14px; border-radius:var(--radius-sm); font-size:14.5px; color:var(--ink);
+  background:var(--bg-1); border:1px solid var(--glass-brd); transition:.2s var(--ease); outline:none}
+html.tema-terang .inp{background:#fff}
+.inp::placeholder{color:var(--ink-faint)}
+.inp:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(245,177,76,.16)}
+.inp[aria-invalid="true"]{border-color:var(--bad); box-shadow:0 0 0 3px var(--bad-bg)}
+select.inp{appearance:none; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239AA3B2' stroke-width='1.8'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center; padding-right:36px}
+.hint{font-size:11.5px; color:var(--ink-faint)}
+.err-msg{font-size:11.5px; color:var(--bad); display:none}
+.field.invalid .err-msg{display:block}
+
+/* upload dropzone */
+.drop{border:1.5px dashed var(--glass-brd); border-radius:var(--radius-sm); padding:18px;
+  text-align:center; cursor:pointer; transition:.2s var(--ease); background:var(--bg-1)}
+html.tema-terang .drop{background:#fff}
+.drop:hover,.drop.over{border-color:var(--gold); background:var(--glass)}
+.drop svg{width:26px; height:26px; stroke:var(--ink-dim); fill:none; stroke-width:1.5; margin:0 auto 6px}
+.drop b{font-size:13.5px; font-weight:600}
+.drop small{display:block; font-size:11.5px; color:var(--ink-faint); margin-top:3px}
+.thumbs{display:flex; flex-wrap:wrap; gap:9px; margin-top:11px}
+.thumb{position:relative; width:66px; height:66px; border-radius:10px; overflow:hidden;
+  border:1px solid var(--glass-brd); background:var(--bg-2); flex:0 0 auto}
+.thumb img{width:100%; height:100%; object-fit:cover}
+.thumb .doc{width:100%; height:100%; display:grid; place-items:center; font-size:10px; color:var(--ink-dim); padding:4px; text-align:center; word-break:break-word}
+.thumb .x{position:absolute; top:3px; right:3px; width:19px; height:19px; border-radius:50%;
+  background:rgba(0,0,0,.6); color:#fff; border:none; cursor:pointer; display:grid; place-items:center; font-size:13px; line-height:1}
+.thumb .bar{position:absolute; left:0; bottom:0; height:3px; background:var(--gold); width:0; transition:width .2s}
+
+/* ketentuan */
+details.syarat{margin-bottom:18px; border:1px solid var(--glass-brd); border-radius:var(--radius);
+  background:var(--glass); overflow:hidden}
+details.syarat summary{list-style:none; cursor:pointer; padding:14px 18px; display:flex; align-items:center; gap:11px;
+  font-size:14px; font-weight:600; user-select:none}
+details.syarat summary::-webkit-details-marker{display:none}
+details.syarat summary .ci{width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+  background:var(--warn-bg); color:var(--warn); flex:0 0 auto}
+details.syarat summary .ci svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8}
+details.syarat summary .chev{margin-left:auto; display:inline-flex; transition:transform .25s var(--ease)}
+details.syarat summary .chev svg{width:16px; height:16px; fill:none; stroke:var(--ink-dim); stroke-width:2}
+details.syarat[open] summary .chev{transform:rotate(180deg)}
+details.syarat .body{padding:2px 18px 16px 59px}
+details.syarat ul{margin:0; padding:0; list-style:none; display:grid; gap:9px}
+details.syarat li{display:flex; gap:9px; font-size:13px; color:var(--ink-dim); align-items:flex-start}
+details.syarat li svg{width:15px; height:15px; stroke:var(--ok); fill:none; stroke-width:2; flex:0 0 auto; margin-top:2px}
+
+.form-actions{display:flex; gap:12px; justify-content:flex-end; margin-top:22px; align-items:center}
+.form-actions .sisa{margin-right:auto; font-size:12.5px; color:var(--ink-faint)}
+
+/* ---------- Status view ---------- */
+.status-search{max-width:560px; margin:0 auto}
+.search-box{display:flex; gap:10px; margin-top:8px}
+.search-box .inp{flex:1}
+.timeline{margin-top:18px; display:grid; gap:14px}
+.tl-card{padding:20px; border-radius:var(--radius); background:var(--glass); border:1px solid var(--glass-brd); box-shadow:var(--shadow)}
+.tl-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.tl-top .tid{font-weight:700; font-size:15px; letter-spacing:.01em}
+.tl-top .kat-tag{font-size:12px; color:var(--ink-dim); padding:4px 10px; border-radius:100px; background:var(--glass-2); border:1px solid var(--glass-brd)}
+.badge{font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:100px; letter-spacing:.02em; text-transform:uppercase}
+.badge.ok{color:var(--ok); background:var(--ok-bg)}
+.badge.bad{color:var(--bad); background:var(--bad-bg)}
+.badge.warn{color:var(--warn); background:var(--warn-bg)}
+.badge.info{color:var(--info); background:var(--info-bg)}
+.tl-meta{margin-top:6px; font-size:13px; color:var(--ink-dim)}
+.steps{display:flex; margin-top:20px; position:relative}
+.step{flex:1; text-align:center; position:relative}
+.step::before{content:""; position:absolute; top:11px; left:-50%; width:100%; height:2px; background:var(--glass-brd)}
+.step:first-child::before{display:none}
+.step.done::before{background:var(--gold)}
+.step .dot{width:24px; height:24px; border-radius:50%; margin:0 auto 8px; display:grid; place-items:center;
+  background:var(--bg-2); border:2px solid var(--glass-brd); position:relative; z-index:1}
+.step.done .dot{background:linear-gradient(135deg,var(--gold),var(--saffron)); border-color:transparent; color:#1A1206}
+.step.done .dot svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2.5}
+.step.now .dot{border-color:var(--gold); box-shadow:0 0 0 4px rgba(245,177,76,.18)}
+.step .lb{font-size:11.5px; color:var(--ink-dim)}
+.step.done .lb,.step.now .lb{color:var(--ink); font-weight:600}
+.tl-note{margin-top:16px; padding:12px 14px; border-radius:var(--radius-sm); background:var(--bg-1); border:1px solid var(--glass-brd); font-size:13px; color:var(--ink-dim)}
+html.tema-terang .tl-note{background:#fff}
+.empty{text-align:center; padding:40px 20px; color:var(--ink-faint)}
+.empty svg{width:40px; height:40px; stroke:currentColor; fill:none; stroke-width:1.4; margin:0 auto 12px}
+
+/* ---------- Modal (tiket sukses) ---------- */
+dialog{border:none; padding:0; background:transparent; color:var(--ink); max-width:min(92vw,440px)}
+dialog::backdrop{background:rgba(6,8,13,.62); backdrop-filter:blur(6px)}
+.modal{background:var(--bg-2); border:1px solid var(--glass-brd); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow); padding:30px 26px; text-align:center;
+  animation:pop .5s var(--ease-out) both}
+@keyframes pop{from{opacity:0; transform:scale(.9) translateY(10px)} to{opacity:1; transform:none}}
+.modal .seal{width:74px; height:74px; margin:0 auto 16px; border-radius:50%;
+  background:radial-gradient(circle at 30% 25%, var(--gold), var(--amber)); display:grid; place-items:center;
+  box-shadow:0 0 0 8px rgba(245,177,76,.12), 0 12px 30px -10px rgba(245,177,76,.6)}
+.modal .seal svg{width:36px; height:36px; stroke:#1A1206; fill:none; stroke-width:2.4; stroke-dasharray:40; stroke-dashoffset:40; animation:draw .6s .25s var(--ease-out) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.modal h3{font-size:20px}
+.modal p{color:var(--ink-dim); font-size:14px; margin-top:8px}
+.tiket{margin:18px 0; padding:16px; border-radius:var(--radius); background:var(--glass); border:1px dashed var(--gold)}
+.tiket .lb{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim)}
+.tiket .no{font-size:26px; font-weight:800; letter-spacing:.03em; margin-top:4px;
+  background:linear-gradient(120deg,var(--gold),var(--saffron)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.tiket .cp{margin-top:8px; font-size:12px; color:var(--gold); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px}
+.tiket .cp svg{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2}
+
+/* ---------- Toast ---------- */
+.toasts{position:fixed; right:18px; bottom:18px; z-index:80; display:flex; flex-direction:column; gap:10px; max-width:340px}
+.toast{padding:13px 16px; border-radius:13px; background:var(--bg-2); border:1px solid var(--glass-brd);
+  box-shadow:var(--shadow); font-size:13.5px; display:flex; gap:10px; align-items:flex-start;
+  animation:toastIn .35s var(--ease-out) both}
+.toast .i{width:20px; height:20px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; margin-top:1px}
+.toast.ok .i{background:var(--ok-bg); color:var(--ok)} .toast.err .i{background:var(--bad-bg); color:var(--bad)}
+.toast.info .i{background:var(--info-bg); color:var(--info)}
+.toast .i svg{width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2.4}
+@keyframes toastIn{from{opacity:0; transform:translateX(30px)} to{opacity:1; transform:none}}
+
+/* ---------- Footer ---------- */
+footer{margin-top:40px; padding:30px 0; border-top:1px solid var(--glass-brd); color:var(--ink-faint); font-size:12.5px; text-align:center}
+
+/* ---------- Skeleton shimmer ---------- */
+.sk{background:linear-gradient(100deg,var(--glass) 30%,var(--glass-2) 50%,var(--glass) 70%);
+  background-size:200% 100%; animation:sh 1.4s infinite; border-radius:8px}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* ---------- Scroll reveal ---------- */
+.reveal{opacity:0; transform:translateY(22px)}
+.reveal.in{opacity:1; transform:none; transition:opacity .7s var(--ease-out), transform .7s var(--ease-out)}
+
+/* ---------- Responsive ---------- */
+@media (max-width:900px){ .grid-kat{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:640px){
+  .grid-kat{grid-template-columns:1fr} .grid-form{grid-template-columns:1fr}
+  .hero{padding:52px 0 20px} .nav a{display:none} .nav a.selalu{display:inline-flex}
+  .form-actions{flex-wrap:wrap} .form-actions .btn{flex:1}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important}
+  .bg::before,.bg::after{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div>
+
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand" onclick="Nav.go('beranda')">
+      <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#1A1206" stroke-width="1.8"><path d="M12 3l2.4 5 5.6.6-4.2 3.8 1.3 5.5L12 20l-5.1 3 1.3-5.6L4 13.6l5.6-.6z"/></svg></span>
+      <span class="txt"><b>Portal Komunikasi Kehumasan</b><span>Ditjen Bimbingan Masyarakat Hindu</span></span>
+    </div>
+    <nav class="nav">
+      <a data-nav="beranda" class="aktif" onclick="Nav.go('beranda')">Beranda</a>
+      <a class="selalu" data-nav="status" onclick="Nav.go('status')">Cek Status</a>
+      <button class="icon-btn" title="Ganti tema" onclick="Tema.toggle()" id="btnTema"></button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ BERANDA ============ -->
+  <section id="v-beranda" class="view aktif">
+    <div class="hero">
+      <span class="eyebrow"><span class="dot"></span> Portal Resmi Kehumasan Pusat &amp; Daerah</span>
+      <h1>Satu Pintu untuk<br><span class="hl">Publikasi Kehumasan</span> Hindu</h1>
+      <p class="lede">Kirim bahan berita, naskah, dan konten dari seluruh satuan kerja — lalu pantau prosesnya secara transparan, dari satu portal yang rapi.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="document.getElementById('kat-sec').scrollIntoView({behavior:'smooth'})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Kirim Bahan
+        </button>
+        <button class="btn btn-ghost" onclick="Nav.go('status')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg> Cek Status Kiriman
+        </button>
+      </div>
+      <div class="stats" id="stats">
+        <div class="stat"><div class="n"><span class="tabular" data-count="0">0</span></div><div class="l">Bahan diproses bulan ini</div></div>
+        <div class="stat"><div class="n"><span class="tabular" data-count="0">0</span><span class="u">%</span></div><div class="l">Tingkat penerimaan</div></div>
+        <div class="stat"><div class="n"><span class="tabular" data-count="0">0</span></div><div class="l">Satker berkontribusi</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="kat-sec">
+      <div class="sec-head reveal">
+        <h2>Pilih Kategori Bahan</h2>
+        <p>Sembilan jalur publikasi. Klik satu kartu untuk mulai mengirim.</p>
+      </div>
+      <div class="grid-kat" id="gridKat"></div>
+    </div>
+  </section>
+
+  <!-- ============ FORM ============ -->
+  <section id="v-form" class="view">
+    <div class="form-head">
+      <button class="icon-btn back" onclick="Nav.go('beranda')" title="Kembali">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="ico-lg" id="fIco"></div>
+      <div><h2 id="fJudul">—</h2><p id="fDesk">—</p></div>
+    </div>
+    <div id="fSyarat"></div>
+    <form class="card" id="formEl" novalidate>
+      <div class="grid-form" id="fFields"></div>
+      <div class="form-actions">
+        <span class="sisa" id="fSisa"></span>
+        <button type="button" class="btn btn-ghost" onclick="Nav.go('beranda')">Batal</button>
+        <button type="submit" class="btn btn-primary" id="fSubmit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg> Kirim Bahan
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ STATUS ============ -->
+  <section id="v-status" class="view">
+    <div class="section">
+      <div class="sec-head reveal"><h2>Cek Status Kiriman</h2><p>Masukkan nomor tiket (mis. PKH-202607-0042) atau nomor WhatsApp yang dipakai saat mengirim.</p></div>
+      <div class="status-search">
+        <div class="search-box">
+          <input class="inp" id="qStatus" placeholder="Nomor tiket atau nomor WhatsApp" onkeydown="if(event.key==='Enter')Status.cari()">
+          <button class="btn btn-primary" onclick="Status.cari()">Lacak</button>
+        </div>
+        <div id="statusHasil"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  Portal Komunikasi Kehumasan Pusat &amp; Daerah · Direktorat Jenderal Bimbingan Masyarakat Hindu · Kementerian Agama RI
+</footer>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+   PORTAL KOMUNIKASI KEHUMASAN — client app (vanilla)
+   Satu file: jalan di GAS (google.script.run) & preview lokal (mode demo).
+   ============================================================ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+/* ---------- ikon SVG (line-art, stroke konsisten) ---------- */
+const IK={
+  berita:'<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+  widyalaya:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
+  kampus:'<path d="M3 21h18M6 21V9l6-4 6 4v12"/><path d="M10 21v-5h4v5"/>',
+  mimbar:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  wisata:'<path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  pasraman:'<path d="M12 3v18M5 8l7-4 7 4M5 8v10M19 8v10M8 21h8"/>',
+  medsos:'<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.5 2.5 13 0 16M12 4c-2.5 2.5-2.5 13 0 16"/>',
+  artikel:'<path d="M4 4h11l5 5v11H4z"/><path d="M14 4v5h5"/><path d="M8 13h8M8 16h5"/>',
+  video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/>',
+  check:'<path d="M20 6L9 17l-5-5"/>', arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>',
+  upload:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 17v3h16v-3"/>',
+  x:'<path d="M18 6L6 18M6 6l12 12"/>', copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h8"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>', inbox:'<path d="M3 12h5l2 3h4l2-3h5M3 12l3-8h12l3 8v6H3z"/>'
+};
+const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
+
+/* ---------- konfigurasi 9 kategori (SATU sumber) ----------
+   fields: daftar key field; upload: slot berkas; syarat: ketentuan.
+   Field def diambil dari FIELD_DEF di bawah. */
+const KATEGORI={
+  'berita-daerah':{judul:'Berita Daerah',ico:'berita',desk:'Liputan kegiatan Bimas Hindu di kanwil & kabupaten/kota.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    syarat:['Memenuhi unsur 5W1H dan ditulis lugas.','Menyertakan kutipan langsung narasumber.','Peristiwa terkini (maks. 7 hari terakhir).','Foto landscape 16:9, tajam, tidak buram.']},
+  'berita-widyalaya':{judul:'Berita Widyalaya',ico:'widyalaya',desk:'Kegiatan pendidikan keagamaan Hindu formal (Widyalaya).',
+    fields:['provinsi','kabupaten','namaWidyalaya','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    syarat:['Menyebut nama Widyalaya dengan lengkap.','Memenuhi 5W1H dan ada kutipan narasumber.','Peristiwa terkini.','Foto landscape 16:9.']},
+  'berita-ptkh':{judul:'Berita PTKH',ico:'kampus',desk:'Kegiatan Perguruan Tinggi Keagamaan Hindu.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    syarat:['Bahan benar-benar berkaitan dengan PTKH.','Memenuhi 5W1H dan ada kutipan.','Peristiwa terkini.','Foto landscape 16:9.']},
+  'naskah-mimbar':{judul:'Naskah Mimbar Hindu',ico:'mimbar',desk:'Naskah renungan/uraian keagamaan untuk rubrik Mimbar Hindu.',
+    fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
+    upload:[{key:'naskah',label:'Naskah Mimbar',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto Penulis (pose tangan di dada)',accept:'image/*',max:1}],
+    syarat:['Naskah orisinal, bukan salinan.','Panjang & gaya sesuai pedoman Mimbar Hindu.','Sertakan sumber sloka/kutipan bila ada.','Foto penulis rapi, pose tangan di dada.']},
+  'wisata-religi':{judul:'Wisata Religi',ico:'wisata',desk:'Artikel destinasi & situs spiritual Hindu.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:'image/*',max:3}],
+    syarat:['Benar-benar bertema wisata religi Hindu.','Memuat nilai sejarah/spiritual lokasi.','Orisinal & informatif.','Foto landscape 16:9 berkualitas.']},
+  'berita-pasraman':{judul:'Berita Pasraman',ico:'pasraman',desk:'Kegiatan pendidikan keagamaan Hindu nonformal (Pasraman).',
+    fields:['provinsi','kabupaten','namaPasraman','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    syarat:['Menyebut nama Pasraman dengan lengkap.','Memenuhi 5W1H dan ada kutipan.','Peristiwa terkini.','Foto landscape 16:9.']},
+  'konten-medsos':{judul:'Bahan Konten Medsos',ico:'medsos',desk:'Materi untuk kanal media sosial resmi Ditjen Bimas Hindu.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'naskah',label:'Naskah / Caption',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:10}],
+    syarat:['Materi sesuai standar konten medsos.','Foto/gambar resolusi tinggi.','Caption ringkas & sesuai kaidah.','Hindari materi ber-hak-cipta pihak lain.']},
+  'artikel-inspiratif':{judul:'Artikel Kisah Inspiratif',ico:'artikel',desk:'Kisah tokoh/umat yang menginspirasi.',
+    fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
+    upload:[{key:'naskah',label:'Naskah Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:'image/*',max:3}],
+    syarat:['Kisah nyata & orisinal.','Ada narasi yang menginspirasi.','Sertakan izin/keterangan tokoh.','Foto pendukung yang relevan.']},
+  'video-mimbar':{judul:'Video Mimbar Hindu',ico:'video',desk:'Rekaman video ceramah/renungan untuk Mimbar Hindu.',
+    fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
+    upload:[{key:'naskah',label:'Naskah / Sinopsis',accept:'.doc,.docx,.pdf,.txt',max:1}],
+    linkVideo:true,
+    syarat:['Video sesuai standar publikasi (durasi, kualitas).','Orientasi landscape 16:9, audio jernih.','Unggah ke Google Drive, akses "siapa saja dgn link".','Tempel tautan Drive video pada isian di bawah.']}
+};
+
+/* ---------- definisi field ---------- */
+const FIELD_DEF={
+  provinsi:{label:'Provinsi',type:'prov',req:true},
+  kabupaten:{label:'Kabupaten / Kota',type:'kab',req:true},
+  instansi:{label:'Instansi / Satuan Kerja',type:'text',req:true,ph:'mis. Kanwil Kemenag / Kemenag Kab. ...'},
+  namaWidyalaya:{label:'Nama Widyalaya',type:'text',req:true,ph:'mis. Widyalaya ...'},
+  namaPasraman:{label:'Nama Pasraman',type:'text',req:true,ph:'mis. Pasraman ...'},
+  namaPenulis:{label:'Nama Penulis',type:'text',req:true,ph:'Nama lengkap penulis'},
+  noWA:{label:'Nomor WhatsApp',type:'tel',req:true,ph:'08xxxxxxxxxx',full:true,hint:'Untuk pemberitahuan status. Format 08.. / +62..'}
+};
+
+/* ---------- master wilayah (dropdown, cegah data kotor) ----------
+   38 provinsi; kabupaten lengkap utk wilayah yg aktif mengirim + kota besar.
+   ponytail: subset kabupaten — sisanya nanti dari sheet MasterWilayah. */
+const WILAYAH={
+  "Bali":["Denpasar","Badung","Gianyar","Klungkung","Bangli","Karangasem","Buleleng","Jembrana","Tabanan"],
+  "DI Yogyakarta":["Kota Yogyakarta","Sleman","Bantul","Kulon Progo","Gunungkidul"],
+  "Jawa Tengah":["Kota Semarang","Boyolali","Klaten","Karanganyar","Banyumas","Sukoharjo","Sragen","Wonogiri","Cilacap","Magelang"],
+  "Jawa Timur":["Surabaya","Malang","Banyuwangi","Jember","Sidoarjo","Kediri","Blitar","Lumajang"],
+  "Jawa Barat":["Bandung","Kota Bandung","Bekasi","Bogor","Depok","Cirebon"],
+  "Banten":["Serang","Kota Serang","Tangerang","Kota Tangerang","Kota Tangerang Selatan","Cilegon","Lebak","Pandeglang"],
+  "DKI Jakarta":["Jakarta Pusat","Jakarta Utara","Jakarta Barat","Jakarta Selatan","Jakarta Timur"],
+  "Lampung":["Bandar Lampung","Lampung Tengah","Lampung Selatan","Lampung Timur","Metro","Tulang Bawang","Mesuji","Way Kanan","Pesawaran"],
+  "Sumatera Utara":["Medan","Deli Serdang","Binjai","Pematang Siantar","Toba","Karo"],
+  "Sumatera Selatan":["Palembang","Ogan Komering Ulu","Musi Rawas","Lubuklinggau"],
+  "Sumatera Barat":["Padang","Bukittinggi","Dharmasraya","Pasaman"],
+  "Riau":["Pekanbaru","Kampar","Rokan Hulu"],
+  "Kepulauan Riau":["Batam","Tanjung Pinang","Bintan"],
+  "Jambi":["Jambi","Muaro Jambi","Tebo"],
+  "Bengkulu":["Bengkulu","Rejang Lebong"],
+  "Aceh":["Banda Aceh","Aceh Tenggara"],
+  "Kalimantan Tengah":["Palangka Raya","Kotawaringin Timur","Kotawaringin Barat","Kapuas","Barito Selatan","Gunung Mas","Katingan"],
+  "Kalimantan Barat":["Pontianak","Ketapang","Sanggau","Sintang"],
+  "Kalimantan Timur":["Samarinda","Balikpapan","Kutai Kartanegara","Berau","Penajam Paser Utara"],
+  "Kalimantan Selatan":["Banjarmasin","Banjarbaru","Tanah Bumbu","Tanah Laut"],
+  "Kalimantan Utara":["Tarakan","Bulungan","Nunukan"],
+  "Sulawesi Tengah":["Palu","Sigi","Poso","Donggala","Morowali","Banggai","Parigi Moutong"],
+  "Sulawesi Selatan":["Makassar","Gowa","Bone","Luwu","Luwu Timur","Palopo"],
+  "Sulawesi Tenggara":["Kendari","Konawe","Konawe Selatan","Kolaka","Muna","Baubau"],
+  "Sulawesi Utara":["Manado","Minahasa","Bitung","Tomohon"],
+  "Sulawesi Barat":["Mamuju","Polewali Mandar","Mamasa"],
+  "Gorontalo":["Gorontalo","Bone Bolango"],
+  "Nusa Tenggara Barat":["Mataram","Lombok Barat","Lombok Tengah","Lombok Timur","Lombok Utara","Sumbawa"],
+  "Nusa Tenggara Timur":["Kupang","Kota Kupang","Sumba Timur","Sumba Barat","Manggarai","Manggarai Barat","Ende","Sikka","Ngada"],
+  "Maluku":["Ambon","Maluku Tengah","Seram Bagian Barat"],
+  "Maluku Utara":["Ternate","Tidore Kepulauan","Halmahera Utara"],
+  "Papua":["Jayapura","Kota Jayapura","Keerom"],
+  "Papua Barat":["Manokwari","Sorong","Kota Sorong"],
+  "Papua Tengah":["Nabire","Mimika","Paniai"],
+  "Papua Pegunungan":["Jayawijaya","Wamena"],
+  "Papua Selatan":["Merauke","Mappi","Asmat"],
+  "Papua Barat Daya":["Kota Sorong","Raja Ampat"],
+  "Bangka Belitung":["Pangkal Pinang","Belitung","Bangka"]
+};
+
+/* ============================================================
+   BACKEND: satu antarmuka. GAS → google.script.run; lokal → demo.
+   ============================================================ */
+const isGas = typeof google!=='undefined' && google.script && google.script.run;
+const Backend={
+  call(fn,payload){
+    return new Promise((res,rej)=>{
+      if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](payload); }
+      else { setTimeout(()=>{ try{res(Demo[fn](payload));}catch(e){rej(e);} }, 420); }
+    });
+  }
+};
+/* mode demo (preview lokal) — data di localStorage */
+const Demo={
+  _key:'pkh_demo_sub',
+  _all(){ try{return JSON.parse(localStorage.getItem(this._key)||'[]')}catch(e){return []} },
+  _save(a){ localStorage.setItem(this._key, JSON.stringify(a)); },
+  getStats(){ const a=this._all();
+    const bulan=a.length+42, done=a.filter(x=>x.status==='Disetujui').length;
+    return {diproses:bulan, penerimaan:59, satker:a.length?new Set(a.map(x=>x.instansi)).size+18:18}; },
+  submitPermohonan(p){
+    const a=this._all();
+    const seq=String(a.length+1).padStart(4,'0');
+    const d=new Date(), ym=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0');
+    const tiket='PKH-'+ym+'-'+seq;
+    a.push({tiket,kategori:p.kategori,provinsi:p.provinsi,kabupaten:p.kabupaten,instansi:p.instansi||p.namaWidyalaya||p.namaPasraman||'',
+      namaPenulis:p.namaPenulis||'',noWA:p.noWA,status:'Terkirim',eksekutor:'',keterangan:'',
+      dibuat:d.toISOString(),files:(p._fileNames||[])});
+    this._save(a);
+    return {tiket, waktu:d.toISOString()};
+  },
+  cekStatus(q){
+    q=(q||'').trim().toLowerCase();
+    return this._all().filter(x=> x.tiket.toLowerCase()===q || (x.noWA||'').replace(/\D/g,'').endsWith(q.replace(/\D/g,'')) && q.replace(/\D/g,'').length>=6 );
+  }
+};
+
+/* ============================================================
+   NAVIGASI antar view
+   ============================================================ */
+const Nav={
+  go(v){
+    $$('.view').forEach(el=>el.classList.remove('aktif'));
+    $('#v-'+v).classList.add('aktif');
+    $$('.nav a[data-nav]').forEach(a=>a.classList.toggle('aktif',a.dataset.nav===v));
+    window.scrollTo({top:0,behavior:'instant'});
+    Reveal.scan();
+  }
+};
+
+/* ============================================================
+   TEMA (gelap default / terang)
+   ============================================================ */
+const Tema={
+  init(){ const s=localStorage.getItem('pkh_tema'); if(s==='terang')document.documentElement.className='tema-terang'; this._btn(); },
+  toggle(){ const t=document.documentElement.classList.toggle('tema-terang'); document.documentElement.classList.toggle('tema-gelap',!t);
+    localStorage.setItem('pkh_tema',t?'terang':'gelap'); this._btn(); },
+  _btn(){ const t=document.documentElement.classList.contains('tema-terang');
+    $('#btnTema').innerHTML = t
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3a6.5 6.5 0 009.5 9.5z"/></svg>'; }
+};
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function toast(msg,tipe='info'){
+  const ic={ok:IK.check,err:IK.x,info:IK.info};
+  const el=document.createElement('div'); el.className='toast '+tipe;
+  el.innerHTML=`<span class="i"><svg viewBox="0 0 24 24">${ic[tipe]||IK.info}</svg></span><span>${msg}</span>`;
+  $('#toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(30px)';el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4200);
+}
+
+/* ============================================================
+   BERANDA: kartu kategori + tilt + stats count-up
+   ============================================================ */
+function renderKategori(){
+  $('#gridKat').innerHTML=Object.entries(KATEGORI).map(([id,k])=>`
+    <article class="kat reveal" data-tilt onclick="Form.buka('${id}')">
+      <div class="ico">${ikon(k.ico)}</div>
+      <h3>${k.judul}</h3>
+      <p>${k.desk}</p>
+      <span class="go">Mulai kirim ${ikon('arrow')}</span>
+    </article>`).join('');
+  Tilt.bind();
+}
+/* 3D tilt mengikuti mouse (nol dependensi) */
+const Tilt={
+  bind(){ if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    $$('[data-tilt]').forEach(el=>{
+      el.addEventListener('mousemove',e=>{
+        const r=el.getBoundingClientRect(), x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+        el.style.transform=`perspective(700px) rotateY(${(x-.5)*9}deg) rotateX(${(.5-y)*9}deg) translateY(-3px)`;
+        el.style.setProperty('--mx',x*100+'%'); el.style.setProperty('--my',y*100+'%');
+      });
+      el.addEventListener('mouseleave',()=>{el.style.transform='';});
+    });
+  }
+};
+/* count-up angka statistik */
+function countUp(el,to){
+  const dur=1100, t0=performance.now();
+  (function tick(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+    el.textContent=Math.round(to*e).toLocaleString('id-ID'); if(p<1)requestAnimationFrame(tick); })(t0);
+}
+async function loadStats(){
+  try{ const s=await Backend.call('getStats');
+    const els=$$('#stats .n .tabular');
+    countUp(els[0], s.diproses); countUp(els[1], s.penerimaan); countUp(els[2], s.satker);
+  }catch(e){ /* diam: stats non-kritis */ }
+}
+
+/* ============================================================
+   FORM dinamis
+   ============================================================ */
+const Form={
+  kat:null, files:{}, /* {slotKey:[{file,name}]} */
+  buka(id){
+    const k=KATEGORI[id]; if(!k)return; this.kat=id; this.files={};
+    $('#fIco').innerHTML=ikon(k.ico); $('#fJudul').textContent=k.judul; $('#fDesk').textContent=k.desk;
+    $('#fSyarat').innerHTML=`
+      <details class="syarat" open>
+        <summary><span class="ci">${ikon('info')}</span> Ketentuan &amp; syarat bahan
+          <span class="chev">${ikon('arrow').replace('viewBox="0 0 24 24"','viewBox="0 0 24 24" style="transform:rotate(90deg)"')}</span></summary>
+        <div class="body"><ul>${k.syarat.map(s=>`<li>${ikon('check')}<span>${s}</span></li>`).join('')}</ul></div>
+      </details>`;
+    let html=k.fields.map(f=>this._field(f)).join('');
+    if(k.linkVideo) html+=this._raw('linkVideo','Tautan Google Drive Video','url','https://drive.google.com/...',true,true);
+    html+=k.upload.map(u=>this._upload(u)).join('');
+    $('#fFields').innerHTML=html;
+    this._wireWilayah(); this._wireUploads();
+    $('#fSisa').textContent='';
+    Nav.go('form');
+  },
+  _field(key){
+    const d=FIELD_DEF[key]; if(!d)return '';
+    const req=d.req?'<span class="req">*</span>':'';
+    const cls='field'+(d.full?' full':'');
+    if(d.type==='prov'){
+      const opts=Object.keys(WILAYAH).sort().map(p=>`<option>${p}</option>`).join('');
+      return `<div class="${cls}"><label>${d.label}${req}</label>
+        <select class="inp" name="provinsi" required><option value="">— pilih provinsi —</option>${opts}</select>
+        <span class="err-msg">Wajib dipilih.</span></div>`;
+    }
+    if(d.type==='kab'){
+      return `<div class="${cls}"><label>${d.label}${req}</label>
+        <select class="inp" name="kabupaten" required disabled><option value="">— pilih provinsi dulu —</option></select>
+        <span class="err-msg">Wajib dipilih.</span></div>`;
+    }
+    return this._raw(key,d.label,d.type==='tel'?'tel':'text',d.ph||'',d.req,d.full,d.hint);
+  },
+  _raw(name,label,type,ph,req,full,hint){
+    return `<div class="field${full?' full':''}"><label>${label}${req?'<span class="req">*</span>':''}</label>
+      <input class="inp" type="${type}" name="${name}" placeholder="${ph||''}" ${req?'required':''}>
+      ${hint?`<span class="hint">${hint}</span>`:''}<span class="err-msg">Wajib diisi.</span></div>`;
+  },
+  _upload(u){
+    return `<div class="field full" data-slot="${u.key}">
+      <label>${u.label}${u.max>1?` <span class="hint">(maks. ${u.max})</span>`:''}</label>
+      <div class="drop" tabindex="0">
+        ${ikon('upload')}<b>Seret berkas ke sini atau klik</b>
+        <small>${u.accept.includes('image')?'Gambar':'Dokumen'} · maks. ${u.max} berkas</small>
+        <input type="file" accept="${u.accept}" ${u.max>1?'multiple':''} hidden>
+      </div>
+      <div class="thumbs"></div></div>`;
+  },
+  _wireWilayah(){
+    const prov=$('#fFields select[name=provinsi]'), kab=$('#fFields select[name=kabupaten]');
+    if(!prov||!kab)return;
+    prov.addEventListener('change',()=>{
+      const list=WILAYAH[prov.value]||[];
+      kab.innerHTML='<option value="">— pilih kabupaten/kota —</option>'+list.sort().map(c=>`<option>${c}</option>`).join('');
+      kab.disabled=!list.length;
+    });
+  },
+  _wireUploads(){
+    $$('#fFields [data-slot]').forEach(wrap=>{
+      const slot=wrap.dataset.slot, u=KATEGORI[this.kat].upload.find(x=>x.key===slot);
+      const drop=$('.drop',wrap), input=$('input[type=file]',wrap), thumbs=$('.thumbs',wrap);
+      this.files[slot]=[];
+      const add=(fileList)=>{
+        for(const f of fileList){
+          if(this.files[slot].length>=u.max){ toast(`Maksimal ${u.max} berkas untuk ${u.label}.`,'err'); break; }
+          this.files[slot].push({file:f,name:f.name});
+        }
+        this._renderThumbs(slot,thumbs);
+      };
+      drop.addEventListener('click',()=>input.click());
+      drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click();}});
+      input.addEventListener('change',()=>{add(input.files); input.value='';});
+      ['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+      ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+      drop.addEventListener('drop',e=>add(e.dataTransfer.files));
+    });
+  },
+  _renderThumbs(slot,thumbs){
+    thumbs.innerHTML=this.files[slot].map((it,i)=>{
+      const img=it.file.type.startsWith('image/');
+      const src=img?URL.createObjectURL(it.file):'';
+      return `<div class="thumb">${img?`<img src="${src}">`:`<div class="doc">${it.name}</div>`}
+        <button class="x" onclick="Form.hapusFile('${slot}',${i})">${'×'}</button></div>`;
+    }).join('');
+  },
+  hapusFile(slot,i){ this.files[slot].splice(i,1); this._renderThumbs(slot,$(`[data-slot="${slot}"] .thumbs`)); },
+
+  validate(fd){
+    let ok=true;
+    $$('#fFields .field').forEach(f=>f.classList.remove('invalid'));
+    $$('#fFields [required]').forEach(inp=>{
+      if(!inp.value.trim()){ inp.closest('.field').classList.add('invalid'); inp.setAttribute('aria-invalid','true'); ok=false; }
+      else inp.removeAttribute('aria-invalid');
+    });
+    const wa=$('#fFields input[name=noWA]');
+    if(wa && wa.value.trim()){
+      const digits=wa.value.replace(/\D/g,'');
+      if(!/^(0|62)\d{8,13}$/.test(digits)){ wa.closest('.field').classList.add('invalid'); wa.closest('.field').querySelector('.err-msg').textContent='Format nomor WhatsApp tidak valid.'; ok=false; }
+    }
+    if(!ok) toast('Periksa kembali isian yang ditandai.','err');
+    return ok;
+  },
+
+  async submit(e){
+    e.preventDefault();
+    const form=$('#formEl'), fd={kategori:this.kat};
+    $$('#fFields input, #fFields select').forEach(inp=>{ if(inp.name) fd[inp.name]=inp.value.trim(); });
+    if(!this.validate(fd))return;
+    const btn=$('#fSubmit'); btn.disabled=true; const orig=btn.innerHTML;
+    btn.innerHTML='<span class="sk" style="width:80px;height:14px;display:inline-block"></span>';
+    try{
+      // siapkan berkas: GAS → base64; demo → hanya nama
+      const fileNames=[];
+      if(isGas){
+        fd._files=[];
+        for(const [slot,arr] of Object.entries(this.files)){
+          for(const it of arr){ const b64=await toBase64(it.file);
+            fd._files.push({slot,name:it.name,mime:it.file.type,data:b64}); fileNames.push(it.name); }
+        }
+      } else {
+        for(const arr of Object.values(this.files)) arr.forEach(it=>fileNames.push(it.name));
+        fd._fileNames=fileNames;
+      }
+      const r=await Backend.call('submitPermohonan',fd);
+      this._sukses(r.tiket);
+      form.reset();
+    }catch(err){ toast(err.message||'Gagal mengirim. Coba lagi.','err'); }
+    finally{ btn.disabled=false; btn.innerHTML=orig; }
+  },
+  _sukses(tiket){
+    const dlg=document.createElement('dialog');
+    dlg.innerHTML=`<div class="modal">
+      <div class="seal"><svg viewBox="0 0 24 24">${IK.check}</svg></div>
+      <h3>Bahan Terkirim</h3>
+      <p>Terima kasih. Tim Humas akan meninjau kiriman Anda. Simpan nomor tiket ini untuk melacak status.</p>
+      <div class="tiket"><div class="lb">Nomor Tiket</div><div class="no">${tiket}</div>
+        <div class="cp" onclick="navigator.clipboard&&navigator.clipboard.writeText('${tiket}');toast('Nomor tiket disalin.','ok')">${ikon('copy')} Salin</div></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="this.closest('dialog').close();Nav.go('beranda')">Selesai</button>
+        <button class="btn btn-primary" style="flex:1" onclick="this.closest('dialog').close();$('#qStatus').value='${tiket}';Nav.go('status');Status.cari()">Lacak Status</button>
+      </div></div>`;
+    document.body.appendChild(dlg); dlg.showModal();
+    dlg.addEventListener('close',()=>dlg.remove());
+  }
+};
+function toBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader();
+  r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); }
+
+/* ============================================================
+   STATUS publik + timeline
+   ============================================================ */
+const LANGKAH=['Terkirim','Direview','Selesai'];
+const Status={
+  async cari(){
+    const q=$('#qStatus').value.trim(); const box=$('#statusHasil');
+    if(!q){ toast('Masukkan nomor tiket atau WhatsApp.','err'); return; }
+    box.innerHTML=`<div class="timeline"><div class="tl-card"><div class="sk" style="height:80px"></div></div></div>`;
+    try{
+      const rows=await Backend.call('cekStatus',q);
+      if(!rows||!rows.length){ box.innerHTML=`<div class="empty">${ikon('inbox')}<div>Tidak ada kiriman untuk "<b>${q}</b>".<br>Periksa kembali nomor tiket/WhatsApp Anda.</div></div>`; return; }
+      box.innerHTML=`<div class="timeline">${rows.map(r=>this._card(r)).join('')}</div>`;
+    }catch(e){ box.innerHTML=`<div class="empty">${ikon('inbox')}<div>Gagal memuat. Coba lagi.</div></div>`; }
+  },
+  _card(r){
+    const st=r.status||'Terkirim';
+    const ditolak=/tolak|reject/i.test(st), selesai=/setuju|complete|selesai|terbit/i.test(st);
+    let idx = ditolak||selesai ? 2 : /review|proses|progress/i.test(st) ? 1 : 0;
+    const badge = ditolak?'bad':selesai?'ok':idx===1?'info':'warn';
+    const katJudul=(KATEGORI[r.kategori]&&KATEGORI[r.kategori].judul)||r.kategori||'—';
+    const steps=LANGKAH.map((lb,i)=>{
+      let s=''; if(i<idx)s='done'; else if(i===idx)s= (ditolak&&i===2)?'now':'now';
+      if(i===2 && ditolak) lb='Ditolak'; if(i===2 && selesai) lb='Disetujui';
+      return `<div class="step ${i<idx?'done':i===idx?'now':''}">
+        <div class="dot">${i<idx?`<svg viewBox="0 0 24 24">${IK.check}</svg>`:''}</div>
+        <div class="lb">${lb}</div></div>`;
+    }).join('');
+    const wilayah=[r.kabupaten,r.provinsi].filter(Boolean).join(', ');
+    return `<div class="tl-card">
+      <div class="tl-top"><span class="tid">${r.tiket||'—'}</span>
+        <span class="kat-tag">${katJudul}</span>
+        <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':idx===1?'Direview':'Terkirim'}</span></div>
+      <div class="tl-meta">${[r.instansi,wilayah].filter(Boolean).join(' · ')||'—'}</div>
+      <div class="steps">${steps}</div>
+      ${r.keterangan?`<div class="tl-note"><b>Catatan Tim Humas:</b> ${r.keterangan}</div>`:''}
+    </div>`;
+  }
+};
+
+/* ============================================================
+   Scroll reveal (IntersectionObserver)
+   ============================================================ */
+const Reveal={
+  io:null,
+  init(){ this.io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');this.io.unobserve(e.target);}}),{threshold:.12}); this.scan(); },
+  scan(){ $$('.reveal:not(.in)').forEach(el=>this.io.observe(el)); }
+};
+
+/* ============================================================
+   INIT
+   ============================================================ */
+Tema.init();
+renderKategori();
+Reveal.init();
+loadStats();
+$('#formEl').addEventListener('submit',e=>Form.submit(e));
+if(!isGas) console.info('[PKH] Mode preview lokal (demo). Di GAS akan pakai google.script.run.');
+</script>
+</body>
+</html>
