@@ -497,6 +497,147 @@ function toIso_(v) {
   return isNaN(d.getTime()) ? String(v || '') : d.toISOString();
 }
 
+/* ===================== MIGRASI DATA LAMA (jalankan SEKALI dari editor) ===================== */
+/**
+ * Impor data historis dari spreadsheet "Respon Portal Komunikasi Kehumasan" (9 tab
+ * respons Google Form lama) ke sheet Submissions database baru.
+ * - Baca-saja terhadap sumber; aman dijalankan pemilik akses view.
+ * - Idempotent: dijaga Script Property MIGRASI_DONE (hapus properti itu untuk mengulang).
+ * - Header tiap tab lama tidak seragam → dicocokkan per kata kunci.
+ * Jalankan `migrasiDariRespon` dari editor Apps Script, lihat Log hasilnya.
+ */
+function migrasiDariRespon() {
+  const SUMBER_ID = '1oguyXhVZdAZGXWop_wsXvshmpXUlUiig6NsRCW4tp94';
+  const MAP = {
+    'Publikasi Berita Daerah': 'berita-daerah',
+    'Berita PTKHN': 'berita-ptkh',
+    'Berita Widyalaya': 'berita-widyalaya',
+    'Berita Pasraman': 'berita-pasraman',
+    'Artikel kisah inspiratif': 'artikel-inspiratif',
+    'Wisata Religi': 'wisata-religi',
+    'Naskah Mimbar Hindu': 'naskah-mimbar',
+    'Video Mimbar Hindu': 'video-mimbar',
+    'Bahan Konten Medsos': 'konten-medsos'
+  };
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('MIGRASI_DONE'))
+    throw new Error('Migrasi sudah pernah dijalankan. Hapus Script Property MIGRASI_DONE untuk mengulang.');
+
+  const src = SpreadsheetApp.openById(SUMBER_ID);
+  const entri = [];
+  const perTab = {};
+
+  Object.keys(MAP).forEach(function (nama) {
+    const sh = src.getSheetByName(nama);
+    if (!sh) { perTab[nama] = 'tab tidak ditemukan'; return; }
+    const vals = sh.getDataRange().getValues();
+    if (vals.length < 2) { perTab[nama] = 0; return; }
+    const head = vals[0].map(function (h) { return String(h).toLowerCase(); });
+    const cari = function () { const keys = arguments;
+      for (var i = 0; i < head.length; i++)
+        for (var k = 0; k < keys.length; k++) if (head[i].indexOf(keys[k]) >= 0) return i;
+      return -1; };
+    const iT = cari('timestamp', 'waktu');
+    const iProv = cari('provinsi');
+    const iKab = cari('kabupaten', 'kota');
+    const iIns = cari('instansi', 'widyalaya', 'pasraman', 'satuan kerja', 'lembaga');
+    const iWA = cari('whatsapp', 'no wa', 'no. wa', 'hp', 'telepon');
+    const iStatus = cari('status');
+    const iEks = cari('eksekutor');
+    const iKet = cari('keterangan');
+    var iNama = -1;
+    for (var i = 0; i < head.length; i++) {
+      if ((head[i].indexOf('penulis') >= 0) ||
+          (head[i].indexOf('nama') >= 0 && head[i].indexOf('widyalaya') < 0 &&
+           head[i].indexOf('pasraman') < 0 && head[i].indexOf('instansi') < 0)) { iNama = i; break; }
+    }
+    // kolom berkas: header berbau bahan/naskah/foto/video/link/dokumentasi/notulen
+    const kolFile = [];
+    head.forEach(function (h, ix) {
+      if (/notulen|naskah|foto|bahan|video|link|dokumentasi/.test(h)) kolFile.push(ix);
+    });
+
+    var n = 0;
+    for (var r = 1; r < vals.length; r++) {
+      const row = vals[r];
+      const ins = iIns >= 0 ? String(row[iIns] || '').trim() : '';
+      const prov = iProv >= 0 ? String(row[iProv] || '').trim() : '';
+      if (!ins && !prov) continue; // baris kosong
+      const ts = (iT >= 0 && row[iT] instanceof Date) ? row[iT] : new Date(row[iT] || Date.now());
+      const files = [];
+      kolFile.forEach(function (ix) {
+        const m = String(row[ix] || '').match(/https?:\/\/\S+/g);
+        if (m) m.forEach(function (u) { files.push({ slot: String(head[ix]).slice(0, 24), name: '', url: u }); });
+      });
+      const stRaw = iStatus >= 0 ? String(row[iStatus] || '').toUpperCase() : '';
+      const status = /COMPLET|SETUJU|SELESAI/.test(stRaw) ? 'Disetujui'
+        : /REJECT|TOLAK/.test(stRaw) ? 'Ditolak'
+        : /PROGRESS|REVIEW|PROSES/.test(stRaw) ? 'Direview' : 'Terkirim';
+      entri.push({
+        ts: ts, kategori: MAP[nama],
+        provinsi: rapikanProv_(prov), kabupaten: iKab >= 0 ? rapikanKata_(String(row[iKab] || '')) : '',
+        instansi: ins, namaPenulis: iNama >= 0 ? String(row[iNama] || '').trim() : '',
+        noWA: iWA >= 0 ? normalizeWA_(row[iWA]) || String(row[iWA] || '').trim() : '',
+        files: files, status: status,
+        eksekutor: iEks >= 0 ? String(row[iEks] || '').trim() : '',
+        keterangan: iKet >= 0 ? String(row[iKet] || '').trim() : ''
+      });
+      n++;
+    }
+    perTab[nama] = n;
+  });
+
+  // urutkan kronologis, beri tiket per bulan, tulis sekaligus
+  entri.sort(function (a, b) { return a.ts - b.ts; });
+  const idx = colIndex_();
+  const seq = {};
+  const rows = entri.map(function (e) {
+    const ym = e.ts.getFullYear() + pad2_(e.ts.getMonth() + 1);
+    seq[ym] = (seq[ym] || 0) + 1;
+    const row = new Array(HEADERS.length).fill('');
+    row[idx.Timestamp] = e.ts;
+    row[idx.TicketID] = 'PKH-' + ym + '-' + pad4_(seq[ym]);
+    row[idx.Kategori] = e.kategori;
+    row[idx.Provinsi] = e.provinsi;
+    row[idx.Kabupaten] = e.kabupaten;
+    row[idx.Instansi] = e.instansi;
+    row[idx.NamaPenulis] = e.namaPenulis;
+    row[idx.NoWA] = e.noWA;
+    row[idx.FileLinks] = JSON.stringify(e.files);
+    row[idx.Status] = e.status;
+    row[idx.Eksekutor] = e.eksekutor;
+    row[idx.Keterangan] = e.keterangan;
+    row[idx.LastUpdated] = e.ts;
+    return row;
+  });
+  if (rows.length) {
+    const dst = getSheet_(SHEET_SUBMISSIONS);
+    dst.getRange(dst.getLastRow() + 1, 1, rows.length, HEADERS.length).setValues(rows);
+  }
+  props.setProperty('MIGRASI_DONE', '1');
+  Logger.log('Migrasi selesai: ' + rows.length + ' baris. Rincian: ' + JSON.stringify(perTab));
+  return { total: rows.length, perTab: perTab };
+}
+
+/** Normalisasi teks wilayah data lama ("bali"/"BALI"/"Kalteng" dsb.). */
+function rapikanKata_(s) {
+  s = String(s || '').trim();
+  return s.replace(/\S+/g, function (w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); });
+}
+function rapikanProv_(s) {
+  const t = rapikanKata_(s);
+  const alias = {
+    'Kalteng': 'Kalimantan Tengah', 'Kaltim': 'Kalimantan Timur', 'Kalsel': 'Kalimantan Selatan',
+    'Kalbar': 'Kalimantan Barat', 'Sulteng': 'Sulawesi Tengah', 'Sulsel': 'Sulawesi Selatan',
+    'Sulut': 'Sulawesi Utara', 'Sultra': 'Sulawesi Tenggara', 'Ntb': 'Nusa Tenggara Barat',
+    'Ntt': 'Nusa Tenggara Timur', 'Diy': 'DI Yogyakarta', 'Daerah Istimewa Yogyakarta': 'DI Yogyakarta',
+    'Daerah Istimewa Yogyak': 'DI Yogyakarta', 'Dki': 'DKI Jakarta', 'Jateng': 'Jawa Tengah',
+    'Jatim': 'Jawa Timur', 'Jabar': 'Jawa Barat', 'Sumut': 'Sumatera Utara', 'Sumsel': 'Sumatera Selatan',
+    'Sumbar': 'Sumatera Barat', 'Nusa Tenggara Tim': 'Nusa Tenggara Timur', 'Nusa Tenggara Timu': 'Nusa Tenggara Timur'
+  };
+  return alias[t] || t;
+}
+
 /* ===================== UJI MANUAL (jalankan dari editor) ===================== */
 // Ganti CONFIG dulu, lalu jalankan uji_() dari editor Apps Script untuk memastikan
 // submit + cek status bekerja tanpa lewat UI.
