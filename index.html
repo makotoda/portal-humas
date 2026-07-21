@@ -313,6 +313,10 @@ footer{margin-top:40px; padding:30px 0; border-top:1px solid var(--glass-brd); c
   *{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important}
   .bg::before,.bg::after{animation:none}
 }
+/* Di iframe GAS/Sites, compositing sering software-only — blur besar beranimasi
+   membekukan renderer. Mesh dibuat statis di sana (class di-set dari JS). */
+html.di-gas .bg::before, html.di-gas .bg::after{animation:none}
+html.di-gas .grain{display:none}
 </style>
 </head>
 <body>
@@ -409,14 +413,19 @@ footer{margin-top:40px; padding:30px 0; border-top:1px solid var(--glass-brd); c
 <div class="toasts" id="toasts"></div>
 
 <script>
-/* ============================================================
-   PORTAL KOMUNIKASI KEHUMASAN — client app (vanilla)
-   Satu file: jalan di GAS (google.script.run) & preview lokal (mode demo).
-   ============================================================ */
+// ============================================================
+// PORTAL KOMUNIKASI KEHUMASAN — client app (vanilla)
+// Satu file: jalan di GAS (google.script.run) & preview lokal (mode demo).
+// ============================================================
+
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+// localStorage bisa melempar SecurityError di iframe sandbox GAS
+// (cookie pihak ketiga diblokir) — selalu lewat wrapper ini.
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+          set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 
-/* ---------- ikon SVG (line-art, stroke konsisten) ---------- */
+
 const IK={
   berita:'<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
   widyalaya:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
@@ -435,41 +444,47 @@ const IK={
 };
 const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
 
-/* ---------- konfigurasi 9 kategori (SATU sumber) ----------
-   fields: daftar key field; upload: slot berkas; syarat: ketentuan.
-   Field def diambil dari FIELD_DEF di bawah. */
+// GOTCHA GAS: HtmlService menstrip komentar blok (slash-asterisk) per baris, naif,
+// TANPA sadar string. Akibatnya: (1) JS inline di file ini HANYA boleh pakai komentar
+// gaya ini; (2) string/template literal tak boleh mengandung sekuens slash-asterisk
+// atau asterisk-slash — 'image(slash)(asterisk)' dirakit runtime lewat konstanta ini.
+const IMG='image/'+'*';
+
+// ---------- konfigurasi 9 kategori (SATU sumber) ----------
+// fields: daftar key field; upload: slot berkas; syarat: ketentuan.
+// Field def diambil dari FIELD_DEF di bawah.
 const KATEGORI={
   'berita-daerah':{judul:'Berita Daerah',ico:'berita',desk:'Liputan kegiatan Bimas Hindu di kanwil & kabupaten/kota.',
     fields:['provinsi','kabupaten','instansi','noWA'],
-    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}],
     syarat:['Memenuhi unsur 5W1H dan ditulis lugas.','Menyertakan kutipan langsung narasumber.','Peristiwa terkini (maks. 7 hari terakhir).','Foto landscape 16:9, tajam, tidak buram.']},
   'berita-widyalaya':{judul:'Berita Widyalaya',ico:'widyalaya',desk:'Kegiatan pendidikan keagamaan Hindu formal (Widyalaya).',
     fields:['provinsi','kabupaten','namaWidyalaya','noWA'],
-    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}],
     syarat:['Menyebut nama Widyalaya dengan lengkap.','Memenuhi 5W1H dan ada kutipan narasumber.','Peristiwa terkini.','Foto landscape 16:9.']},
   'berita-ptkh':{judul:'Berita PTKH',ico:'kampus',desk:'Kegiatan Perguruan Tinggi Keagamaan Hindu.',
     fields:['provinsi','kabupaten','instansi','noWA'],
-    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}],
     syarat:['Bahan benar-benar berkaitan dengan PTKH.','Memenuhi 5W1H dan ada kutipan.','Peristiwa terkini.','Foto landscape 16:9.']},
   'naskah-mimbar':{judul:'Naskah Mimbar Hindu',ico:'mimbar',desk:'Naskah renungan/uraian keagamaan untuk rubrik Mimbar Hindu.',
     fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
-    upload:[{key:'naskah',label:'Naskah Mimbar',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto Penulis (pose tangan di dada)',accept:'image/*',max:1}],
+    upload:[{key:'naskah',label:'Naskah Mimbar',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto Penulis (pose tangan di dada)',accept:IMG,max:1}],
     syarat:['Naskah orisinal, bukan salinan.','Panjang & gaya sesuai pedoman Mimbar Hindu.','Sertakan sumber sloka/kutipan bila ada.','Foto penulis rapi, pose tangan di dada.']},
   'wisata-religi':{judul:'Wisata Religi',ico:'wisata',desk:'Artikel destinasi & situs spiritual Hindu.',
     fields:['provinsi','kabupaten','instansi','noWA'],
-    upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:'image/*',max:3}],
+    upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,max:3}],
     syarat:['Benar-benar bertema wisata religi Hindu.','Memuat nilai sejarah/spiritual lokasi.','Orisinal & informatif.','Foto landscape 16:9 berkualitas.']},
   'berita-pasraman':{judul:'Berita Pasraman',ico:'pasraman',desk:'Kegiatan pendidikan keagamaan Hindu nonformal (Pasraman).',
     fields:['provinsi','kabupaten','namaPasraman','noWA'],
-    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:3}],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}],
     syarat:['Menyebut nama Pasraman dengan lengkap.','Memenuhi 5W1H dan ada kutipan.','Peristiwa terkini.','Foto landscape 16:9.']},
   'konten-medsos':{judul:'Bahan Konten Medsos',ico:'medsos',desk:'Materi untuk kanal media sosial resmi Ditjen Bimas Hindu.',
     fields:['provinsi','kabupaten','instansi','noWA'],
-    upload:[{key:'naskah',label:'Naskah / Caption',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:'image/*',max:10}],
+    upload:[{key:'naskah',label:'Naskah / Caption',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:10}],
     syarat:['Materi sesuai standar konten medsos.','Foto/gambar resolusi tinggi.','Caption ringkas & sesuai kaidah.','Hindari materi ber-hak-cipta pihak lain.']},
   'artikel-inspiratif':{judul:'Artikel Kisah Inspiratif',ico:'artikel',desk:'Kisah tokoh/umat yang menginspirasi.',
     fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
-    upload:[{key:'naskah',label:'Naskah Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:'image/*',max:3}],
+    upload:[{key:'naskah',label:'Naskah Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,max:3}],
     syarat:['Kisah nyata & orisinal.','Ada narasi yang menginspirasi.','Sertakan izin/keterangan tokoh.','Foto pendukung yang relevan.']},
   'video-mimbar':{judul:'Video Mimbar Hindu',ico:'video',desk:'Rekaman video ceramah/renungan untuk Mimbar Hindu.',
     fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
@@ -478,7 +493,7 @@ const KATEGORI={
     syarat:['Video sesuai standar publikasi (durasi, kualitas).','Orientasi landscape 16:9, audio jernih.','Unggah ke Google Drive, akses "siapa saja dgn link".','Tempel tautan Drive video pada isian di bawah.']}
 };
 
-/* ---------- definisi field ---------- */
+
 const FIELD_DEF={
   provinsi:{label:'Provinsi',type:'prov',req:true},
   kabupaten:{label:'Kabupaten / Kota',type:'kab',req:true},
@@ -489,9 +504,9 @@ const FIELD_DEF={
   noWA:{label:'Nomor WhatsApp',type:'tel',req:true,ph:'08xxxxxxxxxx',full:true,hint:'Untuk pemberitahuan status. Format 08.. / +62..'}
 };
 
-/* ---------- master wilayah (dropdown, cegah data kotor) ----------
-   38 provinsi; kabupaten lengkap utk wilayah yg aktif mengirim + kota besar.
-   ponytail: subset kabupaten — sisanya nanti dari sheet MasterWilayah. */
+// ---------- master wilayah (dropdown, cegah data kotor) ----------
+// 38 provinsi; kabupaten lengkap utk wilayah yg aktif mengirim + kota besar.
+// ponytail: subset kabupaten — sisanya nanti dari sheet MasterWilayah.
 const WILAYAH={
   "Bali":["Denpasar","Badung","Gianyar","Klungkung","Bangli","Karangasem","Buleleng","Jembrana","Tabanan"],
   "DI Yogyakarta":["Kota Yogyakarta","Sleman","Bantul","Kulon Progo","Gunungkidul"],
@@ -533,10 +548,11 @@ const WILAYAH={
   "Bangka Belitung":["Pangkal Pinang","Belitung","Bangka"]
 };
 
-/* ============================================================
-   BACKEND: satu antarmuka. GAS → google.script.run; lokal → demo.
-   ============================================================ */
+// ============================================================
+// BACKEND: satu antarmuka. GAS → google.script.run; lokal → demo.
+// ============================================================
 const isGas = typeof google!=='undefined' && google.script && google.script.run;
+if(isGas) document.documentElement.classList.add('di-gas'); // ringankan render di iframe GAS
 const Backend={
   call(fn,payload){
     return new Promise((res,rej)=>{
@@ -545,11 +561,11 @@ const Backend={
     });
   }
 };
-/* mode demo (preview lokal) — data di localStorage */
+
 const Demo={
   _key:'pkh_demo_sub',
-  _all(){ try{return JSON.parse(localStorage.getItem(this._key)||'[]')}catch(e){return []} },
-  _save(a){ localStorage.setItem(this._key, JSON.stringify(a)); },
+  _all(){ try{return JSON.parse(LS.get(this._key)||'[]')}catch(e){return []} },
+  _save(a){ LS.set(this._key, JSON.stringify(a)); },
   getStats(){ const a=this._all();
     const bulan=a.length+42, done=a.filter(x=>x.status==='Disetujui').length;
     return {diproses:bulan, penerimaan:59, satker:a.length?new Set(a.map(x=>x.instansi)).size+18:18}; },
@@ -570,9 +586,9 @@ const Demo={
   }
 };
 
-/* ============================================================
-   NAVIGASI antar view
-   ============================================================ */
+// ============================================================
+// NAVIGASI antar view
+// ============================================================
 const Nav={
   go(v){
     $$('.view').forEach(el=>el.classList.remove('aktif'));
@@ -583,22 +599,22 @@ const Nav={
   }
 };
 
-/* ============================================================
-   TEMA (gelap default / terang)
-   ============================================================ */
+// ============================================================
+// TEMA (gelap default / terang)
+// ============================================================
 const Tema={
-  init(){ const s=localStorage.getItem('pkh_tema'); if(s==='terang')document.documentElement.className='tema-terang'; this._btn(); },
+  init(){ const s=LS.get('pkh_tema'); if(s==='terang')document.documentElement.className='tema-terang'; this._btn(); },
   toggle(){ const t=document.documentElement.classList.toggle('tema-terang'); document.documentElement.classList.toggle('tema-gelap',!t);
-    localStorage.setItem('pkh_tema',t?'terang':'gelap'); this._btn(); },
+    LS.set('pkh_tema',t?'terang':'gelap'); this._btn(); },
   _btn(){ const t=document.documentElement.classList.contains('tema-terang');
     $('#btnTema').innerHTML = t
       ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>'
       : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3a6.5 6.5 0 009.5 9.5z"/></svg>'; }
 };
 
-/* ============================================================
-   TOAST
-   ============================================================ */
+// ============================================================
+// TOAST
+// ============================================================
 function toast(msg,tipe='info'){
   const ic={ok:IK.check,err:IK.x,info:IK.info};
   const el=document.createElement('div'); el.className='toast '+tipe;
@@ -607,9 +623,9 @@ function toast(msg,tipe='info'){
   setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(30px)';el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4200);
 }
 
-/* ============================================================
-   BERANDA: kartu kategori + tilt + stats count-up
-   ============================================================ */
+// ============================================================
+// BERANDA: kartu kategori + tilt + stats count-up
+// ============================================================
 function renderKategori(){
   $('#gridKat').innerHTML=Object.entries(KATEGORI).map(([id,k])=>`
     <article class="kat reveal" data-tilt onclick="Form.buka('${id}')">
@@ -620,7 +636,7 @@ function renderKategori(){
     </article>`).join('');
   Tilt.bind();
 }
-/* 3D tilt mengikuti mouse (nol dependensi) */
+
 const Tilt={
   bind(){ if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
     $$('[data-tilt]').forEach(el=>{
@@ -633,7 +649,7 @@ const Tilt={
     });
   }
 };
-/* count-up angka statistik */
+
 function countUp(el,to){
   const dur=1100, t0=performance.now();
   (function tick(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
@@ -643,14 +659,14 @@ async function loadStats(){
   try{ const s=await Backend.call('getStats');
     const els=$$('#stats .n .tabular');
     countUp(els[0], s.diproses); countUp(els[1], s.penerimaan); countUp(els[2], s.satker);
-  }catch(e){ /* diam: stats non-kritis */ }
+  }catch(e){  }
 }
 
-/* ============================================================
-   FORM dinamis
-   ============================================================ */
+// ============================================================
+// FORM dinamis
+// ============================================================
 const Form={
-  kat:null, files:{}, /* {slotKey:[{file,name}]} */
+  kat:null, files:{}, 
   buka(id){
     const k=KATEGORI[id]; if(!k)return; this.kat=id; this.files={};
     $('#fIco').innerHTML=ikon(k.ico); $('#fJudul').textContent=k.judul; $('#fDesk').textContent=k.desk;
@@ -800,9 +816,9 @@ const Form={
 function toBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader();
   r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); }
 
-/* ============================================================
-   STATUS publik + timeline
-   ============================================================ */
+// ============================================================
+// STATUS publik + timeline
+// ============================================================
 const LANGKAH=['Terkirim','Direview','Selesai'];
 const Status={
   async cari(){
@@ -840,18 +856,18 @@ const Status={
   }
 };
 
-/* ============================================================
-   Scroll reveal (IntersectionObserver)
-   ============================================================ */
+// ============================================================
+// Scroll reveal (IntersectionObserver)
+// ============================================================
 const Reveal={
   io:null,
   init(){ this.io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');this.io.unobserve(e.target);}}),{threshold:.12}); this.scan(); },
   scan(){ $$('.reveal:not(.in)').forEach(el=>this.io.observe(el)); }
 };
 
-/* ============================================================
-   INIT
-   ============================================================ */
+// ============================================================
+// INIT
+// ============================================================
 Tema.init();
 renderKategori();
 Reveal.init();

@@ -270,6 +270,12 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
 <script>
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+          set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const SS={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},
+          set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},
+          del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
 const IK={check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
@@ -277,24 +283,24 @@ const IK={check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/
   doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'};
 const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
 
-/* peta kategori→judul (tampilan) */
+
 const KATJUDUL={'berita-daerah':'Berita Daerah','berita-widyalaya':'Berita Widyalaya','berita-ptkh':'Berita PTKH',
   'naskah-mimbar':'Naskah Mimbar Hindu','wisata-religi':'Wisata Religi','berita-pasraman':'Berita Pasraman',
   'konten-medsos':'Bahan Konten Medsos','artikel-inspiratif':'Artikel Kisah Inspiratif','video-mimbar':'Video Mimbar Hindu'};
 const katJudul=(k)=>KATJUDUL[k]||k||'—';
 
-/* ---- state ---- */
+
 let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel';
 const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:'',dari:'',sampai:''};
 
-/* ============ BACKEND (GAS / demo) ============ */
+
 const isGas=typeof google!=='undefined'&&google.script&&google.script.run;
 const Backend={ call(fn,...args){ return new Promise((res,rej)=>{
   if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](...args); }
   else { setTimeout(()=>{ try{res(Demo[fn](...args))}catch(e){rej(e)} },320); }
 }); } };
 
-/* ---- statistik (dipakai mode demo & sebagai fallback) ---- */
+
 function statsOf(list){
   const s={total:list.length,terkirim:0,direview:0,disetujui:0,ditolak:0,penerimaan:0,avgProsesJam:0,perProvinsi:[],alasanTolak:[]};
   const prov={},alasan={}; let diputus=0,totJam=0,nP=0;
@@ -313,14 +319,14 @@ function statsOf(list){
   return s;
 }
 
-/* ---- mode demo: berbagi store 'pkh_demo_sub' dgn index.html ---- */
+
 const Demo={
   codes:{'super':{nama:'Super Admin',role:'super'},'admin':{nama:'Admin Humas',role:'admin'}},
   eks:['Admin Humas','I Made Editor','Ni Kadek Redaksi'],
   _key:'pkh_demo_sub',
-  _all(){ let a=[]; try{a=JSON.parse(localStorage.getItem(this._key)||'[]')}catch(e){}
-    if(a.length<6){ a=this._seed().concat(a); localStorage.setItem(this._key,JSON.stringify(a)); } return a; },
-  _save(a){ localStorage.setItem(this._key,JSON.stringify(a)); },
+  _all(){ let a=[]; try{a=JSON.parse(LS.get(this._key)||'[]')}catch(e){}
+    if(a.length<6){ a=this._seed().concat(a); LS.set(this._key,JSON.stringify(a)); } return a; },
+  _save(a){ LS.set(this._key,JSON.stringify(a)); },
   _seed(){ const H=36e5*24, now=Date.now(); const mk=(d,upd,o)=>Object.assign({dibuat:new Date(now-d*H).toISOString(),diperbarui:new Date(now-upd*H).toISOString(),files:[],riwayat:[]},o);
     return [
       mk(20,2,{tiket:'PKH-202607-0001',kategori:'berita-daerah',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',noWA:'081337214493',status:'Disetujui',eksekutor:'I Made Editor',riwayat:[{waktu:new Date(now-3*H).toISOString(),aksi:'Disetujui',oleh:'I Made Editor',catatan:''}]}),
@@ -339,10 +345,10 @@ const Demo={
   },
   adminLogin(k){ const m=this.codes[k]; if(!m) throw new Error('Kode akses salah.'); return m; },
   _admKey:'pkh_demo_admins',
-  _admins(){ try{ const a=JSON.parse(localStorage.getItem(this._admKey)||'null'); if(a)return a; }catch(e){}
+  _admins(){ try{ const a=JSON.parse(LS.get(this._admKey)||'null'); if(a)return a; }catch(e){}
     return [{nama:'Super Admin',kode:'super',role:'super'},{nama:'Admin Humas',kode:'admin',role:'admin'},
             {nama:'I Made Editor',kode:'made1',role:'admin'},{nama:'Ni Kadek Redaksi',kode:'kadek',role:'admin'}]; },
-  _saveAdm(a){ localStorage.setItem(this._admKey,JSON.stringify(a)); this.eks=a.map(x=>x.nama); },
+  _saveAdm(a){ LS.set(this._admKey,JSON.stringify(a)); this.eks=a.map(x=>x.nama); },
   adminKelola(k,p){ const me=this.adminLogin(k); if(me.role!=='super')throw new Error('Hanya super admin yang boleh mengelola admin.');
     let a=this._admins(); const sub=(p||{}).sub||'list';
     if(sub==='tambah'){ if(!p.nama||!p.kode)throw new Error('Nama dan kode wajib diisi.');
@@ -379,31 +385,31 @@ const Demo={
   }
 };
 
-/* ============ TEMA ============ */
+
 const Tema={
-  init(){ if(sessionStorage.getItem('pkh_tema')==='terang')document.documentElement.className='tema-terang'; this._btn(); },
+  init(){ if(SS.get('pkh_tema')==='terang')document.documentElement.className='tema-terang'; this._btn(); },
   toggle(){ const t=document.documentElement.classList.toggle('tema-terang'); document.documentElement.classList.toggle('tema-gelap',!t);
-    sessionStorage.setItem('pkh_tema',t?'terang':'gelap'); this._btn(); },
+    SS.set('pkh_tema',t?'terang':'gelap'); this._btn(); },
   _btn(){ const t=document.documentElement.classList.contains('tema-terang');
     $('#btnTema').innerHTML=t?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>'
       :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3a6.5 6.5 0 009.5 9.5z"/></svg>';
     $('#btnExport').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12M8 11l4 4 4-4M4 19h16"/></svg>'; }
 };
 
-/* ============ TOAST ============ */
+
 function toast(msg,tipe='info'){ const ic={ok:IK.check,err:IK.x,info:IK.info};
   const el=document.createElement('div'); el.className='toast '+tipe;
   el.innerHTML=`<span class="i"><svg viewBox="0 0 24 24">${ic[tipe]||IK.info}</svg></span><span>${msg}</span>`;
   $('#toasts').appendChild(el); setTimeout(()=>{el.style.opacity=0;el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4000); }
 
-/* ============ LOGIN ============ */
+
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault(); const kode=$('#kodeInp').value.trim(); if(!kode)return;
   const btn=$('#loginBtn'); btn.disabled=true; const o=btn.textContent; btn.textContent='Memeriksa…';
-  try{ const me=await Backend.call('adminLogin',kode); KODE=kode; sessionStorage.setItem('pkh_kode',kode); boot(me); }
+  try{ const me=await Backend.call('adminLogin',kode); KODE=kode; SS.set('pkh_kode',kode); boot(me); }
   catch(err){ toast(err.message||'Kode salah.','err'); btn.disabled=false; btn.textContent=o; $('#kodeInp').select(); }
 });
-function logout(){ KODE=null; sessionStorage.removeItem('pkh_kode'); location.reload(); }
+function logout(){ KODE=null; SS.del('pkh_kode'); location.reload(); }
 
 async function boot(me){
   $('#loginWrap').style.display='none'; $('#app').style.display='block';
@@ -417,7 +423,7 @@ async function muat(){
   catch(err){ toast(err.message||'Gagal memuat data.','err'); if(/akses|kode/i.test(err.message||''))logout(); }
 }
 
-/* ============ FILTER ============ */
+
 function populasiFilter(){
   const opt=(arr,label)=>`<option value="">${label}</option>`+arr.map(v=>`<option>${v}</option>`).join('');
   const kats=[...new Set(DATA.rows.map(r=>r.kategori))].map(katJudul);
@@ -443,7 +449,7 @@ function terfilter(){ return DATA.rows.filter(r=>{
 }); }
 function setView(v){ view=v; $('#vTabel').classList.toggle('aktif',v==='tabel'); $('#vKanban').classList.toggle('aktif',v==='kanban'); render(); }
 
-/* ============ RENDER ============ */
+
 const badgeOf=(st)=>{ st=(st||'Terkirim'); const l=st.toLowerCase();
   const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/review/.test(l)?'info':'warn';
   return `<span class="badge ${c}">${st}</span>`; };
@@ -503,7 +509,7 @@ function renderAnalitik(){ const s=DATA.stats||statsOf(DATA.rows);
 
 function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada bahan yang cocok dengan filter.</div></div>`; }
 
-/* ============ AKSI ============ */
+
 async function doAksi(tiket,aksi,extra){ try{
     const payload=Object.assign({tiket,aksi},extra||{});
     DATA=await Backend.call('adminAksi',KODE,payload);
@@ -566,7 +572,7 @@ function previewFile(tiket,i){ const r=DATA.rows.find(x=>x.tiket===tiket); const
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-/* ============ KELOLA ADMIN (super) ============ */
+
 async function openKelola(){
   try{ const daftar=await Backend.call('adminKelola',KODE,{sub:'list'}); renderKelola(daftar); }
   catch(err){ toast(err.message||'Gagal memuat admin.','err'); }
@@ -604,7 +610,7 @@ async function aksiKelola(sub,extra){
   }catch(err){ toast(err.message||'Gagal.','err'); }
 }
 
-/* ============ EXPORT CSV ============ */
+
 function exportCSV(){ const rows=terfilter(); if(!rows.length){toast('Tidak ada data untuk diekspor.','info');return;}
   const head=['Tiket','Kategori','Provinsi','Kabupaten','Instansi','Penulis','NoWA','Status','Eksekutor','Keterangan','Dikirim'];
   const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
@@ -614,11 +620,11 @@ function exportCSV(){ const rows=terfilter(); if(!rows.length){toast('Tidak ada 
   toast('CSV diunduh.','ok');
 }
 
-/* ============ INIT ============ */
+
 Tema.init();
 if(!isGas) console.info('[PKH-admin] Mode demo. Kode: "super" atau "admin".');
-(function autologin(){ const k=sessionStorage.getItem('pkh_kode'); if(!k)return;
-  Backend.call('adminLogin',k).then(me=>{ KODE=k; boot(me); }).catch(()=>sessionStorage.removeItem('pkh_kode')); })();
+(function autologin(){ const k=SS.get('pkh_kode'); if(!k)return;
+  Backend.call('adminLogin',k).then(me=>{ KODE=k; boot(me); }).catch(()=>SS.del('pkh_kode')); })();
 </script>
 </body>
 </html>

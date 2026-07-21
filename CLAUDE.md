@@ -51,6 +51,18 @@ Preview lokal: buka `index.html` di browser (mode demo jalan tanpa server).
 Di GAS: jalankan `uji_()` dari editor untuk memverifikasi submit+status server tanpa UI.
 
 ## Catatan penting
+- **GOTCHA FATAL — stripper komentar GAS:** HtmlService menstrip komentar dari JS inline
+  secara **per-baris dan naif (tanpa sadar string)**. Akibat wajib ditaati di `index.html`
+  dan `admin.html`: (1) di dalam `<script>` HANYA boleh komentar `//`, JANGAN PERNAH
+  komentar blok — banner multiline meninggalkan `*/` yatim / pembuka menggantung yang
+  memutilasi kode tersaji (sudah terjadi: `Tema is not defined` di produksi); (2) string
+  tak boleh mengandung sekuens slash-asterisk — `'image/(asterisk)'` dirakit runtime lewat
+  `const IMG`. Preview `file://` TIDAK memunculkan bug ini; hanya muncul saat disajikan GAS.
+- **Storage di iframe GAS bisa melempar SecurityError** (cookie pihak ketiga diblokir) —
+  semua akses localStorage/sessionStorage lewat wrapper `LS`/`SS` (try-catch), jangan akses
+  langsung.
+- **Animasi mesh dimatikan saat `isGas`** (class `di-gas`) — blur besar beranimasi bisa
+  membekukan renderer di iframe sandbox/software compositing.
 - `KATEGORI` (index.html) & `KATEGORI_VALID` (Code.js) adalah kontrak — kalau tambah/ubah
   kategori, samakan keduanya.
 - Skema kolom `Submissions` (`HEADERS` di Code.js) dipakai lintas fungsi — ubah serempak.
