@@ -194,10 +194,14 @@ function cekStatus(query) {
 }
 
 /** Mengambil detail asli untuk pre-fill form revisi. */
-function getDetailRevisi(tiket, queryWa) {
+function getDetailRevisi(payload) {
+  const tiket = payload.tiket;
+  const queryWa = payload.wa;
   const t = String(tiket || '').trim().toLowerCase();
   const waQ = String(queryWa || '').replace(/\D/g, '').replace(/^0+/, '');
-  if (!t || !waQ || waQ.length < 6) throw new Error('Tiket atau WA tidak valid.');
+  if (!t) throw new Error('Debug: Tiket kosong. payload=' + JSON.stringify(payload));
+  if (!queryWa) throw new Error('Debug: queryWa kosong atau undefined. payload=' + JSON.stringify(payload));
+  if (!waQ) throw new Error('Debug: waQ kosong (tidak ada angka). payload=' + JSON.stringify(payload));
   
   const idx = colIndex_();
   const row = dataRows_().find(r => {
@@ -205,8 +209,8 @@ function getDetailRevisi(tiket, queryWa) {
     const wa = String(r[idx.NoWA] || '').replace(/\D/g, '');
     return tid === t && (wa.endsWith(waQ) || wa.endsWith(waQ.replace(/^0+/, '')));
   });
-  if (!row) throw new Error('Tiket tidak ditemukan atau WA salah.');
-  if (row[idx.Status] !== 'Revisi') throw new Error('Tiket ini tidak sedang dalam status Revisi.');
+  if (!row) throw new Error('Debug: Tiket tidak ditemukan atau WA salah (t=' + t + ', waQ=' + waQ + ')');
+  if (row[idx.Status] !== 'Revisi') throw new Error('Debug: Tiket ini tidak sedang dalam status Revisi (status=' + row[idx.Status] + ')');
   
   let linkVideo = '';
   try {

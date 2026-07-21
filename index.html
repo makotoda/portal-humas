@@ -866,7 +866,7 @@ async function BukaRevisi(tiket, q, btn){
       if(!wa) return;
     }
     const orig=btn.innerHTML; btn.innerHTML='Memuat...'; btn.disabled=true;
-    const d=await Backend.call('getDetailRevisi',tiket,wa);
+    const d=await Backend.call('getDetailRevisi', {tiket: tiket, wa: wa});
     Nav.go('form'); Form.buka(d.kategori);
     Form.tiket_revisi=tiket;
     setTimeout(()=>{
