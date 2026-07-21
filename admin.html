@@ -290,6 +290,49 @@ const KATJUDUL={'berita-daerah':'Berita Daerah','berita-widyalaya':'Berita Widya
   'konten-medsos':'Bahan Konten Medsos','artikel-inspiratif':'Artikel Kisah Inspiratif','video-mimbar':'Video Mimbar Hindu'};
 const katJudul=(k)=>KATJUDUL[k]||k||'—';
 
+// GOTCHA GAS: literal image + slash + asterisk dalam string diperlakukan sebagai
+// komentar blok oleh stripper GAS dan memutilasi script tersaji — selalu pakai IMG.
+const IMG='image/'+'*';
+const FIELD_DEF={
+  provinsi:{label:'Provinsi',type:'prov',req:true},
+  kabupaten:{label:'Kabupaten / Kota',type:'kab',req:true},
+  instansi:{label:'Instansi / Satuan Kerja',type:'text',req:true,ph:'mis. Kanwil Kemenag / Kemenag Kab. ...'},
+  namaWidyalaya:{label:'Nama Widyalaya',type:'text',req:true,ph:'mis. Widyalaya ...'},
+  namaPasraman:{label:'Nama Pasraman',type:'text',req:true,ph:'mis. Pasraman ...'},
+  namaPenulis:{label:'Nama Penulis',type:'text',req:true,ph:'Nama lengkap penulis'},
+  noWA:{label:'Nomor WhatsApp',type:'tel',req:true,ph:'08xxxxxxxxxx',full:true,hint:'Untuk pemberitahuan status. Format 08.. / +62..'}
+};
+
+const KATEGORI={
+  'berita-daerah':{judul:'Berita Daerah',ico:'berita',desk:'Liputan kegiatan Bimas Hindu di kanwil & kabupaten/kota.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}]},
+  'berita-widyalaya':{judul:'Berita Widyalaya',ico:'widyalaya',desk:'Kegiatan pendidikan keagamaan Hindu formal (Widyalaya).',
+    fields:['provinsi','kabupaten','namaWidyalaya','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}]},
+  'berita-ptkh':{judul:'Berita PTKH',ico:'kampus',desk:'Kegiatan Perguruan Tinggi Keagamaan Hindu.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}]},
+  'naskah-mimbar':{judul:'Naskah Mimbar Hindu',ico:'mimbar',desk:'Naskah renungan/uraian keagamaan untuk rubrik Mimbar Hindu.',
+    fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
+    upload:[{key:'naskah',label:'Naskah Mimbar',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto Penulis (pose tangan di dada)',accept:IMG,max:1}]},
+  'wisata-religi':{judul:'Wisata Religi',ico:'wisata',desk:'Artikel destinasi & situs spiritual Hindu.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,max:3}]},
+  'berita-pasraman':{judul:'Berita Pasraman',ico:'pasraman',desk:'Kegiatan pendidikan keagamaan Hindu nonformal (Pasraman).',
+    fields:['provinsi','kabupaten','namaPasraman','noWA'],
+    upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}]},
+  'konten-medsos':{judul:'Bahan Konten Medsos',ico:'medsos',desk:'Materi untuk kanal media sosial resmi Ditjen Bimas Hindu.',
+    fields:['provinsi','kabupaten','instansi','noWA'],
+    upload:[{key:'naskah',label:'Naskah / Caption',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:10}]},
+  'artikel-inspiratif':{judul:'Artikel Kisah Inspiratif',ico:'artikel',desk:'Kisah tokoh/umat yang menginspirasi.',
+    fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
+    upload:[{key:'naskah',label:'Naskah Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,max:3}]},
+  'video-mimbar':{judul:'Video Mimbar Hindu',ico:'video',desk:'Rekaman video ceramah/renungan untuk Mimbar Hindu.',
+    fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
+    upload:[{key:'naskah',label:'Naskah / Sinopsis',accept:'.doc,.docx,.pdf,.txt',max:1}],
+    linkVideo:true}
+};
 
 let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel';
 const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:'',dari:'',sampai:''};
@@ -530,15 +573,48 @@ function openTolak(tiket){ const dlg=$('#modal');
   dlg.showModal(); setTimeout(()=>$('#tolakAlasan').focus(),50); }
 function kirimTolak(tiket){ const a=$('#tolakAlasan').value.trim(); if(!a){toast('Isi alasan penolakan.','err');return;} doAksi(tiket,'tolak',{catatan:a}); }
 
-function openRevisi(tiket){ const dlg=$('#modal');
-  dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Minta Revisi ${tiket}</span>
-      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
-    <div class="sheet-b"><p class="sec-title">Catatan Revisi (akan dilihat pengirim)</p>
-      <textarea class="inp" id="revisiAlasan" rows="4" placeholder="mis. Bukti dukungan kurang lengkap, mohon dilampirkan."></textarea></div>
-    <div class="sheet-f"><button class="btn btn-ghost" onclick="$('#modal').close()">Batal</button>
-      <button class="btn btn-primary" style="background:var(--warn-bg);color:var(--warn)" onclick="kirimRevisi('${tiket}')">Minta Revisi</button></div></div>`;
-  dlg.showModal(); setTimeout(()=>$('#revisiAlasan').focus(),50); }
-function kirimRevisi(tiket){ const a=$('#revisiAlasan').value.trim(); if(!a){toast('Isi catatan revisi.','err');return;} doAksi(tiket,'revisi',{catatan:a}); }
+function openRevisi(tiket){ 
+  const r = DATA.rows.find(x=>x.tiket===tiket);
+  if(!r) return;
+  const k = KATEGORI[r.kategori];
+  const dlg=$('#modal');
+  let fieldHtml = '';
+  if(k) {
+    fieldHtml = '<div style="margin-bottom:12px"><b>Pilih Isian yang Harus Direvisi:</b><div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px">';
+    k.fields.forEach(f=>{
+      fieldHtml += `<label style="display:inline-flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" name="revFields" value="${f}"> ${FIELD_DEF[f].label}</label>`;
+    });
+    if(k.upload) {
+      k.upload.forEach(u=>{
+        fieldHtml += `<label style="display:inline-flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" name="revFields" value="${u.key}"> ${u.label}</label>`;
+      });
+    }
+    if(k.linkVideo) {
+       fieldHtml += `<label style="display:inline-flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" name="revFields" value="linkVideo"> Link Video</label>`;
+    }
+    fieldHtml += '</div></div>';
+  }
+
+  dlg.innerHTML=`<div class="sheet" style="max-width:500px"><div class="sheet-h"><span class="tid">Minta Revisi ${tiket}</span>
+    <button class="icon-btn" onclick="this.closest('dialog').close()">${IK.x}</button></div>
+    <div class="sheet-b">
+      ${fieldHtml}
+      <p class="sec-title" style="margin-top:16px">Catatan Revisi (akan dilihat pengirim)</p>
+      <textarea class="inp" id="revisiAlasan" rows="4" placeholder="mis. Bukti dukungan kurang lengkap, mohon dilampirkan."></textarea>
+    </div>
+    <div class="sheet-f">
+      <button class="btn btn-primary" style="background:var(--warn-bg);color:var(--warn)" onclick="kirimRevisi('${tiket}')">Minta Revisi</button>
+    </div></div>`;
+  dlg.showModal(); setTimeout(()=>$('#revisiAlasan').focus(),50); 
+}
+
+function kirimRevisi(tiket){ 
+  const a=$('#revisiAlasan').value.trim(); 
+  if(!a){toast('Isi catatan revisi.','err');return;} 
+  const cb = $$('#modal input[name="revFields"]:checked').map(x=>x.value);
+  const finalCatatan = cb.length > 0 ? `[REVISI:${cb.join(',')}] ${a}` : a;
+  doAksi(tiket,'revisi',{catatan:finalCatatan}); 
+}
 
 // GOTCHA GAS: stripper // GAS mengenali string '...' tapi TIDAK template literal —
 // jangan pernah menaruh URL (https:...) di dalam backtick. Pakai konkatenasi string.
@@ -548,8 +624,15 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
   const files=(r.files||[]).map((f,i)=>{ const img=/(jpg|jpeg|png|gif|webp)/i.test(f.name||'')||/=w\d+/.test(f.url||'');
     return `<div class="file" onclick="previewFile('${tiket}',${i})"><div class="fh">${img&&f.url?`<img src="${f.url}">`:ikon('doc')}</div><div class="fn" title="${f.name||f.slot}">${f.name||f.slot}</div></div>`;
   }).join('') || '<div class="t-sub">Tidak ada berkas / mode demo.</div>';
-  const riw=(r.riwayat||[]).slice().reverse().map(x=>`<div class="riw-item"><span class="rd"></span>
-      <div class="rb"><b>${x.aksi}${x.oleh?` · ${x.oleh}`:''}</b>${x.catatan?`<div>${x.catatan}</div>`:''}<div class="rt">${new Date(x.waktu).toLocaleString('id-ID')}</div></div></div>`).join('')
+  const riw=(r.riwayat||[]).slice().reverse().map(x=>{
+      let cleanCatatan = x.catatan || '';
+      if(cleanCatatan.includes('[REVISI:')) {
+        const m = cleanCatatan.match(/^\[REVISI:([^\]]+)\](.*)$/is);
+        if(m) cleanCatatan = m[2].trim();
+      }
+      return `<div class="riw-item"><span class="rd"></span>
+      <div class="rb"><b>${x.aksi}${x.oleh?` · ${x.oleh}`:''}</b>${cleanCatatan?`<div>${cleanCatatan}</div>`:''}<div class="rt">${new Date(x.waktu).toLocaleString('id-ID')}</div></div></div>`;
+    }).join('')
       || '<div class="t-sub">Belum ada aktivitas.</div>';
   const eksOpt=DATA.eksekutors.map(e=>`<option ${e===r.eksekutor?'selected':''}>${e}</option>`).join('');
   dlg.innerHTML=`<div class="sheet">

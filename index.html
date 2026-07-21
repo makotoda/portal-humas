@@ -194,6 +194,8 @@ select.inp{appearance:none; cursor:pointer;
   text-align:center; cursor:pointer; transition:.2s var(--ease); background:var(--bg-1)}
 html.tema-terang .drop{background:#fff}
 .drop:hover,.drop.over{border-color:var(--gold); background:var(--glass)}
+.drop.drag { border-color: var(--ok); background: #f0fdf4; }
+.drop.disabled-drop { pointer-events: none; opacity: 0.5; background: #f5f5f5; }
 .drop svg{width:26px; height:26px; stroke:var(--ink-dim); fill:none; stroke-width:1.5; margin:0 auto 6px}
 .drop b{font-size:13.5px; font-weight:600}
 .drop small{display:block; font-size:11.5px; color:var(--ink-faint); margin-top:3px}
@@ -413,19 +415,10 @@ html.di-gas .grain{display:none}
 <div class="toasts" id="toasts"></div>
 
 <script>
-// ============================================================
-// PORTAL KOMUNIKASI KEHUMASAN — client app (vanilla)
-// Satu file: jalan di GAS (google.script.run) & preview lokal (mode demo).
-// ============================================================
-
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
-// localStorage bisa melempar SecurityError di iframe sandbox GAS
-// (cookie pihak ketiga diblokir) — selalu lewat wrapper ini.
 const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},
           set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-
-
 const IK={
   berita:'<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
   widyalaya:'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
@@ -443,16 +436,7 @@ const IK={
   search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>', inbox:'<path d="M3 12h5l2 3h4l2-3h5M3 12l3-8h12l3 8v6H3z"/>'
 };
 const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
-
-// GOTCHA GAS: HtmlService menstrip komentar blok (slash-asterisk) per baris, naif,
-// TANPA sadar string. Akibatnya: (1) JS inline di file ini HANYA boleh pakai komentar
-// gaya ini; (2) string/template literal tak boleh mengandung sekuens slash-asterisk
-// atau asterisk-slash — 'image(slash)(asterisk)' dirakit runtime lewat konstanta ini.
 const IMG='image/'+'*';
-
-// ---------- konfigurasi 9 kategori (SATU sumber) ----------
-// fields: daftar key field; upload: slot berkas; syarat: ketentuan.
-// Field def diambil dari FIELD_DEF di bawah.
 const KATEGORI={
   'berita-daerah':{judul:'Berita Daerah',ico:'berita',desk:'Liputan kegiatan Bimas Hindu di kanwil & kabupaten/kota.',
     fields:['provinsi','kabupaten','instansi','noWA'],
@@ -492,8 +476,6 @@ const KATEGORI={
     linkVideo:true,
     syarat:['Video sesuai standar publikasi (durasi, kualitas).','Orientasi landscape 16:9, audio jernih.','Unggah ke Google Drive, akses "siapa saja dgn link".','Tempel tautan Drive video pada isian di bawah.']}
 };
-
-
 const FIELD_DEF={
   provinsi:{label:'Provinsi',type:'prov',req:true},
   kabupaten:{label:'Kabupaten / Kota',type:'kab',req:true},
@@ -503,10 +485,6 @@ const FIELD_DEF={
   namaPenulis:{label:'Nama Penulis',type:'text',req:true,ph:'Nama lengkap penulis'},
   noWA:{label:'Nomor WhatsApp',type:'tel',req:true,ph:'08xxxxxxxxxx',full:true,hint:'Untuk pemberitahuan status. Format 08.. / +62..'}
 };
-
-// ---------- master wilayah (dropdown, cegah data kotor) ----------
-// 38 provinsi; kabupaten lengkap utk wilayah yg aktif mengirim + kota besar.
-// ponytail: subset kabupaten — sisanya nanti dari sheet MasterWilayah.
 const WILAYAH={
   "Bali":["Denpasar","Badung","Gianyar","Klungkung","Bangli","Karangasem","Buleleng","Jembrana","Tabanan"],
   "DI Yogyakarta":["Kota Yogyakarta","Sleman","Bantul","Kulon Progo","Gunungkidul"],
@@ -547,12 +525,8 @@ const WILAYAH={
   "Papua Barat Daya":["Kota Sorong","Raja Ampat"],
   "Bangka Belitung":["Pangkal Pinang","Belitung","Bangka"]
 };
-
-// ============================================================
-// BACKEND: satu antarmuka. GAS → google.script.run; lokal → demo.
-// ============================================================
 const isGas = typeof google!=='undefined' && google.script && google.script.run;
-if(isGas) document.documentElement.classList.add('di-gas'); // ringankan render di iframe GAS
+if(isGas) document.documentElement.classList.add('di-gas');
 const Backend={
   call(fn,payload){
     return new Promise((res,rej)=>{
@@ -561,7 +535,6 @@ const Backend={
     });
   }
 };
-
 const Demo={
   _key:'pkh_demo_sub',
   _all(){ try{return JSON.parse(LS.get(this._key)||'[]')}catch(e){return []} },
@@ -585,23 +558,15 @@ const Demo={
     return this._all().filter(x=> x.tiket.toLowerCase()===q || (x.noWA||'').replace(/\D/g,'').endsWith(q.replace(/\D/g,'')) && q.replace(/\D/g,'').length>=6 );
   }
 };
-
-// ============================================================
-// NAVIGASI antar view
-// ============================================================
 const Nav={
   go(v){
+    if(v!=='form') { Form.tiket_revisi=null; Form.revisiFields=[]; }
     $$('.view').forEach(el=>el.classList.remove('aktif'));
     $('#v-'+v).classList.add('aktif');
     $$('.nav a[data-nav]').forEach(a=>a.classList.toggle('aktif',a.dataset.nav===v));
     window.scrollTo({top:0,behavior:'instant'});
-    Reveal.scan();
   }
 };
-
-// ============================================================
-// TEMA (gelap default / terang)
-// ============================================================
 const Tema={
   init(){ const s=LS.get('pkh_tema'); if(s==='terang')document.documentElement.className='tema-terang'; this._btn(); },
   toggle(){ const t=document.documentElement.classList.toggle('tema-terang'); document.documentElement.classList.toggle('tema-gelap',!t);
@@ -611,10 +576,6 @@ const Tema={
       ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>'
       : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3a6.5 6.5 0 009.5 9.5z"/></svg>'; }
 };
-
-// ============================================================
-// TOAST
-// ============================================================
 function toast(msg,tipe='info'){
   const ic={ok:IK.check,err:IK.x,info:IK.info};
   const el=document.createElement('div'); el.className='toast '+tipe;
@@ -622,10 +583,6 @@ function toast(msg,tipe='info'){
   $('#toasts').appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(30px)';el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4200);
 }
-
-// ============================================================
-// BERANDA: kartu kategori + tilt + stats count-up
-// ============================================================
 function renderKategori(){
   $('#gridKat').innerHTML=Object.entries(KATEGORI).map(([id,k])=>`
     <article class="kat reveal" data-tilt onclick="Form.buka('${id}')">
@@ -636,7 +593,6 @@ function renderKategori(){
     </article>`).join('');
   Tilt.bind();
 }
-
 const Tilt={
   bind(){ if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
     $$('[data-tilt]').forEach(el=>{
@@ -649,7 +605,6 @@ const Tilt={
     });
   }
 };
-
 function countUp(el,to){
   const dur=1100, t0=performance.now();
   (function tick(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
@@ -661,14 +616,10 @@ async function loadStats(){
     countUp(els[0], s.diproses); countUp(els[1], s.penerimaan); countUp(els[2], s.satker);
   }catch(e){  }
 }
-
-// ============================================================
-// FORM dinamis
-// ============================================================
 const Form={
-  kat:null, files:{}, tiket_revisi:null,
-  buka(id){
-    const k=KATEGORI[id]; if(!k)return; this.kat=id; this.files={};
+  kat:null, files:{}, tiket_revisi:null, revisiFields:[],
+  buka(kat){
+    this.kat=kat; const k=KATEGORI[kat];
     $('#fIco').innerHTML=ikon(k.ico); $('#fJudul').textContent=k.judul; $('#fDesk').textContent=k.desk;
     $('#fSyarat').innerHTML=`
       <details class="syarat" open>
@@ -681,6 +632,19 @@ const Form={
     html+=k.upload.map(u=>this._upload(u)).join('');
     $('#fFields').innerHTML=html;
     this._wireWilayah(); this._wireUploads();
+    if(Form.tiket_revisi && Form.revisiFields && Form.revisiFields.length > 0) {
+      $$('#fFields input, #fFields select, #fFields textarea').forEach(el => el.disabled = true);
+      $$('#fFields .drop').forEach(el => el.classList.add('disabled-drop'));
+      Form.revisiFields.forEach(f => {
+        const el = $(`#fFields [name="${f}"]`);
+        if (el) el.disabled = false;
+        const drop = $(`#fFields [data-slot="${f}"]`);
+        if (drop) {
+          const d = drop.querySelector('.drop');
+          if (d) d.classList.remove('disabled-drop');
+        }
+      });
+    }
     $('#fSisa').textContent='';
     Nav.go('form');
   },
@@ -833,6 +797,9 @@ const Status={
   },
   _card(r){
     const st=r.status||'Terkirim';
+    let ket=r.keterangan||'', revFields='';
+    const mRev=ket.match(/^\[REVISI:([^\]]+)\](.*)$/is);
+    if(mRev){ revFields=mRev[1]; ket=mRev[2].trim(); }
     const ditolak=/tolak|reject/i.test(st), selesai=/setuju|complete|selesai|terbit/i.test(st), revisi=/revisi/i.test(st);
     let idx = ditolak||selesai ? 2 : revisi ? 0 : /review|proses|progress/i.test(st) ? 1 : 0;
     const badge = ditolak?'bad':selesai?'ok':revisi?'warn':idx===1?'info':'warn';
@@ -851,13 +818,13 @@ const Status={
         <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':revisi?'Minta Revisi':idx===1?'Direview':'Terkirim'}</span></div>
       <div class="tl-meta">${[r.instansi,wilayah].filter(Boolean).join(' · ')||'—'}</div>
       <div class="steps">${steps}</div>
-      ${r.keterangan?`<div class="tl-note"><b>Catatan Tim Humas:</b> ${r.keterangan}</div>`:''}
-      ${revisi?`<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="BukaRevisi('${r.tiket}','${$('#qStatus').value.trim()}',this)">Revisi Inputan</button></div>`:''}
+      ${ket?`<div class="tl-note"><b>Catatan Tim Humas:</b> ${ket}</div>`:''}
+      ${revisi?`<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="BukaRevisi('${r.tiket}','${$('#qStatus').value.trim()}',this,'${revFields}')">Revisi Inputan</button></div>`:''}
     </div>`;
   }
 };
 
-async function BukaRevisi(tiket, q, btn){
+async function BukaRevisi(tiket, q, btn, fieldsStr){
   try{
     let wa = q;
     const isNumber = /^\d+$/.test(wa.replace(/\D/g, ''));
@@ -867,12 +834,14 @@ async function BukaRevisi(tiket, q, btn){
     }
     const orig=btn.innerHTML; btn.innerHTML='Memuat...'; btn.disabled=true;
     const d=await Backend.call('getDetailRevisi', {tiket: tiket, wa: wa});
-    Nav.go('form'); Form.buka(d.kategori);
+    Nav.go('form');
     Form.tiket_revisi=tiket;
+    Form.revisiFields=fieldsStr ? fieldsStr.split(',') : [];
+    Form.buka(d.kategori);
     setTimeout(()=>{
-      const pv=$('#inp-provinsi'); if(pv)pv.value=d.provinsi; Form.loadKab();
+      const pv=$('#fFields select[name=provinsi]'); if(pv){ pv.value=d.provinsi; pv.dispatchEvent(new Event('change')); }
       setTimeout(()=>{
-        const kb=$('#inp-kabupaten'); if(kb)kb.value=d.kabupaten;
+        const kb=$('#fFields select[name=kabupaten]'); if(kb)kb.value=d.kabupaten;
         $$('#fFields .inp').forEach(inp=>{
           const n=inp.name;
           if(n==='instansi'||n==='namaWidyalaya'||n==='namaPasraman') inp.value=d.instansi||'';
@@ -883,8 +852,8 @@ async function BukaRevisi(tiket, q, btn){
         const m=document.createElement('div'); m.className='tl-note'; m.style.marginBottom='16px';
         m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika Anda ingin mengganti/menambah berkas. Jika tidak diunggah ulang, berkas lama Anda akan tetap tersimpan aman.`;
         $('#form-dynamic').prepend(m);
-      },100);
-    },50);
+      }, 100);
+    }, 50);
   }catch(e){ toast(e.message||'Gagal','err'); if(btn){btn.innerHTML='Revisi Inputan'; btn.disabled=false;} }
 }
 
