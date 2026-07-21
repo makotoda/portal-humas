@@ -1,9 +1,25 @@
 # PROGRESS — Portal Komunikasi Kehumasan
 
 ## Sedang dikerjakan
-- (kosong) — spine selesai; menunggu keputusan lanjut ke modul admin.
+- (kosong) — spine + dashboard admin selesai; kandidat berikutnya: notifikasi Telegram
+  atau pindah wilayah/ketentuan ke sheet Config.
 
 ## Selesai
+- **Dashboard admin (21 Jul 2026)** — file `admin.html` (route `?page=admin`), terverifikasi
+  di browser, nol error console:
+  - Login berbasis **kode akses** (sheet `Admins`), diverifikasi ulang server tiap aksi
+    (trust boundary, stateless). Role `super`/`admin`; auto-login via sessionStorage.
+  - Queue **Tabel + Kanban** (toggle), filter kategori/provinsi/status/eksekutor + cari.
+  - Aksi cepat **Setujui / Tolak+alasan / Assign / Tandai Direview** (live re-render).
+  - Modal **Detail**: info lengkap, preview berkas (iframe Drive), assign eksekutor,
+    **riwayat komunikasi** (dari sheet `Riwayat`).
+  - **Analitik**: 5 stat card, penerimaan per provinsi (bar), alasan penolakan teratas,
+    rerata waktu proses.
+  - **Ekspor CSV** hasil terfilter. Tema gelap/terang.
+  - Backend `Code.js`: routing `doGet(?page=admin)`, `adminLogin`, `adminData`, `adminAksi`,
+    sheet `Admins`(seed super)/`Riwayat`, `cekAdmin_` (trust boundary).
+
+## Selesai (spine)
 - **Spine (21 Jul 2026)** — terverifikasi di browser preview, nol error console:
   - Landing cinematic: hero gradient mesh + grain, glass, stats count-up, CTA.
   - Grid 9 kategori dengan 3D tilt (mouse), ikon line-art custom.
@@ -19,14 +35,14 @@
     workflow auto-deploy Actions, `README.md`.
 
 ## Backlog (urut prioritas)
-1. **Dashboard admin** — tabel/kanban bahan masuk; filter kategori/provinsi/status/eksekutor;
-   aksi Approve / Reject+alasan / Assign (≤3 klik); preview berkas inline; riwayat komunikasi;
-   statistik ringkas (approval rate per provinsi, waktu proses, tren alasan reject).
-2. **Login admin** — whitelist email/kode akses (`Admins` sheet), role admin vs super admin.
-3. **Notifikasi** — Telegram/WA saat status berubah (pola bot Telegram).
-4. **Sheet `MasterWilayah`/`Config`** — pindahkan wilayah & teks ketentuan ke sheet agar
+1. **Notifikasi** — Telegram/WA saat status berubah (pola bot Telegram); kelola daftar
+   eksekutor dari UI (super admin) — sekarang eksekutor = daftar nama di sheet `Admins`.
+2. **Kelola admin dari UI** — super admin tambah/hapus admin & atur role (kini manual di
+   sheet `Admins`).
+3. **Sheet `MasterWilayah`/`Config`** — pindahkan wilayah & teks ketentuan ke sheet agar
    editable tanpa ubah kode; lengkapi seluruh kabupaten/kota (514).
-5. **Upload berkas besar** — ganti base64 ke Drive Picker/resumable bila payload sering >50MB.
+4. **Upload berkas besar** — ganti base64 ke Drive Picker/resumable bila payload sering >50MB.
+5. **Filter tanggal** di dashboard (kini: kategori/provinsi/status/eksekutor/cari).
 
 ## Keputusan teknis penting
 - **Satu file frontend** (bukan template include GAS) supaya bisa dipreview lokal apa adanya

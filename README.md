@@ -55,11 +55,19 @@ Di Google Sites → Insert → Embed → **By URL** → tempel URL `/exec`. Mani
 ## Struktur file
 | File | Isi |
 |---|---|
-| `index.html` | Seluruh frontend (config 9 kategori `KATEGORI` + master `WILAYAH` di dalamnya) |
-| `Code.js` | Backend: `doGet`, `getStats`, `submitPermohonan`, `cekStatus`, helper |
+| `index.html` | Frontend publik (config 9 kategori `KATEGORI` + master `WILAYAH` di dalamnya) |
+| `admin.html` | Dashboard admin (di `?page=admin`): login berkode, queue, approve/reject/assign, analitik, ekspor CSV |
+| `Code.js` | Backend: `doGet` (routing), `getStats`, `submitPermohonan`, `cekStatus`, API admin, helper |
 | `appsscript.json` | Manifest (anonymous, executeAs deployer, scope Sheets+Drive) |
 | `.github/workflows/deploy.yml` | Auto `clasp push` saat push ke `main` |
 | `CLAUDE.md` / `docs/PROGRESS.md` | Dokumentasi & status pekerjaan |
+
+## Dashboard admin
+- Buka `<URL /exec>?page=admin`. Login pakai **kode akses** (baris di sheet `Admins`).
+  Saat pertama, sheet `Admins` di-seed 1 super admin dengan kode dari `CONFIG.ADMIN_SUPER_CODE`
+  — **ganti kode ini sebelum dipakai** (edit Script Property `ADMIN_SUPER_CODE` atau baris sheet).
+- Tambah admin/eksekutor lain: tambah baris di sheet `Admins` (`Nama`, `Kode`, `Role`=`admin`/`super`).
+- Preview lokal `admin.html`: kode demo `super` atau `admin` (data contoh dari `localStorage`).
 
 ## Catatan
 - Ubah/ tambah kategori: samakan `KATEGORI` (index.html) dan `KATEGORI_VALID` (Code.js).

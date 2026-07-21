@@ -13,9 +13,14 @@ Disinkron via clasp + GitHub Actions (pola sama seperti project Kodomo).
 - Bahasa domain: **Indonesia** (nama field/UI). Tema gelap default + toggle tema terang.
 
 ## Struktur
-- `index.html` — seluruh frontend (landing + 9 form dinamis + cek status). Config 9 kategori
+- `index.html` — frontend publik (landing + 9 form dinamis + cek status). Config 9 kategori
   (`KATEGORI`) dan master wilayah (`WILAYAH`) ada di dalamnya sebagai **satu sumber**.
-- `Code.js` — backend: `doGet`, `getStats`, `submitPermohonan`, `cekStatus`, helper `*_`.
+- `admin.html` — dashboard admin (di-serve di `?page=admin`). Login berkode, queue tabel+kanban,
+  approve/reject/assign, detail+riwayat, analitik, ekspor CSV. Preview lokal: kode demo
+  `super` / `admin`.
+- `Code.js` — backend: `doGet` (routing publik vs admin), `getStats`, `submitPermohonan`,
+  `cekStatus`, API admin (`adminLogin`/`adminData`/`adminAksi`, `cekAdmin_` = trust boundary),
+  helper `*_`.
 - `appsscript.json` — manifest (public anonymous, executeAs deployer, scope Sheets+Drive).
 - `docs/PROGRESS.md` — status pekerjaan. **Baca di awal sesi.**
 - `README.md` — cara setup & deploy (Sheet ID, folder Drive, secret Actions, embed Sites).
@@ -54,6 +59,11 @@ Di GAS: jalankan `uji_()` dari editor untuk memverifikasi submit+status server t
 - `WILAYAH` di index.html baru subset kabupaten (provinsi aktif + kota besar) — lengkapi dari
   sheet `MasterWilayah` saat modul admin dibangun.
 
+## Akses admin
+- URL dashboard: `<webapp>/exec?page=admin`. Tidak ditautkan dari UI publik (bookmark).
+- Auth = kode akses di sheet `Admins` (seed 1 super admin dari `CONFIG.ADMIN_SUPER_CODE`).
+  **Ganti kode seed sebelum go-live.** Eksekutor yang bisa di-assign = daftar nama di `Admins`.
+
 ## Belum dibangun (backlog — lihat docs/PROGRESS.md)
-Dashboard admin (approve/reject/assign, filter, statistik), login admin, notifikasi Telegram/WA,
-sheet `MasterWilayah`/`Admins`/`Config`.
+Notifikasi Telegram/WA, kelola admin/eksekutor dari UI, sheet `MasterWilayah`/`Config`,
+upload berkas besar (resumable), filter tanggal.

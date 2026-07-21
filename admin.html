@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="id" class="tema-gelap">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Humas — Portal Komunikasi Kehumasan</title>
+<base target="_top">
+<style>
+/* ============================================================
+   DASHBOARD HUMAS — memakai design token yang sama dgn index.html
+   (glass, gelap default, .tema-terang override). Vanilla, nol dependensi.
+   ============================================================ */
+:root{
+  --bg-0:#0A0D14; --bg-1:#0F131C; --bg-2:#161B27; --bg-3:#1E2432;
+  --glass:rgba(255,255,255,.045); --glass-2:rgba(255,255,255,.07);
+  --glass-brd:rgba(255,255,255,.13); --glass-hi:rgba(255,255,255,.28);
+  --ink:#EAECF2; --ink-dim:#9AA3B2; --ink-faint:#697084;
+  --gold:#F5B14C; --amber:#E8863A; --saffron:#FF9D3D; --violet:#8B5CF6;
+  --ok:#37D39A; --ok-bg:rgba(55,211,154,.13);
+  --warn:#F5B14C; --warn-bg:rgba(245,177,76,.13);
+  --bad:#E0755A; --bad-bg:rgba(224,117,90,.13);
+  --info:#5B9BFF; --info-bg:rgba(91,155,255,.13);
+  --radius:16px; --radius-sm:11px; --radius-lg:22px;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px -14px rgba(0,0,0,.6),0 30px 70px -34px rgba(0,0,0,.7);
+  --ease:cubic-bezier(.22,.61,.36,1); --ease-out:cubic-bezier(.16,1,.3,1);
+  --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+html.tema-terang{
+  --bg-0:#EEF1F7; --bg-1:#F5F7FB; --bg-2:#FFFFFF; --bg-3:#FFFFFF;
+  --glass:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.9);
+  --glass-brd:rgba(20,28,48,.10); --glass-hi:rgba(255,255,255,.9);
+  --ink:#141A28; --ink-dim:#4A5468; --ink-faint:#8892A4;
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 24px -14px rgba(30,40,70,.28),0 24px 60px -30px rgba(30,40,70,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font);color:var(--ink);background:var(--bg-0);-webkit-font-smoothing:antialiased;
+  line-height:1.5;min-height:100vh}
+h1,h2,h3,h4{margin:0;letter-spacing:-.02em;font-weight:650;line-height:1.15}
+p{margin:0} a{color:inherit;text-decoration:none} button{font-family:inherit}
+img{max-width:100%;display:block} svg{width:18px;height:18px}
+.tabular{font-variant-numeric:tabular-nums}
+.bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(120% 80% at 50% -10%,var(--bg-2),var(--bg-0) 55%)}
+.bg::before{content:"";position:absolute;inset:-25%;z-index:-1;filter:blur(70px);opacity:.5;
+  background:radial-gradient(36% 40% at 18% 12%,rgba(245,177,76,.28),transparent 60%),
+             radial-gradient(34% 40% at 88% 8%,rgba(139,92,246,.26),transparent 62%)}
+html.tema-terang .bg::before{opacity:.4}
+
+/* ---- atoms ---- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:11px;
+  font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:.2s var(--ease);white-space:nowrap}
+.btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.btn-primary{color:#1A1206;background:linear-gradient(120deg,var(--gold),var(--saffron));box-shadow:0 8px 22px -10px rgba(245,177,76,.7)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-ghost{color:var(--ink);background:var(--glass);border-color:var(--glass-brd)}
+.btn-ghost:hover{background:var(--glass-2)}
+.btn-ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.btn-bad{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+.btn-sm{padding:7px 11px;font-size:12.5px;border-radius:9px}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.inp{width:100%;padding:10px 13px;border-radius:var(--radius-sm);font-size:14px;color:var(--ink);
+  background:var(--bg-1);border:1px solid var(--glass-brd);outline:none;transition:.2s var(--ease)}
+html.tema-terang .inp{background:#fff}
+.inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,177,76,.15)}
+select.inp{appearance:none;cursor:pointer;padding-right:34px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239AA3B2' stroke-width='1.8'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center}
+.card{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(9px)}
+.badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.badge.ok{color:var(--ok);background:var(--ok-bg)} .badge.bad{color:var(--bad);background:var(--bad-bg)}
+.badge.warn{color:var(--warn);background:var(--warn-bg)} .badge.info{color:var(--info);background:var(--info-bg)}
+.badge.role{color:var(--violet);background:rgba(139,92,246,.14)}
+
+/* ---- login ---- */
+.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+.login{width:100%;max-width:380px;padding:32px 28px;text-align:center;border-radius:var(--radius-lg);
+  background:var(--glass);border:1px solid var(--glass-brd);box-shadow:var(--shadow);backdrop-filter:blur(12px)}
+.login .mark{width:52px;height:52px;margin:0 auto 16px;border-radius:14px;display:grid;place-items:center;
+  background:conic-gradient(from 210deg,var(--gold),var(--amber),var(--violet),var(--gold));box-shadow:0 8px 22px -8px rgba(245,177,76,.6)}
+.login .mark svg{width:26px;height:26px;fill:#1A1206;stroke:#1A1206}
+.login h1{font-size:19px} .login p{color:var(--ink-dim);font-size:13px;margin:6px 0 22px}
+.login .inp{text-align:center;letter-spacing:.05em}
+.login .btn{width:100%;margin-top:14px;padding:12px}
+.login .hint{margin-top:16px;font-size:11.5px;color:var(--ink-faint)}
+
+/* ---- shell ---- */
+.app{display:none}
+.topbar{position:sticky;top:0;z-index:30;backdrop-filter:blur(14px) saturate(140%);
+  border-bottom:1px solid var(--glass-brd);background:linear-gradient(to bottom,rgba(10,13,20,.55),rgba(10,13,20,.15))}
+html.tema-terang .topbar{background:linear-gradient(to bottom,rgba(255,255,255,.7),rgba(255,255,255,.35))}
+.topbar-in{max-width:1280px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;gap:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  background:conic-gradient(from 210deg,var(--gold),var(--amber),var(--violet),var(--gold))}
+.brand .mark svg{width:18px;height:18px;fill:#1A1206;stroke:#1A1206}
+.brand b{font-size:14px;display:block;line-height:1.1} .brand span{font-size:11px;color:var(--ink-dim)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.who{text-align:right;font-size:12px} .who b{font-size:13px} .who .r{color:var(--ink-dim)}
+.icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--glass-brd);background:var(--glass);
+  color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.2s var(--ease)}
+.icon-btn:hover{background:var(--glass-2)} .icon-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
+.main{max-width:1280px;margin:0 auto;padding:22px 20px 60px}
+
+/* ---- stat cards ---- */
+.statgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat{padding:15px 17px;border-radius:var(--radius);background:var(--glass);border:1px solid var(--glass-brd);box-shadow:var(--shadow)}
+.stat .n{font-size:24px;font-weight:700} .stat .l{font-size:11.5px;color:var(--ink-dim);margin-top:2px}
+.stat .n .u{font-size:13px;color:var(--ink-dim);font-weight:600;margin-left:2px}
+.stat.acc-ok .n{color:var(--ok)} .stat.acc-warn .n{color:var(--warn)} .stat.acc-gold .n{color:var(--gold)}
+
+/* ---- filter bar ---- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.filters .search{position:relative;flex:1;min-width:180px}
+.filters .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+  fill:none;stroke:var(--ink-faint);stroke-width:2}
+.filters .search .inp{padding-left:34px}
+.filters select.inp{width:auto;min-width:130px;flex:0 0 auto}
+.viewtog{display:flex;background:var(--glass);border:1px solid var(--glass-brd);border-radius:10px;padding:3px;gap:2px}
+.viewtog button{padding:7px 11px;border:none;background:transparent;color:var(--ink-dim);border-radius:8px;cursor:pointer;display:grid;place-items:center}
+.viewtog button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.viewtog button.aktif{background:var(--glass-2);color:var(--ink)}
+
+/* ---- tabel ---- */
+.tablewrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--glass-brd);background:var(--glass);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+thead th{text-align:left;padding:12px 14px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-dim);font-weight:600;border-bottom:1px solid var(--glass-brd);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--glass-brd);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .15s} tbody tr:hover{background:var(--glass)}
+.t-tiket{font-weight:700;font-size:12.5px;cursor:pointer;color:var(--gold)}
+.t-sub{color:var(--ink-dim);font-size:11.5px}
+.rowact{display:flex;gap:6px;justify-content:flex-end}
+.rowact .icon-btn{width:30px;height:30px} .rowact .icon-btn svg{width:14px;height:14px}
+
+/* ---- kanban ---- */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start}
+.kcol{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+.kcol h4{font-size:12.5px;display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--ink-dim)}
+.kcol h4 .cnt{margin-left:auto;font-size:11px;background:var(--glass-2);padding:2px 8px;border-radius:100px}
+.kcard{padding:12px;border-radius:var(--radius-sm);background:var(--bg-2);border:1px solid var(--glass-brd);margin-bottom:9px;cursor:pointer;transition:.15s var(--ease)}
+html.tema-terang .kcard{background:#fff}
+.kcard:hover{border-color:var(--glass-hi);transform:translateY(-1px)}
+.kcard .kt{font-weight:700;font-size:12px;color:var(--gold)}
+.kcard .kk{font-size:12px;margin:3px 0} .kcard .km{font-size:11px;color:var(--ink-dim)}
+.kcard .keks{margin-top:7px;font-size:11px;color:var(--ink-dim);display:flex;align-items:center;gap:5px}
+.kdot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+
+/* ---- analitik ---- */
+.analytic{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:20px}
+.panel{padding:18px;border-radius:var(--radius);background:var(--glass);border:1px solid var(--glass-brd);box-shadow:var(--shadow)}
+.panel h3{font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.panel h3 svg{width:16px;height:16px;fill:none;stroke:var(--gold);stroke-width:2}
+.bar-row{display:grid;grid-template-columns:120px 1fr 42px;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+.bar-row .pn{color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:8px;border-radius:100px;background:var(--glass-2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:100px;background:linear-gradient(90deg,var(--amber),var(--gold))}
+.bar-row .pct{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.reason{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--glass-brd);font-size:13px}
+.reason:last-child{border-bottom:none} .reason .c{flex:0 0 auto;font-weight:700;color:var(--bad);
+  background:var(--bad-bg);border-radius:8px;padding:2px 9px;font-size:12px}
+
+/* ---- detail modal ---- */
+dialog{border:none;padding:0;background:transparent;color:var(--ink);max-width:min(94vw,640px);width:100%}
+dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
+.sheet{background:var(--bg-2);border:1px solid var(--glass-brd);border-radius:var(--radius-lg);box-shadow:var(--shadow);
+  max-height:86vh;overflow:auto;animation:pop .4s var(--ease-out) both}
+@keyframes pop{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.sheet-h{position:sticky;top:0;background:var(--bg-2);padding:18px 22px;border-bottom:1px solid var(--glass-brd);
+  display:flex;align-items:center;gap:12px;z-index:1}
+.sheet-h .tid{font-weight:700} .sheet-h .close{margin-left:auto}
+.sheet-b{padding:20px 22px}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13px;margin-bottom:16px}
+.kv .k{color:var(--ink-dim)} .kv .v{font-weight:500}
+.files{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.file{width:88px;border-radius:10px;overflow:hidden;border:1px solid var(--glass-brd);cursor:pointer;background:var(--bg-1)}
+.file .fh{height:64px;display:grid;place-items:center;background:var(--glass);color:var(--ink-dim)}
+.file .fh img{width:100%;height:100%;object-fit:cover} .file .fh svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}
+.file .fn{font-size:10px;padding:5px;color:var(--ink-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec-title{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);margin:0 0 9px}
+.riw{display:grid;gap:10px;margin-bottom:8px}
+.riw-item{display:flex;gap:11px;font-size:12.5px}
+.riw-item .rd{width:9px;height:9px;border-radius:50%;background:var(--gold);margin-top:4px;flex:0 0 auto;box-shadow:0 0 0 3px var(--glass-2)}
+.riw-item .rb b{display:block} .riw-item .rt{color:var(--ink-faint);font-size:11px}
+.sheet-f{position:sticky;bottom:0;background:var(--bg-2);border-top:1px solid var(--glass-brd);padding:14px 22px;
+  display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.prev-frame{width:100%;height:60vh;border:1px solid var(--glass-brd);border-radius:12px;background:#000}
+
+/* ---- toast ---- */
+.toasts{position:fixed;right:16px;bottom:16px;z-index:80;display:flex;flex-direction:column;gap:9px;max-width:320px}
+.toast{padding:12px 15px;border-radius:12px;background:var(--bg-2);border:1px solid var(--glass-brd);box-shadow:var(--shadow);
+  font-size:13px;display:flex;gap:9px;animation:tin .3s var(--ease-out) both}
+.toast .i{width:19px;height:19px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center}
+.toast.ok .i{background:var(--ok-bg);color:var(--ok)} .toast.err .i{background:var(--bad-bg);color:var(--bad)}
+.toast.info .i{background:var(--info-bg);color:var(--info)} .toast .i svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4}
+@keyframes tin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.empty{text-align:center;padding:44px 20px;color:var(--ink-faint)} .empty svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.4;margin:0 auto 12px}
+.sk{background:linear-gradient(100deg,var(--glass) 30%,var(--glass-2) 50%,var(--glass) 70%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px}
+@keyframes sh{to{background-position:-200% 0}}
+
+@media (max-width:1000px){ .statgrid{grid-template-columns:repeat(2,1fr)} .kanban{grid-template-columns:repeat(2,1fr)} .analytic{grid-template-columns:1fr} }
+@media (max-width:560px){ .kanban{grid-template-columns:1fr} .who{display:none} .filters select.inp{flex:1;min-width:0} }
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+
+<!-- ============ LOGIN ============ -->
+<div class="login-wrap" id="loginWrap">
+  <form class="login" id="loginForm">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5 5.6.6-4.2 3.8 1.3 5.5L12 20l-5.1 3 1.3-5.6L4 13.6l5.6-.6z"/></svg></div>
+    <h1>Dashboard Humas</h1>
+    <p>Masukkan kode akses untuk masuk.</p>
+    <input class="inp" id="kodeInp" type="password" placeholder="Kode akses" autocomplete="off" required>
+    <button class="btn btn-primary" id="loginBtn" type="submit">Masuk</button>
+    <div class="hint">Portal Komunikasi Kehumasan · Ditjen Bimas Hindu</div>
+  </form>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="brand">
+        <span class="mark"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5 5.6.6-4.2 3.8 1.3 5.5L12 20l-5.1 3 1.3-5.6L4 13.6l5.6-.6z"/></svg></span>
+        <div><b>Dashboard Humas</b><span>Portal Komunikasi Kehumasan</span></div>
+      </div>
+      <div class="top-right">
+        <div class="who"><b id="whoNama">—</b><div class="r" id="whoRole">—</div></div>
+        <button class="icon-btn" id="btnExport" title="Ekspor CSV" onclick="exportCSV()"></button>
+        <button class="icon-btn" id="btnTema" title="Ganti tema" onclick="Tema.toggle()"></button>
+        <button class="icon-btn" title="Keluar" onclick="logout()"><svg viewBox="0 0 24 24"><path d="M15 4h4v16h-4M11 8l4 4-4 4M15 12H3"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="statgrid" id="statgrid"></div>
+
+    <div class="filters">
+      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <input class="inp" id="fq" placeholder="Cari tiket, instansi, penulis…" oninput="applyFilter()"></div>
+      <select class="inp" id="fkat" onchange="applyFilter()"></select>
+      <select class="inp" id="fprov" onchange="applyFilter()"></select>
+      <select class="inp" id="fstatus" onchange="applyFilter()"></select>
+      <select class="inp" id="feks" onchange="applyFilter()"></select>
+      <div class="viewtog">
+        <button id="vTabel" class="aktif" onclick="setView('tabel')" title="Tabel"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <button id="vKanban" onclick="setView('kanban')" title="Kanban"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="10"/><rect x="17" y="4" width="4" height="13"/></svg></button>
+      </div>
+    </div>
+
+    <div id="queue"></div>
+
+    <div class="analytic">
+      <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg> Tingkat Penerimaan per Provinsi</h3><div id="barProv"></div></div>
+      <div class="panel"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg> Alasan Penolakan Teratas</h3><div id="alasan"></div></div>
+    </div>
+  </main>
+</div>
+
+<dialog id="modal"></dialog>
+<div class="toasts" id="toasts"></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const IK={check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'};
+const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
+
+/* peta kategori→judul (tampilan) */
+const KATJUDUL={'berita-daerah':'Berita Daerah','berita-widyalaya':'Berita Widyalaya','berita-ptkh':'Berita PTKH',
+  'naskah-mimbar':'Naskah Mimbar Hindu','wisata-religi':'Wisata Religi','berita-pasraman':'Berita Pasraman',
+  'konten-medsos':'Bahan Konten Medsos','artikel-inspiratif':'Artikel Kisah Inspiratif','video-mimbar':'Video Mimbar Hindu'};
+const katJudul=(k)=>KATJUDUL[k]||k||'—';
+
+/* ---- state ---- */
+let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel';
+const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:''};
+
+/* ============ BACKEND (GAS / demo) ============ */
+const isGas=typeof google!=='undefined'&&google.script&&google.script.run;
+const Backend={ call(fn,...args){ return new Promise((res,rej)=>{
+  if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](...args); }
+  else { setTimeout(()=>{ try{res(Demo[fn](...args))}catch(e){rej(e)} },320); }
+}); } };
+
+/* ---- statistik (dipakai mode demo & sebagai fallback) ---- */
+function statsOf(list){
+  const s={total:list.length,terkirim:0,direview:0,disetujui:0,ditolak:0,penerimaan:0,avgProsesJam:0,perProvinsi:[],alasanTolak:[]};
+  const prov={},alasan={}; let diputus=0,totJam=0,nP=0;
+  list.forEach(r=>{ const st=(r.status||'').toLowerCase();
+    const ok=/setuju|selesai|terbit|complete/.test(st), bad=/tolak|reject/.test(st);
+    if(ok)s.disetujui++; else if(bad)s.ditolak++; else if(/review|proses|progress/.test(st))s.direview++; else s.terkirim++;
+    const P=r.provinsi||'—'; prov[P]=prov[P]||{total:0,ok:0}; prov[P].total++; if(ok)prov[P].ok++;
+    if(ok||bad){ diputus++; const t0=Date.parse(r.dibuat),t1=Date.parse(r.diperbarui); if(t0&&t1&&t1>=t0){totJam+=(t1-t0)/3.6e6;nP++;} }
+    if(bad&&r.keterangan){ const k=(''+r.keterangan).trim(); alasan[k]=(alasan[k]||0)+1; }
+  });
+  s.penerimaan=diputus?Math.round(s.disetujui/diputus*100):0;
+  s.avgProsesJam=nP?Math.round(totJam/nP):0;
+  s.perProvinsi=Object.keys(prov).map(p=>({prov:p,total:prov[p].total,disetujui:prov[p].ok,
+    rate:prov[p].total?Math.round(prov[p].ok/prov[p].total*100):0})).sort((a,b)=>b.total-a.total);
+  s.alasanTolak=Object.keys(alasan).map(k=>({teks:k,jumlah:alasan[k]})).sort((a,b)=>b.jumlah-a.jumlah).slice(0,6);
+  return s;
+}
+
+/* ---- mode demo: berbagi store 'pkh_demo_sub' dgn index.html ---- */
+const Demo={
+  codes:{'super':{nama:'Super Admin',role:'super'},'admin':{nama:'Admin Humas',role:'admin'}},
+  eks:['Admin Humas','I Made Editor','Ni Kadek Redaksi'],
+  _key:'pkh_demo_sub',
+  _all(){ let a=[]; try{a=JSON.parse(localStorage.getItem(this._key)||'[]')}catch(e){}
+    if(a.length<6){ a=this._seed().concat(a); localStorage.setItem(this._key,JSON.stringify(a)); } return a; },
+  _save(a){ localStorage.setItem(this._key,JSON.stringify(a)); },
+  _seed(){ const H=36e5*24, now=Date.now(); const mk=(d,upd,o)=>Object.assign({dibuat:new Date(now-d*H).toISOString(),diperbarui:new Date(now-upd*H).toISOString(),files:[],riwayat:[]},o);
+    return [
+      mk(20,2,{tiket:'PKH-202607-0001',kategori:'berita-daerah',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',noWA:'081337214493',status:'Disetujui',eksekutor:'I Made Editor',riwayat:[{waktu:new Date(now-3*H).toISOString(),aksi:'Disetujui',oleh:'I Made Editor',catatan:''}]}),
+      mk(19,19,{tiket:'PKH-202607-0002',kategori:'naskah-mimbar',provinsi:'Jawa Tengah',kabupaten:'Boyolali',instansi:'Kemenag Kab. Boyolali',namaPenulis:'Rta Wahyu Sri P.',noWA:'081226054321',status:'Terkirim'}),
+      mk(18,4,{tiket:'PKH-202607-0003',kategori:'wisata-religi',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',noWA:'083890825530',status:'Ditolak',keterangan:'Bahan berita bukan wisata religi, mohon dibaca kembali ketentuannya',eksekutor:'Ni Kadek Redaksi',riwayat:[{waktu:new Date(now-4*H).toISOString(),aksi:'Ditolak',oleh:'Ni Kadek Redaksi',catatan:'Bahan berita bukan wisata religi'}]}),
+      mk(16,16,{tiket:'PKH-202607-0004',kategori:'berita-widyalaya',provinsi:'DI Yogyakarta',kabupaten:'Sleman',instansi:'Pratama Widyalaya Kondho Bumi',noWA:'085238602841',status:'Direview',eksekutor:'Admin Humas'}),
+      mk(15,1,{tiket:'PKH-202607-0005',kategori:'berita-daerah',provinsi:'Lampung',kabupaten:'Lampung Tengah',instansi:'Kemenag Kab. Lampung Tengah',noWA:'082225492825',status:'Disetujui',eksekutor:'Admin Humas'}),
+      mk(14,3,{tiket:'PKH-202607-0006',kategori:'berita-pasraman',provinsi:'Nusa Tenggara Timur',kabupaten:'Manggarai Barat',instansi:'Pasraman Widya Saraswati',noWA:'085738762064',status:'Ditolak',keterangan:'Belum ada kutipan langsung narasumber',eksekutor:'I Made Editor'}),
+      mk(12,12,{tiket:'PKH-202607-0007',kategori:'konten-medsos',provinsi:'Kalimantan Tengah',kabupaten:'Palangka Raya',instansi:'Bimas Hindu Kanwil Kalteng',noWA:'081350404422',status:'Terkirim'}),
+      mk(10,2,{tiket:'PKH-202607-0008',kategori:'berita-ptkh',provinsi:'Kalimantan Tengah',kabupaten:'Palangka Raya',instansi:'IAHN Tampung Penyang',noWA:'081350404422',status:'Disetujui',eksekutor:'Ni Kadek Redaksi'}),
+      mk(8,8,{tiket:'PKH-202607-0009',kategori:'artikel-inspiratif',provinsi:'Sumatera Utara',kabupaten:'Medan',instansi:'Kanwil Kemenag Sumut',namaPenulis:'Elirosa Tarigan',noWA:'081314147277',status:'Direview',eksekutor:'Admin Humas'}),
+      mk(6,1,{tiket:'PKH-202607-0010',kategori:'video-mimbar',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',namaPenulis:'Ni Komang Diantini',noWA:'081337214493',status:'Ditolak',keterangan:'Video belum sesuai standar publikasi'}),
+      mk(4,4,{tiket:'PKH-202607-0011',kategori:'naskah-mimbar',provinsi:'Sulawesi Tengah',kabupaten:'Palu',instansi:'Kanwil Kemenag Sulteng',namaPenulis:'I Nyoman S.',noWA:'081145678123',status:'Terkirim'}),
+      mk(2,2,{tiket:'PKH-202607-0012',kategori:'berita-widyalaya',provinsi:'Lampung',kabupaten:'Lampung Tengah',instansi:'UWK Eka Dharma Sastra',noWA:'082179223077',status:'Terkirim'})
+    ];
+  },
+  adminLogin(k){ const m=this.codes[k]; if(!m) throw new Error('Kode akses salah.'); return m; },
+  adminData(k){ this.adminLogin(k);
+    const rows=this._all().map(r=>({tiket:r.tiket,kategori:r.kategori,provinsi:r.provinsi,kabupaten:r.kabupaten,
+      instansi:r.instansi||'',namaPenulis:r.namaPenulis||'',noWA:r.noWA||'',files:r.files||[],
+      status:r.status||'Terkirim',eksekutor:r.eksekutor||'',keterangan:r.keterangan||'',
+      dibuat:r.dibuat||new Date().toISOString(),diperbarui:r.diperbarui||r.dibuat||new Date().toISOString(),riwayat:r.riwayat||[]})).reverse();
+    return {roleAnda:this.codes[k],eksekutors:this.eks,stats:statsOf(rows),rows};
+  },
+  adminAksi(k,p){ this.adminLogin(k); const a=this._all(); const rec=a.find(x=>x.tiket===p.tiket);
+    if(!rec) throw new Error('Tiket tidak ditemukan.'); const now=new Date().toISOString();
+    let label='';
+    if(p.aksi==='setujui'){rec.status='Disetujui';label='Disetujui';}
+    else if(p.aksi==='tolak'){ if(!p.catatan)throw new Error('Alasan penolakan wajib diisi.'); rec.status='Ditolak';rec.keterangan=p.catatan;label='Ditolak';}
+    else if(p.aksi==='review'){rec.status='Direview';label='Ditandai direview';}
+    else if(p.aksi==='assign'){ if(!p.eksekutor)throw new Error('Pilih eksekutor.'); rec.eksekutor=p.eksekutor;label='Ditugaskan';}
+    rec.diperbarui=now; rec.riwayat=rec.riwayat||[];
+    rec.riwayat.push({waktu:now,aksi:label,oleh:(this.codes[k]||{}).nama||'Admin',catatan:p.aksi==='tolak'?p.catatan:(p.aksi==='assign'?('Ditugaskan ke '+p.eksekutor):'')});
+    this._save(a); return this.adminData(k);
+  }
+};
+
+/* ============ TEMA ============ */
+const Tema={
+  init(){ if(sessionStorage.getItem('pkh_tema')==='terang')document.documentElement.className='tema-terang'; this._btn(); },
+  toggle(){ const t=document.documentElement.classList.toggle('tema-terang'); document.documentElement.classList.toggle('tema-gelap',!t);
+    sessionStorage.setItem('pkh_tema',t?'terang':'gelap'); this._btn(); },
+  _btn(){ const t=document.documentElement.classList.contains('tema-terang');
+    $('#btnTema').innerHTML=t?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>'
+      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.5A8.5 8.5 0 1111.5 3a6.5 6.5 0 009.5 9.5z"/></svg>';
+    $('#btnExport').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12M8 11l4 4 4-4M4 19h16"/></svg>'; }
+};
+
+/* ============ TOAST ============ */
+function toast(msg,tipe='info'){ const ic={ok:IK.check,err:IK.x,info:IK.info};
+  const el=document.createElement('div'); el.className='toast '+tipe;
+  el.innerHTML=`<span class="i"><svg viewBox="0 0 24 24">${ic[tipe]||IK.info}</svg></span><span>${msg}</span>`;
+  $('#toasts').appendChild(el); setTimeout(()=>{el.style.opacity=0;el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4000); }
+
+/* ============ LOGIN ============ */
+$('#loginForm').addEventListener('submit',async e=>{
+  e.preventDefault(); const kode=$('#kodeInp').value.trim(); if(!kode)return;
+  const btn=$('#loginBtn'); btn.disabled=true; const o=btn.textContent; btn.textContent='Memeriksa…';
+  try{ const me=await Backend.call('adminLogin',kode); KODE=kode; sessionStorage.setItem('pkh_kode',kode); boot(me); }
+  catch(err){ toast(err.message||'Kode salah.','err'); btn.disabled=false; btn.textContent=o; $('#kodeInp').select(); }
+});
+function logout(){ KODE=null; sessionStorage.removeItem('pkh_kode'); location.reload(); }
+
+async function boot(me){
+  $('#loginWrap').style.display='none'; $('#app').style.display='block';
+  $('#whoNama').textContent=me.nama; $('#whoRole').textContent=me.role==='super'?'Super Admin':'Admin';
+  $('#btnExport').style.display=(me.role==='super')?'grid':'grid'; // ekspor utk semua admin
+  await muat();
+}
+async function muat(){
+  $('#queue').innerHTML=`<div class="tablewrap"><div class="sk" style="height:220px"></div></div>`;
+  try{ DATA=await Backend.call('adminData',KODE); populasiFilter(); render(); }
+  catch(err){ toast(err.message||'Gagal memuat data.','err'); if(/akses|kode/i.test(err.message||''))logout(); }
+}
+
+/* ============ FILTER ============ */
+function populasiFilter(){
+  const opt=(arr,label)=>`<option value="">${label}</option>`+arr.map(v=>`<option>${v}</option>`).join('');
+  const kats=[...new Set(DATA.rows.map(r=>r.kategori))].map(katJudul);
+  const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort();
+  $('#fkat').innerHTML=`<option value="">Semua kategori</option>`+[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>`<option value="${k}">${katJudul(k)}</option>`).join('');
+  $('#fprov').innerHTML=opt(provs,'Semua provinsi');
+  $('#fstatus').innerHTML=opt(['Terkirim','Direview','Disetujui','Ditolak'],'Semua status');
+  $('#feks').innerHTML=opt(DATA.eksekutors,'Semua eksekutor');
+}
+function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
+  filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value; render(); }
+function terfilter(){ return DATA.rows.filter(r=>{
+  if(filter.kategori&&r.kategori!==filter.kategori)return false;
+  if(filter.provinsi&&r.provinsi!==filter.provinsi)return false;
+  if(filter.status&&(r.status||'Terkirim')!==filter.status)return false;
+  if(filter.eksekutor&&r.eksekutor!==filter.eksekutor)return false;
+  if(filter.q){ const blob=[r.tiket,r.instansi,r.namaPenulis,r.kabupaten,r.provinsi].join(' ').toLowerCase(); if(!blob.includes(filter.q))return false; }
+  return true;
+}); }
+function setView(v){ view=v; $('#vTabel').classList.toggle('aktif',v==='tabel'); $('#vKanban').classList.toggle('aktif',v==='kanban'); render(); }
+
+/* ============ RENDER ============ */
+const badgeOf=(st)=>{ st=(st||'Terkirim'); const l=st.toLowerCase();
+  const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/review/.test(l)?'info':'warn';
+  return `<span class="badge ${c}">${st}</span>`; };
+const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
+
+function render(){ renderStats(); (view==='tabel'?renderTabel:renderKanban)(); renderAnalitik(); }
+
+function renderStats(){ const s=DATA.stats||statsOf(DATA.rows);
+  const cards=[
+    {n:s.total,l:'Total bahan',c:''},
+    {n:s.terkirim+s.direview,l:'Menunggu review',c:'acc-warn'},
+    {n:s.disetujui,l:'Disetujui',c:'acc-ok'},
+    {n:s.penerimaan,u:'%',l:'Tingkat penerimaan',c:'acc-gold'},
+    {n:s.avgProsesJam,u:' jam',l:'Rerata waktu proses',c:''}
+  ];
+  $('#statgrid').innerHTML=cards.map(c=>`<div class="stat ${c.c}"><div class="n tabular">${c.n}${c.u?`<span class="u">${c.u}</span>`:''}</div><div class="l">${c.l}</div></div>`).join('');
+}
+
+function renderTabel(){ const rows=terfilter();
+  if(!rows.length){ $('#queue').innerHTML=empty(); return; }
+  $('#queue').innerHTML=`<div class="tablewrap"><table><thead><tr>
+    <th>Tiket</th><th>Kategori</th><th>Wilayah</th><th>Instansi</th><th>Tanggal</th><th>Eksekutor</th><th>Status</th><th></th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><span class="t-tiket" onclick="openDetail('${r.tiket}')">${r.tiket}</span></td>
+      <td>${katJudul(r.kategori)}${r.namaPenulis?`<div class="t-sub">${r.namaPenulis}</div>`:''}</td>
+      <td>${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')}</td>
+      <td>${r.instansi||'—'}</td>
+      <td class="t-sub">${tgl(r.dibuat)}</td>
+      <td>${r.eksekutor||'<span class="t-sub">—</span>'}</td>
+      <td>${badgeOf(r.status)}</td>
+      <td><div class="rowact">
+        <button class="icon-btn" title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
+        <button class="icon-btn" title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
+        <button class="icon-btn" title="Detail" onclick="openDetail('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.eye}</svg></button>
+      </div></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderKanban(){ const rows=terfilter(); const kolom=['Terkirim','Direview','Disetujui','Ditolak'];
+  const grup={}; kolom.forEach(k=>grup[k]=[]);
+  rows.forEach(r=>{ const st=r.status||'Terkirim'; (grup[st]||(grup[st]=[])).push(r); });
+  $('#queue').innerHTML=`<div class="kanban">${kolom.map(k=>`
+    <div class="kcol"><h4>${k}<span class="cnt">${(grup[k]||[]).length}</span></h4>
+      ${(grup[k]||[]).map(r=>`<div class="kcard" onclick="openDetail('${r.tiket}')">
+        <div class="kt">${r.tiket}</div><div class="kk">${katJudul(r.kategori)}</div>
+        <div class="km">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'—'}</div>
+        ${r.eksekutor?`<div class="keks"><span class="kdot"></span>${r.eksekutor}</div>`:''}
+      </div>`).join('')||'<div class="t-sub" style="padding:8px 4px">Kosong</div>'}
+    </div>`).join('')}</div>`;
+}
+
+function renderAnalitik(){ const s=DATA.stats||statsOf(DATA.rows);
+  $('#barProv').innerHTML=(s.perProvinsi||[]).slice(0,8).map(p=>`
+    <div class="bar-row"><span class="pn" title="${p.prov}">${p.prov}</span>
+      <span class="bar"><i style="width:${p.rate}%"></i></span><span class="pct">${p.rate}%</span></div>`).join('')||'<div class="t-sub">Belum ada data.</div>';
+  $('#alasan').innerHTML=(s.alasanTolak||[]).map(a=>`<div class="reason"><span class="c">${a.jumlah}×</span><span>${a.teks}</span></div>`).join('')||'<div class="t-sub">Belum ada penolakan.</div>';
+}
+
+function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada bahan yang cocok dengan filter.</div></div>`; }
+
+/* ============ AKSI ============ */
+async function doAksi(tiket,aksi,extra){ try{
+    const payload=Object.assign({tiket,aksi},extra||{});
+    DATA=await Backend.call('adminAksi',KODE,payload);
+    render(); populasiFilter();
+    const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',review:'Ditandai sedang direview.',assign:'Eksekutor ditugaskan.'}[aksi];
+    toast(pesan||'Tersimpan.','ok'); const m=$('#modal'); if(m.open)m.close();
+  }catch(err){ toast(err.message||'Gagal.','err'); } }
+
+function openTolak(tiket){ const dlg=$('#modal');
+  dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Tolak ${tiket}</span>
+      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
+    <div class="sheet-b"><p class="sec-title">Alasan penolakan (akan dilihat pengirim)</p>
+      <textarea class="inp" id="tolakAlasan" rows="4" placeholder="mis. Belum ada kutipan langsung narasumber."></textarea></div>
+    <div class="sheet-f"><button class="btn btn-ghost" onclick="$('#modal').close()">Batal</button>
+      <button class="btn btn-bad" onclick="kirimTolak('${tiket}')">Tolak Bahan</button></div></div>`;
+  dlg.showModal(); setTimeout(()=>$('#tolakAlasan').focus(),50); }
+function kirimTolak(tiket){ const a=$('#tolakAlasan').value.trim(); if(!a){toast('Isi alasan penolakan.','err');return;} doAksi(tiket,'tolak',{catatan:a}); }
+
+function drivePreview(url){ const m=String(url||'').match(/[-\w]{25,}/); return m?`https://drive.google.com/file/d/${m[0]}/preview`:''; }
+
+function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)return; const dlg=$('#modal');
+  const files=(r.files||[]).map((f,i)=>{ const img=/(jpg|jpeg|png|gif|webp)/i.test(f.name||'')||/=w\d+/.test(f.url||'');
+    return `<div class="file" onclick="previewFile('${tiket}',${i})"><div class="fh">${img&&f.url?`<img src="${f.url}">`:ikon('doc')}</div><div class="fn" title="${f.name||f.slot}">${f.name||f.slot}</div></div>`;
+  }).join('') || '<div class="t-sub">Tidak ada berkas / mode demo.</div>';
+  const riw=(r.riwayat||[]).slice().reverse().map(x=>`<div class="riw-item"><span class="rd"></span>
+      <div class="rb"><b>${x.aksi}${x.oleh?` · ${x.oleh}`:''}</b>${x.catatan?`<div>${x.catatan}</div>`:''}<div class="rt">${new Date(x.waktu).toLocaleString('id-ID')}</div></div></div>`).join('')
+      || '<div class="t-sub">Belum ada aktivitas.</div>';
+  const eksOpt=DATA.eksekutors.map(e=>`<option ${e===r.eksekutor?'selected':''}>${e}</option>`).join('');
+  dlg.innerHTML=`<div class="sheet">
+    <div class="sheet-h"><span class="tid">${r.tiket}</span> ${badgeOf(r.status)}
+      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
+    <div class="sheet-b">
+      <div class="kv">
+        <span class="k">Kategori</span><span class="v">${katJudul(r.kategori)}</span>
+        <span class="k">Instansi</span><span class="v">${r.instansi||'—'}</span>
+        <span class="k">Wilayah</span><span class="v">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'—'}</span>
+        ${r.namaPenulis?`<span class="k">Penulis</span><span class="v">${r.namaPenulis}</span>`:''}
+        <span class="k">No. WhatsApp</span><span class="v">${r.noWA||'—'}</span>
+        <span class="k">Dikirim</span><span class="v">${tgl(r.dibuat)}</span>
+        <span class="k">Eksekutor</span><span class="v">${r.eksekutor||'Belum ditugaskan'}</span>
+      </div>
+      <p class="sec-title">Berkas</p><div class="files">${files}</div>
+      <div id="prevBox"></div>
+      <p class="sec-title">Assign eksekutor</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px"><select class="inp" id="assignSel">${eksOpt}</select>
+        <button class="btn btn-ghost btn-sm" onclick="doAksi('${tiket}','assign',{eksekutor:$('#assignSel').value})">Tugaskan</button></div>
+      <p class="sec-title">Riwayat</p><div class="riw">${riw}</div>
+    </div>
+    <div class="sheet-f">
+      <button class="btn btn-ghost" onclick="doAksi('${tiket}','review')">Tandai Direview</button>
+      <button class="btn btn-bad" onclick="openTolak('${tiket}')">Tolak</button>
+      <button class="btn btn-primary" onclick="doAksi('${tiket}','setujui')"><svg viewBox="0 0 24 24">${IK.check}</svg> Setujui</button>
+    </div></div>`;
+  dlg.showModal();
+}
+function previewFile(tiket,i){ const r=DATA.rows.find(x=>x.tiket===tiket); const f=(r.files||[])[i]; const box=$('#prevBox');
+  if(!f||!f.url){ toast('Berkas tidak tersedia (mode demo).','info'); return; }
+  const p=drivePreview(f.url);
+  box.innerHTML=p?`<iframe class="prev-frame" src="${p}"></iframe>`:`<a class="btn btn-ghost" href="${f.url}" target="_blank">Buka berkas</a>`;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ============ EXPORT CSV ============ */
+function exportCSV(){ const rows=terfilter(); if(!rows.length){toast('Tidak ada data untuk diekspor.','info');return;}
+  const head=['Tiket','Kategori','Provinsi','Kabupaten','Instansi','Penulis','NoWA','Status','Eksekutor','Keterangan','Dikirim'];
+  const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+  const body=rows.map(r=>[r.tiket,katJudul(r.kategori),r.provinsi,r.kabupaten,r.instansi,r.namaPenulis,r.noWA,r.status,r.eksekutor,r.keterangan,tgl(r.dibuat)].map(esc).join(',')).join('\n');
+  const blob=new Blob(['﻿'+head.join(',')+'\n'+body],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bahan-kehumasan.csv'; a.click();
+  toast('CSV diunduh.','ok');
+}
+
+/* ============ INIT ============ */
+Tema.init();
+if(!isGas) console.info('[PKH-admin] Mode demo. Kode: "super" atau "admin".');
+(function autologin(){ const k=sessionStorage.getItem('pkh_kode'); if(!k)return;
+  Backend.call('adminLogin',k).then(me=>{ KODE=k; boot(me); }).catch(()=>sessionStorage.removeItem('pkh_kode')); })();
+</script>
+</body>
+</html>

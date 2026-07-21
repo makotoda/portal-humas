@@ -14,7 +14,7 @@
 const CONFIG_DEFAULT = {
   SPREADSHEET_ID: 'GANTI_DENGAN_ID_SPREADSHEET', // ID Google Sheet database
   DRIVE_FOLDER_ID: 'GANTI_DENGAN_ID_FOLDER_DRIVE', // folder Drive induk untuk unggahan
-  ADMIN_EMAILS: 'makotoda999@gmail.com'          // dipakai modul admin (sesi berikutnya)
+  ADMIN_SUPER_CODE: 'ubah-kode-super-ini'        // kode super admin awal (seed sheet Admins)
 };
 function cfg_(k) {
   const p = PropertiesService.getScriptProperties().getProperty(k);
@@ -24,6 +24,11 @@ function cfg_(k) {
 const SHEET_SUBMISSIONS = 'Submissions';
 const HEADERS = ['Timestamp','TicketID','Kategori','Provinsi','Kabupaten','Instansi',
                  'NamaPenulis','NoWA','FileLinks','Status','Eksekutor','Keterangan','LastUpdated'];
+
+const SHEET_ADMINS = 'Admins';
+const HEADERS_ADMIN = ['Nama','Kode','Role'];        // Role: 'super' | 'admin'
+const SHEET_RIWAYAT = 'Riwayat';
+const HEADERS_RIWAYAT = ['Timestamp','TicketID','Aksi','Oleh','Catatan'];
 
 // Kategori valid + field organisasi wajibnya (kontrak dgn KATEGORI di index.html).
 const KATEGORI_VALID = {
@@ -39,10 +44,15 @@ const KATEGORI_VALID = {
 };
 
 /* ===================== WEB APP ENTRY ===================== */
-function doGet() {
+function doGet(e) {
   setupSheets_(); // self-heal: pastikan sheet & header ada
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('Portal Komunikasi Kehumasan — Ditjen Bimas Hindu')
+  const page = (e && e.parameter && e.parameter.page) || '';
+  const file = page === 'admin' ? 'admin' : 'index';
+  const judul = page === 'admin'
+    ? 'Dashboard Humas — Portal Komunikasi Kehumasan'
+    : 'Portal Komunikasi Kehumasan — Ditjen Bimas Hindu';
+  return HtmlService.createHtmlOutputFromFile(file)
+    .setTitle(judul)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     // ALLOWALL agar bisa disematkan (embed) di Google Sites portal.
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
@@ -161,19 +171,34 @@ function getSpreadsheet_() {
   return SpreadsheetApp.openById(id);
 }
 
+function headersFor_(name) {
+  if (name === SHEET_ADMINS) return HEADERS_ADMIN;
+  if (name === SHEET_RIWAYAT) return HEADERS_RIWAYAT;
+  return HEADERS;
+}
+
 /** Ambil sheet; buat + isi header bila belum ada (pola self-heal Kodomo). */
 function getSheet_(name) {
   const ss = getSpreadsheet_();
   let sh = ss.getSheetByName(name);
   if (!sh) {
+    const H = headersFor_(name);
     sh = ss.insertSheet(name);
-    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
+    sh.getRange(1, 1, 1, H.length).setValues([H]).setFontWeight('bold');
     sh.setFrozenRows(1);
   }
   return sh;
 }
 
-function setupSheets_() { getSheet_(SHEET_SUBMISSIONS); }
+function setupSheets_() {
+  getSheet_(SHEET_SUBMISSIONS);
+  getSheet_(SHEET_RIWAYAT);
+  const admins = getSheet_(SHEET_ADMINS);
+  // seed satu super admin bila kosong (ganti kodenya lewat CONFIG/Script Properties)
+  if (admins.getLastRow() < 2) {
+    admins.appendRow(['Super Admin', cfg_('ADMIN_SUPER_CODE'), 'super']);
+  }
+}
 
 /** Peta nama kolom → indeks (0-based), mengikuti HEADERS. */
 function colIndex_() {
@@ -250,6 +275,162 @@ function normalizeWA_(v) {
 function pad2_(n) { return String(n).padStart(2, '0'); }
 function pad4_(n) { return String(n).padStart(4, '0'); }
 
+/* ===================== API ADMIN (dashboard humas) ===================== */
+// TRUST BOUNDARY: setiap fungsi admin* WAJIB memanggil cekAdmin_ dulu.
+// Web app anonymous → tak ada identitas Google; auth = kode akses di sheet Admins.
+// Kode diverifikasi ULANG di server tiap aksi (stateless) — jangan percaya klien.
+
+/** Verifikasi kode → {nama, role} atau null. Tak pernah mengembalikan kode. */
+function cekAdmin_(kode) {
+  const k = String(kode || '').trim();
+  if (!k) return null;
+  const sh = getSheet_(SHEET_ADMINS);
+  const last = sh.getLastRow();
+  if (last < 2) return null;
+  const vals = sh.getRange(2, 1, last - 1, HEADERS_ADMIN.length).getValues();
+  for (const r of vals) {
+    if (String(r[1]).trim() === k) return { nama: String(r[0]), role: String(r[2] || 'admin') };
+  }
+  return null;
+}
+
+/** Login: lempar error bila kode salah, jika benar kembalikan profil. */
+function adminLogin(kode) {
+  const me = cekAdmin_(kode);
+  if (!me) throw new Error('Kode akses salah.');
+  return me;
+}
+
+/** Muat seluruh data dashboard (list + eksekutor + statistik). */
+function adminData(kode) {
+  const me = cekAdmin_(kode);
+  if (!me) throw new Error('Akses ditolak. Kode salah.');
+  const idx = colIndex_();
+  const riw = riwayatMap_();
+  const list = dataRows_().map(r => {
+    let files = [];
+    try { files = JSON.parse(r[idx.FileLinks] || '[]'); } catch (e) { files = []; }
+    const tiket = r[idx.TicketID];
+    return {
+      tiket: tiket, kategori: r[idx.Kategori], provinsi: r[idx.Provinsi], kabupaten: r[idx.Kabupaten],
+      instansi: r[idx.Instansi], namaPenulis: r[idx.NamaPenulis], noWA: r[idx.NoWA],
+      files: files, status: r[idx.Status] || 'Terkirim', eksekutor: r[idx.Eksekutor],
+      keterangan: r[idx.Keterangan], dibuat: toIso_(r[idx.Timestamp]),
+      diperbarui: toIso_(r[idx.LastUpdated]), riwayat: riw[tiket] || []
+    };
+  }).reverse();
+  return { roleAnda: me, eksekutors: daftarEksekutor_(), stats: hitungStats_(list), rows: list };
+}
+
+/**
+ * Aksi admin atas satu tiket. payload: { tiket, aksi, catatan?, eksekutor? }
+ * aksi: 'setujui' | 'tolak'(catatan wajib) | 'review' | 'assign'(eksekutor wajib)
+ * Mengembalikan adminData terbaru (pola "kembalikan state penuh").
+ */
+function adminAksi(kode, payload) {
+  const me = cekAdmin_(kode);
+  if (!me) throw new Error('Akses ditolak. Kode salah.');
+  const p = payload || {};
+  const tiket = String(p.tiket || '').trim();
+  const aksi = String(p.aksi || '').trim();
+  const catatan = String(p.catatan || '').trim();
+  const eksekutor = String(p.eksekutor || '').trim();
+
+  let status = '';
+  if (aksi === 'setujui') status = 'Disetujui';
+  else if (aksi === 'tolak') { if (!catatan) throw new Error('Alasan penolakan wajib diisi.'); status = 'Ditolak'; }
+  else if (aksi === 'review') status = 'Direview';
+  else if (aksi === 'assign') { if (!eksekutor) throw new Error('Pilih eksekutor.'); }
+  else throw new Error('Aksi tidak dikenal.');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = getSheet_(SHEET_SUBMISSIONS);
+    const idx = colIndex_();
+    const rownum = findRow_(sh, tiket);
+    if (!rownum) throw new Error('Tiket tidak ditemukan.');
+    const now = new Date();
+    if (status) sh.getRange(rownum, idx.Status + 1).setValue(status);
+    if (aksi === 'tolak') sh.getRange(rownum, idx.Keterangan + 1).setValue(catatan);
+    if (eksekutor) sh.getRange(rownum, idx.Eksekutor + 1).setValue(eksekutor);
+    sh.getRange(rownum, idx.LastUpdated + 1).setValue(now);
+    const label = { setujui: 'Disetujui', tolak: 'Ditolak', review: 'Ditandai direview', assign: 'Ditugaskan' }[aksi];
+    const ket = aksi === 'tolak' ? catatan : (aksi === 'assign' ? ('Ditugaskan ke ' + eksekutor) : catatan);
+    getSheet_(SHEET_RIWAYAT).appendRow([now, tiket, label, me.nama, ket]);
+    return adminData(kode);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ---- helper admin ---- */
+function findRow_(sheet, tiket) {
+  const last = sheet.getLastRow();
+  if (last < 2) return 0;
+  const idx = colIndex_();
+  const col = sheet.getRange(2, idx.TicketID + 1, last - 1, 1).getValues();
+  for (let i = 0; i < col.length; i++) if (String(col[i][0]) === tiket) return i + 2;
+  return 0;
+}
+
+function riwayatMap_() {
+  const sh = getSheet_(SHEET_RIWAYAT);
+  const last = sh.getLastRow();
+  const map = {};
+  if (last < 2) return map;
+  sh.getRange(2, 1, last - 1, HEADERS_RIWAYAT.length).getValues().forEach(r => {
+    const t = String(r[1]); if (!t) return;
+    (map[t] = map[t] || []).push({ waktu: toIso_(r[0]), aksi: r[2], oleh: r[3], catatan: r[4] });
+  });
+  return map;
+}
+
+function daftarEksekutor_() {
+  const sh = getSheet_(SHEET_ADMINS);
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, 1).getValues().map(r => String(r[0])).filter(Boolean);
+}
+
+function hitungStats_(list) {
+  const s = { total: list.length, terkirim: 0, direview: 0, disetujui: 0, ditolak: 0,
+              penerimaan: 0, avgProsesJam: 0, perProvinsi: [], alasanTolak: [] };
+  const prov = {}, alasan = {};
+  let diputus = 0, totalJam = 0, nProses = 0;
+  list.forEach(r => {
+    const st = String(r.status || '').toLowerCase();
+    const disetujui = /setuju|selesai|terbit|complete/.test(st);
+    const ditolak = /tolak|reject/.test(st);
+    if (disetujui) s.disetujui++; else if (ditolak) s.ditolak++;
+    else if (/review|proses|progress/.test(st)) s.direview++; else s.terkirim++;
+    const P = r.provinsi || '—';
+    prov[P] = prov[P] || { total: 0, disetujui: 0 };
+    prov[P].total++; if (disetujui) prov[P].disetujui++;
+    if (disetujui || ditolak) {
+      diputus++;
+      const t0 = Date.parse(r.dibuat), t1 = Date.parse(r.diperbarui);
+      if (t0 && t1 && t1 >= t0) { totalJam += (t1 - t0) / 3.6e6; nProses++; }
+    }
+    if (ditolak && r.keterangan) { const k = String(r.keterangan).trim(); alasan[k] = (alasan[k] || 0) + 1; }
+  });
+  s.penerimaan = diputus ? Math.round((s.disetujui / diputus) * 100) : 0;
+  s.avgProsesJam = nProses ? Math.round(totalJam / nProses) : 0;
+  s.perProvinsi = Object.keys(prov).map(p => ({
+    prov: p, total: prov[p].total, disetujui: prov[p].disetujui,
+    rate: prov[p].total ? Math.round((prov[p].disetujui / prov[p].total) * 100) : 0
+  })).sort((a, b) => b.total - a.total);
+  s.alasanTolak = Object.keys(alasan).map(k => ({ teks: k, jumlah: alasan[k] }))
+    .sort((a, b) => b.jumlah - a.jumlah).slice(0, 6);
+  return s;
+}
+
+function toIso_(v) {
+  if (v instanceof Date) return v.toISOString();
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? String(v || '') : d.toISOString();
+}
+
 /* ===================== UJI MANUAL (jalankan dari editor) ===================== */
 // Ganti CONFIG dulu, lalu jalankan uji_() dari editor Apps Script untuk memastikan
 // submit + cek status bekerja tanpa lewat UI.
@@ -261,4 +442,9 @@ function uji_() {
   Logger.log('Tiket: ' + r.tiket);
   Logger.log('Cek status: ' + JSON.stringify(cekStatus(r.tiket)));
   Logger.log('Stats: ' + JSON.stringify(getStats()));
+  // admin: login super + setujui tiket uji
+  const me = adminLogin(cfg_('ADMIN_SUPER_CODE'));
+  Logger.log('Admin: ' + JSON.stringify(me));
+  const d = adminAksi(cfg_('ADMIN_SUPER_CODE'), { tiket: r.tiket, aksi: 'setujui' });
+  Logger.log('Setelah setujui — stats: ' + JSON.stringify(d.stats));
 }
