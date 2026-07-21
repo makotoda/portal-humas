@@ -857,8 +857,14 @@ const Status={
   }
 };
 
-async function BukaRevisi(tiket, wa, btn){
+async function BukaRevisi(tiket, q, btn){
   try{
+    let wa = q;
+    const isNumber = /^\d+$/.test(wa.replace(/\D/g, ''));
+    if(!isNumber || wa.toLowerCase().startsWith('pkh-')){
+      wa = prompt(`Verifikasi keamanan: Masukkan nomor WhatsApp Anda untuk merevisi tiket ${tiket}`);
+      if(!wa) return;
+    }
     const orig=btn.innerHTML; btn.innerHTML='Memuat...'; btn.disabled=true;
     const d=await Backend.call('getDetailRevisi',tiket,wa);
     Nav.go('form'); Form.buka(d.kategori);
@@ -879,7 +885,7 @@ async function BukaRevisi(tiket, wa, btn){
         $('#form-dynamic').prepend(m);
       },100);
     },50);
-  }catch(e){ toast(e.message||'Gagal','err'); btn.innerHTML='Revisi Inputan'; btn.disabled=false; }
+  }catch(e){ toast(e.message||'Gagal','err'); if(btn){btn.innerHTML='Revisi Inputan'; btn.disabled=false;} }
 }
 
 // ============================================================
