@@ -12,7 +12,7 @@
 // Boleh diisi langsung di sini ATAU lewat Script Properties (kunci sama).
 // Script Properties menang bila diisi — berguna agar ID tak ikut ter-commit.
 const CONFIG_DEFAULT = {
-  SPREADSHEET_ID: 'GANTI_DENGAN_ID_SPREADSHEET', // ID Google Sheet database
+  SPREADSHEET_ID: '1j_tuEOaKeoUAdZXGhbwaTdnDL8zg87LCZ_GLIKrV3NI', // ID Google Sheet database
   DRIVE_FOLDER_ID: 'GANTI_DENGAN_ID_FOLDER_DRIVE', // folder Drive induk untuk unggahan
   ADMIN_SUPER_CODE: 'ubah-kode-super-ini'        // kode super admin awal (seed sheet Admins)
 };
