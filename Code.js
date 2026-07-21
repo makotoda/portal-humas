@@ -143,12 +143,13 @@ function cekStatus(query) {
   const q = String(query || '').trim();
   if (!q) return [];
   const qDigit = q.replace(/\D/g, '');
+  const qSearch = qDigit.replace(/^0+/, ''); // Atasi data lama dari Form: awalan 0 hilang di Sheet
   const idx = colIndex_();
   return dataRows_().filter(r => {
     const tid = String(r[idx.TicketID] || '').toLowerCase();
     if (tid === q.toLowerCase()) return true;
     const wa = String(r[idx.NoWA] || '').replace(/\D/g, '');
-    return qDigit.length >= 6 && wa && wa.endsWith(qDigit);
+    return qSearch.length >= 6 && wa && (wa.endsWith(qDigit) || wa.endsWith(qSearch));
   }).map(r => ({
     tiket: r[idx.TicketID], kategori: r[idx.Kategori],
     provinsi: r[idx.Provinsi], kabupaten: r[idx.Kabupaten],
