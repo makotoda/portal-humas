@@ -1,8 +1,30 @@
 # PROGRESS — Portal Komunikasi Kehumasan
 
 ## Sedang dikerjakan
-- (kosong) — spine + dashboard admin (termasuk kelola admin & filter tanggal) selesai;
-  kandidat berikutnya: notifikasi Telegram atau pindah wilayah/ketentuan ke sheet Config.
+- (kosong) — lihat Backlog di bawah untuk kandidat berikutnya; dua dari tiga item
+  butuh info/keputusan dari Anda dulu (lihat catatan blocker per item).
+
+## Selesai (sistem revisi per-field + fix produksi, 22-23 Jul 2026)
+- **Minta Revisi per-field**: admin mencentang field spesifik yang perlu diperbaiki
+  pengirim (bukan revisi seluruh form). Prefix `[REVISI:field1,field2]` disisipkan
+  ke `Keterangan`, dibersihkan lagi saat ditampilkan di riwayat/timeline.
+  Form revisi di sisi pengirim mengunci semua field kecuali yang dicentang.
+- **Cek status tahan format WA lama** (`cekStatus`) — nomor tanpa angka nol depan
+  dari form lama tetap cocok.
+- Perbaikan bug produksi (ditemukan saat verifikasi live, bukan preview lokal):
+  1. `Status._card()` memakai variabel `ket`/`revFields` yang tak pernah didefinisikan
+     → `ReferenceError` di setiap render kartu → Cek Status selalu gagal untuk semua
+     pengguna. Diperbaiki dengan parsing prefix `[REVISI:...]` dari `r.keterangan`.
+  2. `KATEGORI`/`FIELD_DEF` baru di `admin.html` memakai literal `'image/*'` →
+     kena gotcha stripper komentar GAS (lihat CLAUDE.md) → mematikan seluruh script
+     admin di produksi. Diganti ke konstanta `IMG`.
+  3. Tombol Setujui/Tolak/Revisi (tabel + modal) tetap aktif walau tiket sudah
+     Disetujui/Ditolak → sekarang `disabled` via `statusFinal(status)`.
+  4. Field kabupaten di form revisi ikut ter-*enable* meski tak dicentang reviewer —
+     akar masalah: `_wireWilayah`'s change-handler menimpa `kab.disabled` tanpa sadar
+     status lock revisi. Fix di satu titik (shared handler), bukan per-caller.
+  5. Tiga bug lingkungan iframe GAS lain (login admin blank, mesh animasi membekukan
+     renderer, `localStorage` SecurityError) — didokumentasikan di CLAUDE.md.
 
 ## Selesai (admin lanjutan, 21 Jul 2026)
 - **Kelola Admin & Eksekutor dari UI** (khusus super admin, tombol di topbar):
@@ -44,11 +66,17 @@
     workflow auto-deploy Actions, `README.md`.
 
 ## Backlog (urut prioritas)
-1. **Notifikasi** — Telegram/WA saat status berubah (pola bot Telegram); kelola daftar
-   eksekutor dari UI (super admin) — sekarang eksekutor = daftar nama di sheet `Admins`.
+1. **Notifikasi** — Telegram/WA saat status berubah. **Blocker: butuh token bot
+   Telegram / kredensial WA API dari Anda** — belum ada satu pun di repo/sheet ini,
+   tak bisa dibangun tanpa itu. Kelola daftar eksekutor dari UI sudah selesai
+   (lihat "Selesai — admin lanjutan").
 2. **Sheet `MasterWilayah`/`Config`** — pindahkan wilayah & teks ketentuan ke sheet agar
-   editable tanpa ubah kode; lengkapi seluruh kabupaten/kota (514).
-3. **Upload berkas besar** — ganti base64 ke Drive Picker/resumable bila payload sering >50MB.
+   editable tanpa ubah kode. Plumbing (sheet + self-heal + fungsi getter) bisa dibangun
+   kapan saja tanpa info tambahan; **tapi melengkapi seluruh 514 kabupaten/kota butuh
+   sumber data resmi** (BPS/Kemendagri) — mengarang isian administratif berisiko salah,
+   jadi belum diisi. Subset saat ini (provinsi aktif + kota besar) tetap dipakai.
+3. **Upload berkas besar** — ganti base64 ke Drive Picker/resumable. Belum ada laporan
+   payload >50MB gagal di produksi — ditunda sampai benar-benar jadi masalah (YAGNI).
 
 ## Keputusan teknis penting
 - **Satu file frontend** (bukan template include GAS) supaya bisa dipreview lokal apa adanya
