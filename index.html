@@ -666,7 +666,7 @@ async function loadStats(){
 // FORM dinamis
 // ============================================================
 const Form={
-  kat:null, files:{}, 
+  kat:null, files:{}, tiket_revisi:null,
   buka(id){
     const k=KATEGORI[id]; if(!k)return; this.kat=id; this.files={};
     $('#fIco').innerHTML=ikon(k.ico); $('#fJudul').textContent=k.judul; $('#fDesk').textContent=k.desk;
@@ -773,7 +773,7 @@ const Form={
 
   async submit(e){
     e.preventDefault();
-    const form=$('#formEl'), fd={kategori:this.kat};
+    const form=$('#formEl'), fd={kategori:this.kat, tiket_revisi:this.tiket_revisi};
     $$('#fFields input, #fFields select').forEach(inp=>{ if(inp.name) fd[inp.name]=inp.value.trim(); });
     if(!this.validate(fd))return;
     const btn=$('#fSubmit'); btn.disabled=true; const orig=btn.innerHTML;
@@ -792,16 +792,16 @@ const Form={
         fd._fileNames=fileNames;
       }
       const r=await Backend.call('submitPermohonan',fd);
-      this._sukses(r.tiket);
+      this._sukses(r.tiket, r.isRevisi);
       form.reset();
     }catch(err){ toast(err.message||'Gagal mengirim. Coba lagi.','err'); }
     finally{ btn.disabled=false; btn.innerHTML=orig; }
   },
-  _sukses(tiket){
+  _sukses(tiket, isRevisi){
     const dlg=document.createElement('dialog');
     dlg.innerHTML=`<div class="modal">
       <div class="seal"><svg viewBox="0 0 24 24">${IK.check}</svg></div>
-      <h3>Bahan Terkirim</h3>
+      <h3>${isRevisi?'Revisi Terkirim':'Bahan Terkirim'}</h3>
       <p>Terima kasih. Tim Humas akan meninjau kiriman Anda. Simpan nomor tiket ini untuk melacak status.</p>
       <div class="tiket"><div class="lb">Nomor Tiket</div><div class="no">${tiket}</div>
         <div class="cp" onclick="navigator.clipboard&&navigator.clipboard.writeText('${tiket}');toast('Nomor tiket disalin.','ok')">${ikon('copy')} Salin</div></div>
@@ -833,9 +833,9 @@ const Status={
   },
   _card(r){
     const st=r.status||'Terkirim';
-    const ditolak=/tolak|reject/i.test(st), selesai=/setuju|complete|selesai|terbit/i.test(st);
-    let idx = ditolak||selesai ? 2 : /review|proses|progress/i.test(st) ? 1 : 0;
-    const badge = ditolak?'bad':selesai?'ok':idx===1?'info':'warn';
+    const ditolak=/tolak|reject/i.test(st), selesai=/setuju|complete|selesai|terbit/i.test(st), revisi=/revisi/i.test(st);
+    let idx = ditolak||selesai ? 2 : revisi ? 0 : /review|proses|progress/i.test(st) ? 1 : 0;
+    const badge = ditolak?'bad':selesai?'ok':revisi?'warn':idx===1?'info':'warn';
     const katJudul=(KATEGORI[r.kategori]&&KATEGORI[r.kategori].judul)||r.kategori||'—';
     const steps=LANGKAH.map((lb,i)=>{
       let s=''; if(i<idx)s='done'; else if(i===idx)s= (ditolak&&i===2)?'now':'now';
@@ -848,13 +848,39 @@ const Status={
     return `<div class="tl-card">
       <div class="tl-top"><span class="tid">${r.tiket||'—'}</span>
         <span class="kat-tag">${katJudul}</span>
-        <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':idx===1?'Direview':'Terkirim'}</span></div>
+        <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':revisi?'Minta Revisi':idx===1?'Direview':'Terkirim'}</span></div>
       <div class="tl-meta">${[r.instansi,wilayah].filter(Boolean).join(' · ')||'—'}</div>
       <div class="steps">${steps}</div>
       ${r.keterangan?`<div class="tl-note"><b>Catatan Tim Humas:</b> ${r.keterangan}</div>`:''}
+      ${revisi?`<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="BukaRevisi('${r.tiket}','${$('#qStatus').value.trim()}',this)">Revisi Inputan</button></div>`:''}
     </div>`;
   }
 };
+
+async function BukaRevisi(tiket, wa, btn){
+  try{
+    const orig=btn.innerHTML; btn.innerHTML='Memuat...'; btn.disabled=true;
+    const d=await Backend.call('getDetailRevisi',tiket,wa);
+    Nav.go('form'); Form.buka(d.kategori);
+    Form.tiket_revisi=tiket;
+    setTimeout(()=>{
+      const pv=$('#inp-provinsi'); if(pv)pv.value=d.provinsi; Form.loadKab();
+      setTimeout(()=>{
+        const kb=$('#inp-kabupaten'); if(kb)kb.value=d.kabupaten;
+        $$('#fFields .inp').forEach(inp=>{
+          const n=inp.name;
+          if(n==='instansi'||n==='namaWidyalaya'||n==='namaPasraman') inp.value=d.instansi||'';
+          if(n==='namaPenulis') inp.value=d.namaPenulis||'';
+          if(n==='noWA') inp.value=d.noWA||'';
+          if(n==='linkVideo') inp.value=d.linkVideo||'';
+        });
+        const m=document.createElement('div'); m.className='tl-note'; m.style.marginBottom='16px';
+        m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika Anda ingin mengganti/menambah berkas. Jika tidak diunggah ulang, berkas lama Anda akan tetap tersimpan aman.`;
+        $('#form-dynamic').prepend(m);
+      },100);
+    },50);
+  }catch(e){ toast(e.message||'Gagal','err'); btn.innerHTML='Revisi Inputan'; btn.disabled=false; }
+}
 
 // ============================================================
 // Scroll reveal (IntersectionObserver)

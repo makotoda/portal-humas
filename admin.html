@@ -280,6 +280,7 @@ const IK={check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
   doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'};
 const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
 
@@ -430,7 +431,7 @@ function populasiFilter(){
   const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort();
   $('#fkat').innerHTML=`<option value="">Semua kategori</option>`+[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>`<option value="${k}">${katJudul(k)}</option>`).join('');
   $('#fprov').innerHTML=opt(provs,'Semua provinsi');
-  $('#fstatus').innerHTML=opt(['Terkirim','Direview','Disetujui','Ditolak'],'Semua status');
+  $('#fstatus').innerHTML=opt(['Terkirim','Direview','Revisi','Disetujui','Ditolak'],'Semua status');
   $('#feks').innerHTML=opt(DATA.eksekutors,'Semua eksekutor');
 }
 function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
@@ -451,7 +452,7 @@ function setView(v){ view=v; $('#vTabel').classList.toggle('aktif',v==='tabel');
 
 
 const badgeOf=(st)=>{ st=(st||'Terkirim'); const l=st.toLowerCase();
-  const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/review/.test(l)?'info':'warn';
+  const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/revisi/.test(l)?'warn':/review/.test(l)?'info':'warn';
   return `<span class="badge ${c}">${st}</span>`; };
 const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
 
@@ -483,11 +484,12 @@ function renderTabel(){ const rows=terfilter();
       <td><div class="rowact">
         <button class="icon-btn" title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
         <button class="icon-btn" title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
+        <button class="icon-btn" title="Revisi" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
         <button class="icon-btn" title="Detail" onclick="openDetail('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.eye}</svg></button>
       </div></td></tr>`).join('')}</tbody></table></div>`;
 }
 
-function renderKanban(){ const rows=terfilter(); const kolom=['Terkirim','Direview','Disetujui','Ditolak'];
+function renderKanban(){ const rows=terfilter(); const kolom=['Terkirim','Direview','Revisi','Disetujui','Ditolak'];
   const grup={}; kolom.forEach(k=>grup[k]=[]);
   rows.forEach(r=>{ const st=r.status||'Terkirim'; (grup[st]||(grup[st]=[])).push(r); });
   $('#queue').innerHTML=`<div class="kanban">${kolom.map(k=>`
@@ -528,6 +530,16 @@ function openTolak(tiket){ const dlg=$('#modal');
   dlg.showModal(); setTimeout(()=>$('#tolakAlasan').focus(),50); }
 function kirimTolak(tiket){ const a=$('#tolakAlasan').value.trim(); if(!a){toast('Isi alasan penolakan.','err');return;} doAksi(tiket,'tolak',{catatan:a}); }
 
+function openRevisi(tiket){ const dlg=$('#modal');
+  dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Minta Revisi ${tiket}</span>
+      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
+    <div class="sheet-b"><p class="sec-title">Catatan Revisi (akan dilihat pengirim)</p>
+      <textarea class="inp" id="revisiAlasan" rows="4" placeholder="mis. Bukti dukungan kurang lengkap, mohon dilampirkan."></textarea></div>
+    <div class="sheet-f"><button class="btn btn-ghost" onclick="$('#modal').close()">Batal</button>
+      <button class="btn btn-primary" style="background:var(--warn-bg);color:var(--warn)" onclick="kirimRevisi('${tiket}')">Minta Revisi</button></div></div>`;
+  dlg.showModal(); setTimeout(()=>$('#revisiAlasan').focus(),50); }
+function kirimRevisi(tiket){ const a=$('#revisiAlasan').value.trim(); if(!a){toast('Isi catatan revisi.','err');return;} doAksi(tiket,'revisi',{catatan:a}); }
+
 // GOTCHA GAS: stripper // GAS mengenali string '...' tapi TIDAK template literal —
 // jangan pernah menaruh URL (https:...) di dalam backtick. Pakai konkatenasi string.
 function drivePreview(url){ const m=String(url||'').match(/[-\w]{25,}/); return m?('https://drive.google.com/file/d/'+m[0]+'/preview'):''; }
@@ -562,6 +574,7 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
     </div>
     <div class="sheet-f">
       <button class="btn btn-ghost" onclick="doAksi('${tiket}','review')">Tandai Direview</button>
+      <button class="btn btn-ghost" onclick="openRevisi('${tiket}')" style="color:var(--warn)">Revisi</button>
       <button class="btn btn-bad" onclick="openTolak('${tiket}')">Tolak</button>
       <button class="btn btn-primary" onclick="doAksi('${tiket}','setujui')"><svg viewBox="0 0 24 24">${IK.check}</svg> Setujui</button>
     </div></div>`;

@@ -110,29 +110,63 @@ function submitPermohonan(payload) {
   try {
     const sheet = getSheet_(SHEET_SUBMISSIONS);
     const now = new Date();
-    const ym = now.getFullYear() + pad2_(now.getMonth() + 1);
-    const tiket = 'PKH-' + ym + '-' + pad4_(nextSeq_(sheet, 'PKH-' + ym + '-'));
+    let tiket = p.tiket_revisi;
+    let ym = '';
+    let rownum = 0;
+    const idx = colIndex_();
+
+    if (tiket) {
+      rownum = findRow_(sheet, tiket);
+      if (!rownum) throw new Error('Tiket revisi tidak ditemukan.');
+      ym = tiket.split('-')[1]; // ex: PKH-202607-0001 -> 202607
+    } else {
+      ym = now.getFullYear() + pad2_(now.getMonth() + 1);
+      tiket = 'PKH-' + ym + '-' + pad4_(nextSeq_(sheet, 'PKH-' + ym + '-'));
+    }
 
     // Simpan berkas ke Drive (folder: induk / Kategori / YYYY-MM / tiket)
     const links = simpanBerkas_(p._files || [], p.kategori, ym, tiket);
-    if (spec.video && p.linkVideo) links.push({ slot: 'linkVideo', url: String(p.linkVideo).trim() });
+    
+    let mergedFiles = [];
+    if (rownum) {
+      // Gabungkan berkas lama jika revisi
+      const oldStr = sheet.getRange(rownum, idx.FileLinks + 1).getValue();
+      try { mergedFiles = JSON.parse(oldStr || '[]'); } catch(e) {}
+      if (spec.video && p.linkVideo) mergedFiles = mergedFiles.filter(f => f.slot !== 'linkVideo');
+    }
+    mergedFiles.push(...links);
+    if (spec.video && p.linkVideo) mergedFiles.push({ slot: 'linkVideo', url: String(p.linkVideo).trim() });
 
-    const idx = colIndex_();
-    const row = new Array(HEADERS.length).fill('');
-    row[idx.Timestamp]   = now;
-    row[idx.TicketID]    = tiket;
-    row[idx.Kategori]    = p.kategori;
-    row[idx.Provinsi]    = provinsi;
-    row[idx.Kabupaten]   = kabupaten;
-    row[idx.Instansi]    = org;
-    row[idx.NamaPenulis] = penulis;
-    row[idx.NoWA]        = noWA;
-    row[idx.FileLinks]   = JSON.stringify(links);
-    row[idx.Status]      = 'Terkirim';
-    row[idx.LastUpdated] = now;
-    sheet.appendRow(row);
+    if (rownum) {
+      // Menimpa baris yang sudah ada (Revisi)
+      sheet.getRange(rownum, idx.Kategori + 1).setValue(p.kategori);
+      sheet.getRange(rownum, idx.Provinsi + 1).setValue(provinsi);
+      sheet.getRange(rownum, idx.Kabupaten + 1).setValue(kabupaten);
+      sheet.getRange(rownum, idx.Instansi + 1).setValue(org);
+      sheet.getRange(rownum, idx.NamaPenulis + 1).setValue(penulis);
+      sheet.getRange(rownum, idx.NoWA + 1).setValue(noWA);
+      sheet.getRange(rownum, idx.FileLinks + 1).setValue(JSON.stringify(mergedFiles));
+      sheet.getRange(rownum, idx.Status + 1).setValue('Direvisi');
+      sheet.getRange(rownum, idx.LastUpdated + 1).setValue(now);
+      getSheet_(SHEET_RIWAYAT).appendRow([now, tiket, 'Inputan Direvisi', penulis || noWA, 'Pengirim memperbaiki data inputan.']);
+    } else {
+      // Buat baris baru
+      const row = new Array(HEADERS.length).fill('');
+      row[idx.Timestamp]   = now;
+      row[idx.TicketID]    = tiket;
+      row[idx.Kategori]    = p.kategori;
+      row[idx.Provinsi]    = provinsi;
+      row[idx.Kabupaten]   = kabupaten;
+      row[idx.Instansi]    = org;
+      row[idx.NamaPenulis] = penulis;
+      row[idx.NoWA]        = noWA;
+      row[idx.FileLinks]   = JSON.stringify(mergedFiles);
+      row[idx.Status]      = 'Terkirim';
+      row[idx.LastUpdated] = now;
+      sheet.appendRow(row);
+    }
 
-    return { tiket: tiket, waktu: now.toISOString() };
+    return { tiket: tiket, waktu: now.toISOString(), isRevisi: !!rownum };
   } finally {
     lock.releaseLock();
   }
@@ -157,6 +191,36 @@ function cekStatus(query) {
     status: r[idx.Status] || 'Terkirim', eksekutor: r[idx.Eksekutor],
     keterangan: r[idx.Keterangan]
   })).reverse(); // terbaru dulu
+}
+
+/** Mengambil detail asli untuk pre-fill form revisi. */
+function getDetailRevisi(tiket, queryWa) {
+  const t = String(tiket || '').trim().toLowerCase();
+  const waQ = String(queryWa || '').replace(/\D/g, '').replace(/^0+/, '');
+  if (!t || !waQ || waQ.length < 6) throw new Error('Tiket atau WA tidak valid.');
+  
+  const idx = colIndex_();
+  const row = dataRows_().find(r => {
+    const tid = String(r[idx.TicketID] || '').toLowerCase();
+    const wa = String(r[idx.NoWA] || '').replace(/\D/g, '');
+    return tid === t && (wa.endsWith(waQ) || wa.endsWith(waQ.replace(/^0+/, '')));
+  });
+  if (!row) throw new Error('Tiket tidak ditemukan atau WA salah.');
+  if (row[idx.Status] !== 'Revisi') throw new Error('Tiket ini tidak sedang dalam status Revisi.');
+  
+  let linkVideo = '';
+  try {
+    const files = JSON.parse(row[idx.FileLinks] || '[]');
+    const lv = files.find(f => f.slot === 'linkVideo');
+    if (lv) linkVideo = lv.url;
+  } catch(e) {}
+
+  return {
+    tiket: row[idx.TicketID], kategori: row[idx.Kategori],
+    provinsi: row[idx.Provinsi], kabupaten: row[idx.Kabupaten],
+    instansi: row[idx.Instansi], namaPenulis: row[idx.NamaPenulis],
+    noWA: row[idx.NoWA], linkVideo: linkVideo
+  };
 }
 
 /* ===================== HELPER (internal) ===================== */
@@ -340,6 +404,7 @@ function adminAksi(kode, payload) {
   let status = '';
   if (aksi === 'setujui') status = 'Disetujui';
   else if (aksi === 'tolak') { if (!catatan) throw new Error('Alasan penolakan wajib diisi.'); status = 'Ditolak'; }
+  else if (aksi === 'revisi') { if (!catatan) throw new Error('Catatan revisi wajib diisi.'); status = 'Revisi'; }
   else if (aksi === 'review') status = 'Direview';
   else if (aksi === 'assign') { if (!eksekutor) throw new Error('Pilih eksekutor.'); }
   else throw new Error('Aksi tidak dikenal.');
@@ -353,11 +418,11 @@ function adminAksi(kode, payload) {
     if (!rownum) throw new Error('Tiket tidak ditemukan.');
     const now = new Date();
     if (status) sh.getRange(rownum, idx.Status + 1).setValue(status);
-    if (aksi === 'tolak') sh.getRange(rownum, idx.Keterangan + 1).setValue(catatan);
+    if (aksi === 'tolak' || aksi === 'revisi') sh.getRange(rownum, idx.Keterangan + 1).setValue(catatan);
     if (eksekutor) sh.getRange(rownum, idx.Eksekutor + 1).setValue(eksekutor);
     sh.getRange(rownum, idx.LastUpdated + 1).setValue(now);
-    const label = { setujui: 'Disetujui', tolak: 'Ditolak', review: 'Ditandai direview', assign: 'Ditugaskan' }[aksi];
-    const ket = aksi === 'tolak' ? catatan : (aksi === 'assign' ? ('Ditugaskan ke ' + eksekutor) : catatan);
+    const label = { setujui: 'Disetujui', tolak: 'Ditolak', revisi: 'Minta Revisi', review: 'Ditandai direview', assign: 'Ditugaskan' }[aksi];
+    const ket = (aksi === 'tolak' || aksi === 'revisi') ? catatan : (aksi === 'assign' ? ('Ditugaskan ke ' + eksekutor) : catatan);
     getSheet_(SHEET_RIWAYAT).appendRow([now, tiket, label, me.nama, ket]);
     return adminData(kode);
   } finally {
