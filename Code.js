@@ -199,18 +199,18 @@ function getDetailRevisi(payload) {
   const queryWa = payload.wa;
   const t = String(tiket || '').trim().toLowerCase();
   const waQ = String(queryWa || '').replace(/\D/g, '').replace(/^0+/, '');
-  if (!t) throw new Error('Debug: Tiket kosong. payload=' + JSON.stringify(payload));
-  if (!queryWa) throw new Error('Debug: queryWa kosong atau undefined. payload=' + JSON.stringify(payload));
-  if (!waQ) throw new Error('Debug: waQ kosong (tidak ada angka). payload=' + JSON.stringify(payload));
-  
+  // Syarat panjang WA disamakan dgn cekStatus — cegah tembus-cocok pakai 1-2 digit
+  // saat tiket (berurutan, gampang ditebak) sudah diketahui penyerang.
+  if (!t || waQ.length < 6) throw new Error('Tiket atau nomor WhatsApp tidak valid.');
+
   const idx = colIndex_();
   const row = dataRows_().find(r => {
     const tid = String(r[idx.TicketID] || '').toLowerCase();
     const wa = String(r[idx.NoWA] || '').replace(/\D/g, '');
-    return tid === t && (wa.endsWith(waQ) || wa.endsWith(waQ.replace(/^0+/, '')));
+    return tid === t && wa && wa.endsWith(waQ);
   });
-  if (!row) throw new Error('Debug: Tiket tidak ditemukan atau WA salah (t=' + t + ', waQ=' + waQ + ')');
-  if (row[idx.Status] !== 'Revisi') throw new Error('Debug: Tiket ini tidak sedang dalam status Revisi (status=' + row[idx.Status] + ')');
+  if (!row) throw new Error('Tiket tidak ditemukan atau nomor WhatsApp tidak cocok.');
+  if (row[idx.Status] !== 'Revisi') throw new Error('Tiket ini tidak sedang dalam status Revisi.');
   
   let linkVideo = '';
   try {
