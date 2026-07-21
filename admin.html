@@ -100,6 +100,7 @@ html.tema-terang .topbar{background:linear-gradient(to bottom,rgba(255,255,255,.
 .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--glass-brd);background:var(--glass);
   color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.2s var(--ease)}
 .icon-btn:hover{background:var(--glass-2)} .icon-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
+.icon-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 .main{max-width:1280px;margin:0 auto;padding:22px 20px 60px}
 
 /* ---- stat cards ---- */
@@ -498,6 +499,7 @@ const badgeOf=(st)=>{ st=(st||'Terkirim'); const l=st.toLowerCase();
   const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/revisi/.test(l)?'warn':/review/.test(l)?'info':'warn';
   return `<span class="badge ${c}">${st}</span>`; };
 const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
+const statusFinal=(st)=>/setuju|selesai|tolak/i.test(st||'');
 
 function render(){ renderStats(); (view==='tabel'?renderTabel:renderKanban)(); renderAnalitik(); }
 
@@ -525,9 +527,9 @@ function renderTabel(){ const rows=terfilter();
       <td>${r.eksekutor||'<span class="t-sub">—</span>'}</td>
       <td>${badgeOf(r.status)}</td>
       <td><div class="rowact">
-        <button class="icon-btn" title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
-        <button class="icon-btn" title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
-        <button class="icon-btn" title="Revisi" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
+        <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
+        <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
+        <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Revisi" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
         <button class="icon-btn" title="Detail" onclick="openDetail('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.eye}</svg></button>
       </div></td></tr>`).join('')}</tbody></table></div>`;
 }
@@ -656,10 +658,10 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
       <p class="sec-title">Riwayat</p><div class="riw">${riw}</div>
     </div>
     <div class="sheet-f">
-      <button class="btn btn-ghost" onclick="doAksi('${tiket}','review')">Tandai Direview</button>
-      <button class="btn btn-ghost" onclick="openRevisi('${tiket}')" style="color:var(--warn)">Revisi</button>
-      <button class="btn btn-bad" onclick="openTolak('${tiket}')">Tolak</button>
-      <button class="btn btn-primary" onclick="doAksi('${tiket}','setujui')"><svg viewBox="0 0 24 24">${IK.check}</svg> Setujui</button>
+      <button class="btn btn-ghost" ${statusFinal(r.status)?'disabled':''} onclick="doAksi('${tiket}','review')">Tandai Direview</button>
+      <button class="btn btn-ghost" ${statusFinal(r.status)?'disabled':''} style="color:var(--warn)" onclick="openRevisi('${tiket}')">Revisi</button>
+      <button class="btn btn-bad" ${statusFinal(r.status)?'disabled':''} onclick="openTolak('${tiket}')">Tolak</button>
+      <button class="btn btn-primary" ${statusFinal(r.status)?'disabled':''} onclick="doAksi('${tiket}','setujui')"><svg viewBox="0 0 24 24">${IK.check}</svg> Setujui</button>
     </div></div>`;
   dlg.showModal();
 }

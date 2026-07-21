@@ -686,7 +686,8 @@ const Form={
     prov.addEventListener('change',()=>{
       const list=WILAYAH[prov.value]||[];
       kab.innerHTML='<option value="">— pilih kabupaten/kota —</option>'+list.sort().map(c=>`<option>${c}</option>`).join('');
-      kab.disabled=!list.length;
+      const terkunci=Form.tiket_revisi && Form.revisiFields.length && !Form.revisiFields.includes('kabupaten');
+      kab.disabled=terkunci||!list.length;
     });
   },
   _wireUploads(){
