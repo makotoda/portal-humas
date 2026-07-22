@@ -162,6 +162,31 @@ html.tema-terang .topbar{background:linear-gradient(to bottom,rgba(255,255,255,.
   opacity:0;transition:opacity .14s var(--ease)}
 .dd-opt.aktif .ck{opacity:1}
 .dd-panel::-webkit-scrollbar{width:9px} .dd-panel::-webkit-scrollbar-thumb{background:var(--glass-2);border-radius:9px;border:3px solid transparent;background-clip:padding-box}
+/* custom date picker */
+.dd-date{min-width:150px}
+.dd-datebtn{gap:9px}
+.dd-datebtn .cal{width:16px;height:16px;flex:0 0 auto;fill:none;stroke:var(--ink-dim);stroke-width:2;transition:stroke .2s var(--ease)}
+.dd-datebtn:hover .cal,.dd.open .dd-datebtn .cal{stroke:var(--gold)}
+.dd-datebtn .dd-lbl.ph{color:var(--ink-faint)}
+.dd-cal{padding:12px;min-width:266px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-t{font-size:13.5px;font-weight:600;color:var(--ink)}
+.cal-nav{width:30px;height:30px;border:none;background:transparent;color:var(--ink-dim);border-radius:9px;cursor:pointer;
+  display:grid;place-items:center;transition:background .14s,color .14s}
+.cal-nav svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2}
+.cal-nav:hover{background:var(--glass-2);color:var(--gold)}
+.cal-w{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px}
+.cal-w span{text-align:center;font-size:10px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;padding:5px 0}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-e{aspect-ratio:1}
+.cal-d{aspect-ratio:1;border:none;background:transparent;color:var(--ink-dim);border-radius:9px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;display:grid;place-items:center;transition:background .14s,color .14s}
+.cal-d:hover{background:var(--glass-2);color:var(--ink)}
+.cal-d.kini{color:var(--gold);font-weight:700}
+.cal-d.sel{background:linear-gradient(135deg,var(--gold),var(--amber));color:#1A1206;font-weight:700}
+.cal-clear{width:100%;margin-top:8px;padding:9px;border:none;background:transparent;color:var(--ink-dim);
+  font-family:inherit;font-size:12px;cursor:pointer;border-radius:9px;transition:background .14s,color .14s}
+.cal-clear:hover{background:var(--bad-bg);color:var(--bad)}
 .date-field{display:flex;flex-direction:column;gap:5px}
 .date-field label{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-faint);padding-left:2px}
@@ -316,10 +341,10 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
         <div class="dd" id="ddProv"></div>
         <div class="dd" id="ddStatus"></div>
         <div class="dd" id="ddEks"></div>
-        <div class="date-field"><label for="fdari">Dari tanggal</label>
-          <input class="inp" type="date" id="fdari" onchange="applyFilter()"></div>
-        <div class="date-field"><label for="fsampai">Sampai tanggal</label>
-          <input class="inp" type="date" id="fsampai" onchange="applyFilter()"></div>
+        <div class="date-field"><label>Dari tanggal</label>
+          <div class="dd dd-date" id="ddDari"></div></div>
+        <div class="date-field"><label>Sampai tanggal</label>
+          <div class="dd dd-date" id="ddSampai"></div></div>
       </div>
     </div>
 
@@ -594,6 +619,52 @@ function buatDropdown(host,id,placeholder,options,current){
     host.classList.remove('open'); applyFilter();
   }));
 }
+const BULAN_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const BULAN_PENDEK=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const HARI_ID=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const CAL_ICON='<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>';
+const CAL_PREV='<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>';
+const CAL_NEXT='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmtTanggal(iso){ const p=iso.split('-'); return parseInt(p[2],10)+' '+BULAN_PENDEK[parseInt(p[1],10)-1]+' '+p[0]; }
+function buatDatePicker(host,id,placeholder){
+  const prev=host.querySelector('input');
+  let sel=prev?prev.value:'';
+  const today=new Date();
+  const todayStr=today.getFullYear()+'-'+pad2(today.getMonth()+1)+'-'+pad2(today.getDate());
+  let vy=sel?parseInt(sel.slice(0,4),10):today.getFullYear();
+  let vm=sel?parseInt(sel.slice(5,7),10)-1:today.getMonth();
+  host.innerHTML=
+    `<input type="hidden" id="${id}">`+
+    `<button type="button" class="inp dd-btn dd-datebtn">${CAL_ICON}<span class="dd-lbl${sel?'':' ph'}">${sel?fmtTanggal(sel):placeholder}</span></button>`+
+    `<div class="dd-panel dd-cal"></div>`;
+  const hidden=host.querySelector('input'); hidden.value=sel;
+  const btn=host.querySelector('.dd-btn'), lbl=host.querySelector('.dd-lbl'), panel=host.querySelector('.dd-cal');
+  host.addEventListener('click',ddStop);
+  btn.addEventListener('click',()=>{ const open=host.classList.contains('open'); tutupSemuaDD(); if(!open){ render(); host.classList.add('open'); } });
+  function pilih(iso){ sel=iso; hidden.value=iso; lbl.textContent=fmtTanggal(iso); lbl.classList.remove('ph'); host.classList.remove('open'); applyFilter(); }
+  function hapus(){ sel=''; hidden.value=''; lbl.textContent=placeholder; lbl.classList.add('ph'); host.classList.remove('open'); applyFilter(); }
+  function render(){
+    const startDow=new Date(vy,vm,1).getDay(), days=new Date(vy,vm+1,0).getDate();
+    let cells='';
+    for(let i=0;i<startDow;i++) cells+='<span class="cal-e"></span>';
+    for(let d=1;d<=days;d++){
+      const iso=vy+'-'+pad2(vm+1)+'-'+pad2(d);
+      let cls='cal-d'; if(iso===sel)cls+=' sel'; if(iso===todayStr)cls+=' kini';
+      cells+=`<button type="button" class="${cls}" data-iso="${iso}">${d}</button>`;
+    }
+    panel.innerHTML=
+      `<div class="cal-h"><button type="button" class="cal-nav" data-nav="-1">${CAL_PREV}</button>`+
+      `<span class="cal-t">${BULAN_ID[vm]} ${vy}</span>`+
+      `<button type="button" class="cal-nav" data-nav="1">${CAL_NEXT}</button></div>`+
+      `<div class="cal-w">${HARI_ID.map(h=>`<span>${h}</span>`).join('')}</div>`+
+      `<div class="cal-g">${cells}</div>`+
+      (sel?`<button type="button" class="cal-clear">Hapus tanggal</button>`:'');
+    panel.querySelectorAll('.cal-d').forEach(b=>b.addEventListener('click',()=>pilih(b.dataset.iso)));
+    panel.querySelectorAll('.cal-nav').forEach(b=>b.addEventListener('click',()=>{ vm+=parseInt(b.dataset.nav,10); if(vm<0){vm=11;vy--;} if(vm>11){vm=0;vy++;} render(); }));
+    const clr=panel.querySelector('.cal-clear'); if(clr) clr.addEventListener('click',hapus);
+  }
+}
 function populasiFilter(){
   const kats=[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>({value:k,label:katJudul(k)}));
   const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort().map(v=>({value:v,label:v}));
@@ -603,6 +674,8 @@ function populasiFilter(){
   buatDropdown($('#ddProv'),'fprov','Semua provinsi',provs,filter.provinsi);
   buatDropdown($('#ddStatus'),'fstatus','Semua status',stats,filter.status);
   buatDropdown($('#ddEks'),'feks','Semua eksekutor',eks,filter.eksekutor);
+  buatDatePicker($('#ddDari'),'fdari','Pilih tanggal');
+  buatDatePicker($('#ddSampai'),'fsampai','Pilih tanggal');
 }
 function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
   filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value;
