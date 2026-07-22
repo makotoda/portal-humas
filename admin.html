@@ -196,9 +196,10 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
 .toast.ok .i{background:var(--ok-bg);color:var(--ok)} .toast.err .i{background:var(--bad-bg);color:var(--bad)}
 .toast.info .i{background:var(--info-bg);color:var(--info)} .toast .i svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4}
 @keyframes tin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
-.loader-overlay{position:fixed;inset:0;z-index:100;display:none;place-items:center;background:rgba(10,13,20,.55);backdrop-filter:blur(6px)}
+.loader-overlay{position:fixed;inset:0;margin:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;
+  display:none;place-items:center;background:rgba(10,13,20,.55);backdrop-filter:blur(6px)}
 html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
-.loader-overlay.aktif{display:grid}
+.loader-overlay[open]{display:grid}
 .loader-box{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 32px;background:var(--bg-2);border:1px solid var(--glass-brd);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
 .loader-spin{width:42px;height:42px;animation:loaderRot .9s linear infinite}
 .loader-spin circle{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;stroke-dasharray:80 40;transform-origin:center}
@@ -278,13 +279,13 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
 <dialog id="modal"></dialog>
 <div class="toasts" id="toasts"></div>
 
-<div class="loader-overlay" id="loaderOverlay">
+<dialog class="loader-overlay" id="loaderOverlay">
   <div class="loader-box">
     <svg class="loader-spin" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/></svg>
     <div class="loader-pct" id="loaderPct">0%</div>
     <div class="loader-label" id="loaderLabel">Memproses…</div>
   </div>
-</div>
+</dialog>
 
 <script>
 const $=(s,r=document)=>r.querySelector(s);
@@ -337,7 +338,7 @@ const KATEGORI={
     upload:[{key:'naskah',label:'Naskah Mimbar',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto Penulis (pose tangan di dada)',accept:IMG,max:1}]},
   'wisata-religi':{judul:'Wisata Religi',ico:'wisata',desk:'Artikel destinasi & situs spiritual Hindu.',
     fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
-    upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,max:3}]},
+    upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,min:3}]},
   'berita-pasraman':{judul:'Berita Pasraman',ico:'pasraman',desk:'Kegiatan pendidikan keagamaan Hindu nonformal (Pasraman).',
     fields:['provinsi','kabupaten','namaPasraman','namaPenulis','noWA'],
     upload:[{key:'notulen',label:'Notulen / Bahan Berita',accept:'.doc,.docx,.pdf,.txt',max:1},{key:'foto',label:'Foto Dokumentasi',accept:IMG,max:3}]},
@@ -368,12 +369,12 @@ const Loader={
   show(label){
     this.pct=0; clearInterval(this.timer);
     $('#loaderLabel').textContent=label||'Memproses…'; $('#loaderPct').textContent='0%';
-    $('#loaderOverlay').classList.add('aktif');
+    const dlg=$('#loaderOverlay'); if(!dlg.open)dlg.showModal();
     this.timer=setInterval(()=>{ this.pct+=(90-this.pct)*.12+.6; if(this.pct>90)this.pct=90;
       $('#loaderPct').textContent=Math.round(this.pct)+'%'; },150);
   },
   hide(){ clearInterval(this.timer); $('#loaderPct').textContent='100%';
-    setTimeout(()=>$('#loaderOverlay').classList.remove('aktif'),220); }
+    setTimeout(()=>{ const dlg=$('#loaderOverlay'); if(dlg.open)dlg.close(); },220); }
 };
 async function withLoader(promise,label){
   Loader.show(label);
