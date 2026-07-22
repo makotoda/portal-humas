@@ -466,6 +466,7 @@ function adminKelola(kode, payload) {
       const rows = adminRows_();
       if (rows.some(r => r.nama.toLowerCase() === nama.toLowerCase())) throw new Error('Nama admin sudah ada.');
       if (rows.some(r => r.kode === kd)) throw new Error('Kode sudah dipakai admin lain.');
+      if (role === 'super' && rows.some(r => r.role === 'super')) throw new Error('Sudah ada super admin. Hanya boleh satu.');
       sh.appendRow([nama, kd, role]);
     } else if (sub === 'hapus') {
       const nama = String(p.nama || '').trim();
@@ -484,6 +485,8 @@ function adminKelola(kode, payload) {
       if (!t) throw new Error('Admin tidak ditemukan.');
       if (t.role === 'super' && role !== 'super' && rows.filter(r => r.role === 'super').length <= 1)
         throw new Error('Minimal harus ada satu super admin.');
+      if (role === 'super' && t.role !== 'super' && rows.some(r => r.role === 'super'))
+        throw new Error('Sudah ada super admin. Hanya boleh satu.');
       const rn = findAdminRow_(nama);
       if (rn) sh.getRange(rn, 3).setValue(role);
     }

@@ -437,7 +437,9 @@ const Demo={
       if(p.kode.length<4)throw new Error('Kode minimal 4 karakter.');
       if(a.some(x=>x.nama.toLowerCase()===p.nama.toLowerCase()))throw new Error('Nama admin sudah ada.');
       if(a.some(x=>x.kode===p.kode))throw new Error('Kode sudah dipakai admin lain.');
-      a.push({nama:p.nama,kode:p.kode,role:p.role==='super'?'super':'admin'}); }
+      const role=p.role==='super'?'super':'admin';
+      if(role==='super'&&a.some(x=>x.role==='super'))throw new Error('Sudah ada super admin. Hanya boleh satu.');
+      a.push({nama:p.nama,kode:p.kode,role}); }
     else if(sub==='hapus'){ const t=a.find(x=>x.nama===p.nama); if(!t)throw new Error('Admin tidak ditemukan.');
       if(t.nama===me.nama)throw new Error('Tidak bisa menghapus akun sendiri.');
       if(t.role==='super'&&a.filter(x=>x.role==='super').length<=1)throw new Error('Minimal harus ada satu super admin.');
@@ -445,6 +447,7 @@ const Demo={
     else if(sub==='ubahRole'){ const t=a.find(x=>x.nama===p.nama); if(!t)throw new Error('Admin tidak ditemukan.');
       const role=p.role==='super'?'super':'admin';
       if(t.role==='super'&&role!=='super'&&a.filter(x=>x.role==='super').length<=1)throw new Error('Minimal harus ada satu super admin.');
+      if(role==='super'&&t.role!=='super'&&a.some(x=>x.role==='super'))throw new Error('Sudah ada super admin. Hanya boleh satu.');
       t.role=role; }
     this._saveAdm(a); return a.map(x=>({nama:x.nama,role:x.role})); },
   adminData(k){ this.adminLogin(k);
@@ -742,13 +745,14 @@ async function openKelola(){
 }
 function renderKelola(daftar){
   const dlg=$('#modal'); const meNama=$('#whoNama').textContent;
+  const adaSuper=daftar.some(a=>a.role==='super');
   const rows=daftar.map(a=>`
     <div class="reason" style="align-items:center">
       <span style="flex:1"><b>${a.nama}</b>${a.nama===meNama?' <span class="t-sub">(Anda)</span>':''}</span>
       <select class="inp" style="width:auto;padding:6px 30px 6px 10px;font-size:12.5px"
         onchange="aksiKelola('ubahRole',{nama:'${a.nama}',role:this.value})">
         <option value="admin" ${a.role!=='super'?'selected':''}>Admin</option>
-        <option value="super" ${a.role==='super'?'selected':''}>Super</option></select>
+        <option value="super" ${a.role==='super'?'selected':''} ${adaSuper&&a.role!=='super'?'disabled':''}>Super</option></select>
       <button class="btn btn-bad btn-sm" onclick="aksiKelola('hapus',{nama:'${a.nama}'})">Hapus</button>
     </div>`).join('');
   dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Kelola Admin &amp; Eksekutor</span>
@@ -760,7 +764,7 @@ function renderKelola(daftar){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
         <input class="inp" id="kaNama" placeholder="Nama">
         <input class="inp" id="kaKode" placeholder="Kode akses (min. 4 karakter)">
-        <select class="inp" id="kaRole"><option value="admin">Admin</option><option value="super">Super</option></select>
+        <select class="inp" id="kaRole"><option value="admin">Admin</option><option value="super" ${adaSuper?'disabled':''}>Super</option></select>
         <button class="btn btn-primary" onclick="aksiKelola('tambah',{nama:$('#kaNama').value.trim(),kode:$('#kaKode').value.trim(),role:$('#kaRole').value})">Tambah</button>
       </div>
     </div></div>`;
