@@ -111,12 +111,17 @@ html.tema-terang .topbar{background:linear-gradient(to bottom,rgba(255,255,255,.
 .stat.acc-ok .n{color:var(--ok)} .stat.acc-warn .n{color:var(--warn)} .stat.acc-gold .n{color:var(--gold)} .stat.acc-bad .n{color:var(--bad)}
 
 /* ---- filter bar ---- */
-.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.filters{margin-bottom:16px}
+.filters-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filters-row+.filters-row{margin-top:10px}
 .filters .search{position:relative;flex:1;min-width:180px}
 .filters .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
   fill:none;stroke:var(--ink-faint);stroke-width:2}
 .filters .search .inp{padding-left:34px}
 .filters select.inp{width:auto;min-width:130px;flex:0 0 auto}
+.date-field{display:flex;flex-direction:column;gap:4px}
+.date-field label{font-size:11px;color:var(--ink-dim)}
+.date-field .inp{width:auto;flex:0 0 auto}
 .viewtog{display:flex;background:var(--glass);border:1px solid var(--glass-brd);border-radius:10px;padding:3px;gap:2px}
 .viewtog button{padding:7px 11px;border:none;background:transparent;color:var(--ink-dim);border-radius:8px;cursor:pointer;display:grid;place-items:center}
 .viewtog button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
@@ -253,17 +258,23 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
     <div class="statgrid" id="statgrid"></div>
 
     <div class="filters">
-      <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-        <input class="inp" id="fq" placeholder="Cari tiket, instansi, penulis…" oninput="applyFilter()"></div>
-      <select class="inp" id="fkat" onchange="applyFilter()"></select>
-      <select class="inp" id="fprov" onchange="applyFilter()"></select>
-      <select class="inp" id="fstatus" onchange="applyFilter()"></select>
-      <select class="inp" id="feks" onchange="applyFilter()"></select>
-      <input class="inp" type="date" id="fdari" title="Dari tanggal" onchange="applyFilter()" style="width:auto;flex:0 0 auto">
-      <input class="inp" type="date" id="fsampai" title="Sampai tanggal" onchange="applyFilter()" style="width:auto;flex:0 0 auto">
-      <div class="viewtog">
-        <button id="vTabel" class="aktif" onclick="setView('tabel')" title="Tabel"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
-        <button id="vKanban" onclick="setView('kanban')" title="Kanban"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="10"/><rect x="17" y="4" width="4" height="13"/></svg></button>
+      <div class="filters-row">
+        <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input class="inp" id="fq" placeholder="Cari tiket, instansi, penulis…" oninput="applyFilter()"></div>
+        <div class="viewtog">
+          <button id="vTabel" class="aktif" onclick="setView('tabel')" title="Tabel"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+          <button id="vKanban" onclick="setView('kanban')" title="Kanban"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="10"/><rect x="17" y="4" width="4" height="13"/></svg></button>
+        </div>
+      </div>
+      <div class="filters-row">
+        <select class="inp" id="fkat" onchange="applyFilter()"></select>
+        <select class="inp" id="fprov" onchange="applyFilter()"></select>
+        <select class="inp" id="fstatus" onchange="applyFilter()"></select>
+        <select class="inp" id="feks" onchange="applyFilter()"></select>
+        <div class="date-field"><label for="fdari">Dari tanggal</label>
+          <input class="inp" type="date" id="fdari" onchange="applyFilter()"></div>
+        <div class="date-field"><label for="fsampai">Sampai tanggal</label>
+          <input class="inp" type="date" id="fsampai" onchange="applyFilter()"></div>
       </div>
     </div>
 
