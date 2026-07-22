@@ -375,17 +375,17 @@ const Demo={
   _seed(){ const H=36e5*24, now=Date.now(); const mk=(d,upd,o)=>Object.assign({dibuat:new Date(now-d*H).toISOString(),diperbarui:new Date(now-upd*H).toISOString(),files:[],riwayat:[]},o);
     return [
       mk(20,2,{tiket:'PKH-202607-0001',kategori:'berita-daerah',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',noWA:'081337214493',status:'Disetujui',eksekutor:'I Made Editor',riwayat:[{waktu:new Date(now-3*H).toISOString(),aksi:'Disetujui',oleh:'I Made Editor',catatan:''}]}),
-      mk(19,19,{tiket:'PKH-202607-0002',kategori:'naskah-mimbar',provinsi:'Jawa Tengah',kabupaten:'Boyolali',instansi:'Kemenag Kab. Boyolali',namaPenulis:'Rta Wahyu Sri P.',noWA:'081226054321',status:'Terkirim'}),
+      mk(19,19,{tiket:'PKH-202607-0002',kategori:'naskah-mimbar',provinsi:'Jawa Tengah',kabupaten:'Boyolali',instansi:'Kemenag Kab. Boyolali',namaPenulis:'Rta Wahyu Sri P.',noWA:'081226054321',status:'Direview'}),
       mk(18,4,{tiket:'PKH-202607-0003',kategori:'wisata-religi',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',noWA:'083890825530',status:'Ditolak',keterangan:'Bahan berita bukan wisata religi, mohon dibaca kembali ketentuannya',eksekutor:'Ni Kadek Redaksi',riwayat:[{waktu:new Date(now-4*H).toISOString(),aksi:'Ditolak',oleh:'Ni Kadek Redaksi',catatan:'Bahan berita bukan wisata religi'}]}),
       mk(16,16,{tiket:'PKH-202607-0004',kategori:'berita-widyalaya',provinsi:'DI Yogyakarta',kabupaten:'Sleman',instansi:'Pratama Widyalaya Kondho Bumi',noWA:'085238602841',status:'Direview',eksekutor:'Admin Humas'}),
       mk(15,1,{tiket:'PKH-202607-0005',kategori:'berita-daerah',provinsi:'Lampung',kabupaten:'Lampung Tengah',instansi:'Kemenag Kab. Lampung Tengah',noWA:'082225492825',status:'Disetujui',eksekutor:'Admin Humas'}),
       mk(14,3,{tiket:'PKH-202607-0006',kategori:'berita-pasraman',provinsi:'Nusa Tenggara Timur',kabupaten:'Manggarai Barat',instansi:'Pasraman Widya Saraswati',noWA:'085738762064',status:'Ditolak',keterangan:'Belum ada kutipan langsung narasumber',eksekutor:'I Made Editor'}),
-      mk(12,12,{tiket:'PKH-202607-0007',kategori:'konten-medsos',provinsi:'Kalimantan Tengah',kabupaten:'Palangka Raya',instansi:'Bimas Hindu Kanwil Kalteng',noWA:'081350404422',status:'Terkirim'}),
+      mk(12,12,{tiket:'PKH-202607-0007',kategori:'konten-medsos',provinsi:'Kalimantan Tengah',kabupaten:'Palangka Raya',instansi:'Bimas Hindu Kanwil Kalteng',noWA:'081350404422',status:'Direview'}),
       mk(10,2,{tiket:'PKH-202607-0008',kategori:'berita-ptkh',provinsi:'Kalimantan Tengah',kabupaten:'Palangka Raya',instansi:'IAHN Tampung Penyang',noWA:'081350404422',status:'Disetujui',eksekutor:'Ni Kadek Redaksi'}),
       mk(8,8,{tiket:'PKH-202607-0009',kategori:'artikel-inspiratif',provinsi:'Sumatera Utara',kabupaten:'Medan',instansi:'Kanwil Kemenag Sumut',namaPenulis:'Elirosa Tarigan',noWA:'081314147277',status:'Direview',eksekutor:'Admin Humas'}),
       mk(6,1,{tiket:'PKH-202607-0010',kategori:'video-mimbar',provinsi:'Bali',kabupaten:'Klungkung',instansi:'Kemenag Kab. Klungkung',namaPenulis:'Ni Komang Diantini',noWA:'081337214493',status:'Ditolak',keterangan:'Video belum sesuai standar publikasi'}),
-      mk(4,4,{tiket:'PKH-202607-0011',kategori:'naskah-mimbar',provinsi:'Sulawesi Tengah',kabupaten:'Palu',instansi:'Kanwil Kemenag Sulteng',namaPenulis:'I Nyoman S.',noWA:'081145678123',status:'Terkirim'}),
-      mk(2,2,{tiket:'PKH-202607-0012',kategori:'berita-widyalaya',provinsi:'Lampung',kabupaten:'Lampung Tengah',instansi:'UWK Eka Dharma Sastra',noWA:'082179223077',status:'Terkirim'})
+      mk(4,4,{tiket:'PKH-202607-0011',kategori:'naskah-mimbar',provinsi:'Sulawesi Tengah',kabupaten:'Palu',instansi:'Kanwil Kemenag Sulteng',namaPenulis:'I Nyoman S.',noWA:'081145678123',status:'Direview'}),
+      mk(2,2,{tiket:'PKH-202607-0012',kategori:'berita-widyalaya',provinsi:'Lampung',kabupaten:'Lampung Tengah',instansi:'UWK Eka Dharma Sastra',noWA:'082179223077',status:'Direview'})
     ];
   },
   adminLogin(k){ const m=this.codes[k]; if(!m) throw new Error('Kode akses salah.'); return m; },
@@ -413,7 +413,7 @@ const Demo={
   adminData(k){ this.adminLogin(k);
     const rows=this._all().map(r=>({tiket:r.tiket,kategori:r.kategori,provinsi:r.provinsi,kabupaten:r.kabupaten,
       instansi:r.instansi||'',namaPenulis:r.namaPenulis||'',noWA:r.noWA||'',files:r.files||[],
-      status:r.status||'Terkirim',eksekutor:r.eksekutor||'',keterangan:r.keterangan||'',
+      status:r.status||'Direview',eksekutor:r.eksekutor||'',keterangan:r.keterangan||'',
       dibuat:r.dibuat||new Date().toISOString(),diperbarui:r.diperbarui||r.dibuat||new Date().toISOString(),riwayat:r.riwayat||[]})).reverse();
     return {roleAnda:this.codes[k],eksekutors:this._admins().map(x=>x.nama),stats:statsOf(rows),rows};
   },
@@ -475,7 +475,7 @@ function populasiFilter(){
   const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort();
   $('#fkat').innerHTML=`<option value="">Semua kategori</option>`+[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>`<option value="${k}">${katJudul(k)}</option>`).join('');
   $('#fprov').innerHTML=opt(provs,'Semua provinsi');
-  $('#fstatus').innerHTML=opt(['Terkirim','Direview','Revisi','Disetujui','Ditolak'],'Semua status');
+  $('#fstatus').innerHTML=opt(['Direview','Revisi','Disetujui','Ditolak'],'Semua status');
   $('#feks').innerHTML=opt(DATA.eksekutors,'Semua eksekutor');
 }
 function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
@@ -484,7 +484,7 @@ function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kat
 function terfilter(){ return DATA.rows.filter(r=>{
   if(filter.kategori&&r.kategori!==filter.kategori)return false;
   if(filter.provinsi&&r.provinsi!==filter.provinsi)return false;
-  if(filter.status&&(r.status||'Terkirim')!==filter.status)return false;
+  if(filter.status&&(r.status||'Direview')!==filter.status)return false;
   if(filter.eksekutor&&r.eksekutor!==filter.eksekutor)return false;
   if(filter.dari||filter.sampai){ const d=(r.dibuat||'').slice(0,10);
     if(filter.dari&&d<filter.dari)return false;
@@ -495,7 +495,7 @@ function terfilter(){ return DATA.rows.filter(r=>{
 function setView(v){ view=v; $('#vTabel').classList.toggle('aktif',v==='tabel'); $('#vKanban').classList.toggle('aktif',v==='kanban'); render(); }
 
 
-const badgeOf=(st)=>{ st=(st||'Terkirim'); const l=st.toLowerCase();
+const badgeOf=(st)=>{ st=(st||'Direview'); const l=st.toLowerCase();
   const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/revisi/.test(l)?'warn':/review/.test(l)?'info':'warn';
   return `<span class="badge ${c}">${st}</span>`; };
 const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
@@ -550,9 +550,9 @@ function renderTabel(){ const allRows=terfilter();
       </div></td></tr>`).join('')}</tbody></table></div>${renderPagination(p)}`;
 }
 
-function renderKanban(){ const rows=terfilter(); const kolom=['Terkirim','Direview','Revisi','Disetujui','Ditolak'];
+function renderKanban(){ const rows=terfilter(); const kolom=['Direview','Revisi','Disetujui','Ditolak'];
   const grup={}; kolom.forEach(k=>grup[k]=[]);
-  rows.forEach(r=>{ const st=r.status||'Terkirim'; (grup[st]||(grup[st]=[])).push(r); });
+  rows.forEach(r=>{ const st=r.status||'Direview'; (grup[st]||(grup[st]=[])).push(r); });
   const kolHtml=kolom.map(k=>{
     const allInCol=grup[k]||[]; const p=paginate(allInCol, paginationPage, 10);
     const cardsHtml=(p.rows||[]).map(r=>`<div class="kcard" onclick="openDetail('${r.tiket}')">

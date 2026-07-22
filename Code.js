@@ -161,7 +161,7 @@ function submitPermohonan(payload) {
       row[idx.NamaPenulis] = penulis;
       row[idx.NoWA]        = noWA;
       row[idx.FileLinks]   = JSON.stringify(mergedFiles);
-      row[idx.Status]      = 'Terkirim';
+      row[idx.Status]      = 'Direview';
       row[idx.LastUpdated] = now;
       sheet.appendRow(row);
     }
@@ -188,7 +188,7 @@ function cekStatus(query) {
     tiket: r[idx.TicketID], kategori: r[idx.Kategori],
     provinsi: r[idx.Provinsi], kabupaten: r[idx.Kabupaten],
     instansi: r[idx.Instansi], namaPenulis: r[idx.NamaPenulis],
-    status: r[idx.Status] || 'Terkirim', eksekutor: r[idx.Eksekutor],
+    status: r[idx.Status] || 'Direview', eksekutor: r[idx.Eksekutor],
     keterangan: r[idx.Keterangan]
   })).reverse(); // terbaru dulu
 }
@@ -383,7 +383,7 @@ function adminData(kode) {
     return {
       tiket: tiket, kategori: r[idx.Kategori], provinsi: r[idx.Provinsi], kabupaten: r[idx.Kabupaten],
       instansi: r[idx.Instansi], namaPenulis: r[idx.NamaPenulis], noWA: r[idx.NoWA],
-      files: files, status: r[idx.Status] || 'Terkirim', eksekutor: r[idx.Eksekutor],
+      files: files, status: r[idx.Status] || 'Direview', eksekutor: r[idx.Eksekutor],
       keterangan: r[idx.Keterangan], dibuat: toIso_(r[idx.Timestamp]),
       diperbarui: toIso_(r[idx.LastUpdated]), riwayat: riw[tiket] || []
     };

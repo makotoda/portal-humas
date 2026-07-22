@@ -548,7 +548,7 @@ const Demo={
     const d=new Date(), ym=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0');
     const tiket='PKH-'+ym+'-'+seq;
     a.push({tiket,kategori:p.kategori,provinsi:p.provinsi,kabupaten:p.kabupaten,instansi:p.instansi||p.namaWidyalaya||p.namaPasraman||'',
-      namaPenulis:p.namaPenulis||'',noWA:p.noWA,status:'Terkirim',eksekutor:'',keterangan:'',
+      namaPenulis:p.namaPenulis||'',noWA:p.noWA,status:'Direview',eksekutor:'',keterangan:'',
       dibuat:d.toISOString(),files:(p._fileNames||[])});
     this._save(a);
     return {tiket, waktu:d.toISOString()};
@@ -784,7 +784,7 @@ function toBase64(file){ return new Promise((res,rej)=>{ const r=new FileReader(
 // ============================================================
 // STATUS publik + timeline
 // ============================================================
-const LANGKAH=['Terkirim','Direview','Selesai'];
+const LANGKAH=['Direview','Selesai'];
 const Status={
   async cari(){
     const q=$('#qStatus').value.trim(); const box=$('#statusHasil');
@@ -797,17 +797,16 @@ const Status={
     }catch(e){ box.innerHTML=`<div class="empty">${ikon('inbox')}<div>Gagal memuat. Coba lagi.</div></div>`; }
   },
   _card(r){
-    const st=r.status||'Terkirim';
+    const st=r.status||'Direview';
     let ket=r.keterangan||'', revFields='';
     const mRev=ket.match(/^\[REVISI:([^\]]+)\](.*)$/is);
     if(mRev){ revFields=mRev[1]; ket=mRev[2].trim(); }
     const ditolak=/tolak|reject/i.test(st), selesai=/setuju|complete|selesai|terbit/i.test(st), revisi=/revisi/i.test(st);
-    let idx = ditolak||selesai ? 2 : revisi ? 0 : /review|proses|progress/i.test(st) ? 1 : 0;
-    const badge = ditolak?'bad':selesai?'ok':revisi?'warn':idx===1?'info':'warn';
+    let idx = ditolak||selesai ? 1 : 0;
+    const badge = ditolak?'bad':selesai?'ok':revisi?'warn':'info';
     const katJudul=(KATEGORI[r.kategori]&&KATEGORI[r.kategori].judul)||r.kategori||'—';
     const steps=LANGKAH.map((lb,i)=>{
-      let s=''; if(i<idx)s='done'; else if(i===idx)s= (ditolak&&i===2)?'now':'now';
-      if(i===2 && ditolak) lb='Ditolak'; if(i===2 && selesai) lb='Disetujui';
+      if(i===1 && ditolak) lb='Ditolak'; if(i===1 && selesai) lb='Disetujui';
       return `<div class="step ${i<idx?'done':i===idx?'now':''}">
         <div class="dot">${i<idx?`<svg viewBox="0 0 24 24">${IK.check}</svg>`:''}</div>
         <div class="lb">${lb}</div></div>`;
@@ -816,7 +815,7 @@ const Status={
     return `<div class="tl-card">
       <div class="tl-top"><span class="tid">${r.tiket||'—'}</span>
         <span class="kat-tag">${katJudul}</span>
-        <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':revisi?'Minta Revisi':idx===1?'Direview':'Terkirim'}</span></div>
+        <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':revisi?'Minta Revisi':'Direview'}</span></div>
       <div class="tl-meta">${[r.instansi,wilayah].filter(Boolean).join(' · ')||'—'}</div>
       <div class="steps">${steps}</div>
       ${ket?`<div class="tl-note"><b>Catatan Tim Humas:</b> ${ket}</div>`:''}
