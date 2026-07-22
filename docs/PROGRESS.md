@@ -4,6 +4,12 @@
 - (kosong) — lihat Backlog di bawah untuk kandidat berikutnya; dua dari tiga item
   butuh info/keputusan dari Anda dulu (lihat catatan blocker per item).
 
+## Selesai (pagination admin dashboard, 22 Jul 2026)
+- **Paginate tabel & kanban — max 10 baris/kolom per halaman**: data 602+ tiket dari
+  migrasi dirender hanya 10 baris tabel per halaman + 10 card per status column kanban.
+  Tombol Prev/Next di bawah, halaman global (`paginationPage`) shared antara tabel & kanban.
+  Saat filter diubah, halaman reset ke 1. Total halaman & nomor halaman ditampilkan.
+
 ## Selesai (sistem revisi per-field + fix produksi, 22-23 Jul 2026)
 - **Minta Revisi per-field**: admin mencentang field spesifik yang perlu diperbaiki
   pengirim (bukan revisi seluruh form). Prefix `[REVISI:field1,field2]` disisipkan
