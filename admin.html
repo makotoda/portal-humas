@@ -335,7 +335,7 @@ const KATEGORI={
     linkVideo:true}
 };
 
-let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel';
+let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel', paginationPage=1;
 const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:'',dari:'',sampai:''};
 
 
@@ -480,7 +480,7 @@ function populasiFilter(){
 }
 function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
   filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value;
-  filter.dari=$('#fdari').value; filter.sampai=$('#fsampai').value; render(); }
+  filter.dari=$('#fdari').value; filter.sampai=$('#fsampai').value; paginationPage=1; render(); }
 function terfilter(){ return DATA.rows.filter(r=>{
   if(filter.kategori&&r.kategori!==filter.kategori)return false;
   if(filter.provinsi&&r.provinsi!==filter.provinsi)return false;
@@ -503,6 +503,20 @@ const statusFinal=(st)=>/setuju|selesai|tolak/i.test(st||'');
 
 function render(){ renderStats(); (view==='tabel'?renderTabel:renderKanban)(); renderAnalitik(); }
 
+function paginate(rows, page, pageSize){
+  const total=Math.ceil(rows.length/pageSize);
+  const start=(page-1)*pageSize;
+  return {rows:rows.slice(start,start+pageSize), page, totalPages:total, totalRows:rows.length};
+}
+function renderPagination(p){
+  if(p.totalPages<=1)return '';
+  return `<div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px">
+    <button class="btn btn-ghost btn-sm" ${p.page===1?'disabled':''} onclick="paginationPage=Math.max(1,paginationPage-1);render()">← Sebelumnya</button>
+    <span style="font-size:13px">Halaman ${p.page} dari ${p.totalPages}</span>
+    <button class="btn btn-ghost btn-sm" ${p.page===p.totalPages?'disabled':''} onclick="paginationPage=Math.min(${p.totalPages},paginationPage+1);render()">Berikutnya →</button>
+  </div>`;
+}
+
 function renderStats(){ const s=DATA.stats||statsOf(DATA.rows);
   const cards=[
     {n:s.total,l:'Total bahan',c:''},
@@ -514,8 +528,10 @@ function renderStats(){ const s=DATA.stats||statsOf(DATA.rows);
   $('#statgrid').innerHTML=cards.map(c=>`<div class="stat ${c.c}"><div class="n tabular">${c.n}${c.u?`<span class="u">${c.u}</span>`:''}</div><div class="l">${c.l}</div></div>`).join('');
 }
 
-function renderTabel(){ const rows=terfilter();
-  if(!rows.length){ $('#queue').innerHTML=empty(); return; }
+function renderTabel(){ const allRows=terfilter();
+  if(!allRows.length){ $('#queue').innerHTML=empty(); return; }
+  const p=paginate(allRows, paginationPage, 10);
+  const rows=p.rows;
   $('#queue').innerHTML=`<div class="tablewrap"><table><thead><tr>
     <th>Tiket</th><th>Kategori</th><th>Wilayah</th><th>Instansi</th><th>Tanggal</th><th>Eksekutor</th><th>Status</th><th></th></tr></thead>
     <tbody>${rows.map(r=>`<tr>
@@ -531,20 +547,25 @@ function renderTabel(){ const rows=terfilter();
         <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
         <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Revisi" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
         <button class="icon-btn" title="Detail" onclick="openDetail('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.eye}</svg></button>
-      </div></td></tr>`).join('')}</tbody></table></div>`;
+      </div></td></tr>`).join('')}</tbody></table></div>${renderPagination(p)}`;
 }
 
 function renderKanban(){ const rows=terfilter(); const kolom=['Terkirim','Direview','Revisi','Disetujui','Ditolak'];
   const grup={}; kolom.forEach(k=>grup[k]=[]);
   rows.forEach(r=>{ const st=r.status||'Terkirim'; (grup[st]||(grup[st]=[])).push(r); });
-  $('#queue').innerHTML=`<div class="kanban">${kolom.map(k=>`
-    <div class="kcol"><h4>${k}<span class="cnt">${(grup[k]||[]).length}</span></h4>
-      ${(grup[k]||[]).map(r=>`<div class="kcard" onclick="openDetail('${r.tiket}')">
-        <div class="kt">${r.tiket}</div><div class="kk">${katJudul(r.kategori)}</div>
-        <div class="km">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'—'}</div>
-        ${r.eksekutor?`<div class="keks"><span class="kdot"></span>${r.eksekutor}</div>`:''}
-      </div>`).join('')||'<div class="t-sub" style="padding:8px 4px">Kosong</div>'}
-    </div>`).join('')}</div>`;
+  const kolHtml=kolom.map(k=>{
+    const allInCol=grup[k]||[]; const p=paginate(allInCol, paginationPage, 10);
+    const cardsHtml=(p.rows||[]).map(r=>`<div class="kcard" onclick="openDetail('${r.tiket}')">
+      <div class="kt">${r.tiket}</div><div class="kk">${katJudul(r.kategori)}</div>
+      <div class="km">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'—'}</div>
+      ${r.eksekutor?`<div class="keks"><span class="kdot"></span>${r.eksekutor}</div>`:''}
+    </div>`).join('')||'<div class="t-sub" style="padding:8px 4px">Kosong</div>';
+    const pageHtml=p.totalPages>1?`<div style="padding:8px 4px;font-size:12px;color:var(--ink-dim)">Halaman ${p.page}/${p.totalPages}</div>`:'';
+    return `<div class="kcol"><h4>${k}<span class="cnt">${allInCol.length}</span></h4>${cardsHtml}${pageHtml}</div>`;
+  }).join('');
+  const allRows=terfilter(); const allTotal=Math.ceil(allRows.length/10);
+  const pagBarHtml=allTotal>1?renderPagination({page:paginationPage,totalPages:allTotal}):'';
+  $('#queue').innerHTML=`<div class="kanban">${kolHtml}</div>${pagBarHtml}`;
 }
 
 function renderAnalitik(){ const s=DATA.stats||statsOf(DATA.rows);
