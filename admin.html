@@ -657,7 +657,7 @@ function openRevisi(tiket){
   }
 
   dlg.innerHTML=`<div class="sheet" style="max-width:500px"><div class="sheet-h"><span class="tid">Minta Revisi ${tiket}</span>
-    <button class="icon-btn" onclick="this.closest('dialog').close()">${IK.x}</button></div>
+    <button class="icon-btn close" onclick="this.closest('dialog').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
     <div class="sheet-b">
       ${fieldHtml}
       <p class="sec-title" style="margin-top:16px">Catatan Revisi (akan dilihat pengirim)</p>
