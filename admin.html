@@ -79,10 +79,9 @@ select.inp:hover,select.inp:focus{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23F5B14C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E")}
 input[type=date].inp{cursor:pointer;color-scheme:dark}
 html.tema-terang input[type=date].inp{color-scheme:light}
-input[type=date].inp::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.5;transition:opacity .2s var(--ease);
-  filter:invert(.5) sepia(1) saturate(4) hue-rotate(5deg)}
+input[type=date].inp::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.55;transition:opacity .2s var(--ease)}
 input[type=date].inp:hover::-webkit-calendar-picker-indicator,
-input[type=date].inp:focus::-webkit-calendar-picker-indicator{opacity:1}
+input[type=date].inp:focus::-webkit-calendar-picker-indicator{opacity:.9}
 .card{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(9px)}
 .badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 .badge.ok{color:var(--ok);background:var(--ok-bg)} .badge.bad{color:var(--bad);background:var(--bad-bg)}
