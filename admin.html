@@ -196,6 +196,16 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
 .toast.ok .i{background:var(--ok-bg);color:var(--ok)} .toast.err .i{background:var(--bad-bg);color:var(--bad)}
 .toast.info .i{background:var(--info-bg);color:var(--info)} .toast .i svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.4}
 @keyframes tin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.loader-overlay{position:fixed;inset:0;z-index:100;display:none;place-items:center;background:rgba(10,13,20,.55);backdrop-filter:blur(6px)}
+html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
+.loader-overlay.aktif{display:grid}
+.loader-box{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 32px;background:var(--bg-2);border:1px solid var(--glass-brd);border-radius:var(--radius-lg);box-shadow:var(--shadow)}
+.loader-spin{width:42px;height:42px;animation:loaderRot .9s linear infinite}
+.loader-spin circle{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;stroke-dasharray:80 40;transform-origin:center}
+@keyframes loaderRot{to{transform:rotate(360deg)}}
+.loader-pct{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.loader-label{font-size:12px;color:var(--ink-dim)}
+@media (prefers-reduced-motion:reduce){.loader-spin{animation:none}}
 .empty{text-align:center;padding:44px 20px;color:var(--ink-faint)} .empty svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.4;margin:0 auto 12px}
 .sk{background:linear-gradient(100deg,var(--glass) 30%,var(--glass-2) 50%,var(--glass) 70%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px}
 @keyframes sh{to{background-position:-200% 0}}
@@ -267,6 +277,14 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
 
 <dialog id="modal"></dialog>
 <div class="toasts" id="toasts"></div>
+
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="loader-box">
+    <svg class="loader-spin" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/></svg>
+    <div class="loader-pct" id="loaderPct">0%</div>
+    <div class="loader-label" id="loaderLabel">Memproses…</div>
+  </div>
+</div>
 
 <script>
 const $=(s,r=document)=>r.querySelector(s);
@@ -344,6 +362,24 @@ const Backend={ call(fn,...args){ return new Promise((res,rej)=>{
   if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](...args); }
   else { setTimeout(()=>{ try{res(Demo[fn](...args))}catch(e){rej(e)} },320); }
 }); } };
+
+const Loader={
+  pct:0, timer:null,
+  show(label){
+    this.pct=0; clearInterval(this.timer);
+    $('#loaderLabel').textContent=label||'Memproses…'; $('#loaderPct').textContent='0%';
+    $('#loaderOverlay').classList.add('aktif');
+    this.timer=setInterval(()=>{ this.pct+=(90-this.pct)*.12+.6; if(this.pct>90)this.pct=90;
+      $('#loaderPct').textContent=Math.round(this.pct)+'%'; },150);
+  },
+  hide(){ clearInterval(this.timer); $('#loaderPct').textContent='100%';
+    setTimeout(()=>$('#loaderOverlay').classList.remove('aktif'),220); }
+};
+async function withLoader(promise,label){
+  Loader.show(label);
+  try{ const r=await promise; Loader.hide(); return r; }
+  catch(e){ Loader.hide(); throw e; }
+}
 
 
 function statsOf(list){
@@ -451,7 +487,7 @@ function toast(msg,tipe='info'){ const ic={ok:IK.check,err:IK.x,info:IK.info};
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault(); const kode=$('#kodeInp').value.trim(); if(!kode)return;
   const btn=$('#loginBtn'); btn.disabled=true; const o=btn.textContent; btn.textContent='Memeriksa…';
-  try{ const me=await Backend.call('adminLogin',kode); KODE=kode; SS.set('pkh_kode',kode); boot(me); }
+  try{ const me=await withLoader(Backend.call('adminLogin',kode), 'Memeriksa kode akses…'); KODE=kode; SS.set('pkh_kode',kode); boot(me); }
   catch(err){ toast(err.message||'Kode salah.','err'); btn.disabled=false; btn.textContent=o; $('#kodeInp').select(); }
 });
 function logout(){ KODE=null; SS.del('pkh_kode'); location.reload(); }
@@ -580,7 +616,8 @@ function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada 
 
 async function doAksi(tiket,aksi,extra){ try{
     const payload=Object.assign({tiket,aksi},extra||{});
-    DATA=await Backend.call('adminAksi',KODE,payload);
+    const label={setujui:'Menyetujui…',tolak:'Menolak…',revisi:'Mengirim revisi…',review:'Menandai direview…',assign:'Menugaskan…'}[aksi]||'Menyimpan…';
+    DATA=await withLoader(Backend.call('adminAksi',KODE,payload), label);
     render(); populasiFilter();
     const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',review:'Ditandai sedang direview.',assign:'Eksekutor ditugaskan.'}[aksi];
     toast(pesan||'Tersimpan.','ok'); const m=$('#modal'); if(m.open)m.close();
@@ -695,7 +732,7 @@ function previewFile(tiket,i){ const r=DATA.rows.find(x=>x.tiket===tiket); const
 
 
 async function openKelola(){
-  try{ const daftar=await Backend.call('adminKelola',KODE,{sub:'list'}); renderKelola(daftar); }
+  try{ const daftar=await withLoader(Backend.call('adminKelola',KODE,{sub:'list'}), 'Memuat daftar admin…'); renderKelola(daftar); }
   catch(err){ toast(err.message||'Gagal memuat admin.','err'); }
 }
 function renderKelola(daftar){
@@ -725,7 +762,7 @@ function renderKelola(daftar){
   dlg.showModal();
 }
 async function aksiKelola(sub,extra){
-  try{ const daftar=await Backend.call('adminKelola',KODE,Object.assign({sub},extra));
+  try{ const daftar=await withLoader(Backend.call('adminKelola',KODE,Object.assign({sub},extra)), 'Menyimpan…');
     renderKelola(daftar); DATA.eksekutors=daftar.map(a=>a.nama); populasiFilter();
     toast({tambah:'Admin ditambahkan.',hapus:'Admin dihapus.',ubahRole:'Role diubah.'}[sub]||'Tersimpan.','ok');
   }catch(err){ toast(err.message||'Gagal.','err'); }
