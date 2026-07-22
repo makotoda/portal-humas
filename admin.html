@@ -137,6 +137,31 @@ html.tema-terang .topbar{background:linear-gradient(to bottom,rgba(255,255,255,.
 .filters .search:focus-within svg{stroke:var(--gold)}
 .filters .search .inp{padding-left:38px}
 .filters select.inp{width:auto;min-width:150px;flex:0 0 auto}
+/* custom dropdown */
+.dd{position:relative;flex:0 0 auto;min-width:158px}
+.dd-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;white-space:nowrap;cursor:pointer}
+.dd-btn .dd-lbl{flex:1;overflow:hidden;text-overflow:ellipsis}
+.dd-btn .chev{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:var(--ink-dim);stroke-width:2;
+  transition:transform .2s var(--ease), stroke .2s var(--ease)}
+.dd-btn:hover .chev{stroke:var(--gold)}
+.dd.open .dd-btn{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,177,76,.14)}
+.dd.open .chev{transform:rotate(180deg);stroke:var(--gold)}
+.dd-panel{position:absolute;top:calc(100% + 7px);left:0;min-width:100%;z-index:50;
+  background:var(--bg-2);border:1px solid var(--glass-brd);border-radius:13px;
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 18px 44px -20px rgba(0,0,0,.75), 0 8px 20px -12px rgba(0,0,0,.6);
+  padding:6px;opacity:0;transform:translateY(-8px) scale(.97);transform-origin:top;pointer-events:none;
+  transition:opacity .17s var(--ease-out), transform .17s var(--ease-out);
+  max-height:300px;overflow-y:auto;overscroll-behavior:contain}
+.dd.open .dd-panel{opacity:1;transform:none;pointer-events:auto}
+.dd-opt{display:flex;align-items:center;gap:9px;width:100%;text-align:left;white-space:nowrap;
+  padding:10px 12px;border:none;background:transparent;color:var(--ink-dim);font-family:inherit;
+  font-size:13px;border-radius:9px;cursor:pointer;transition:background .14s var(--ease), color .14s var(--ease)}
+.dd-opt:hover{background:var(--glass-2);color:var(--ink)}
+.dd-opt.aktif{color:var(--gold);font-weight:600}
+.dd-opt .ck{width:15px;height:15px;margin-left:auto;flex:0 0 auto;fill:none;stroke:var(--gold);stroke-width:2.5;
+  opacity:0;transition:opacity .14s var(--ease)}
+.dd-opt.aktif .ck{opacity:1}
+.dd-panel::-webkit-scrollbar{width:9px} .dd-panel::-webkit-scrollbar-thumb{background:var(--glass-2);border-radius:9px;border:3px solid transparent;background-clip:padding-box}
 .date-field{display:flex;flex-direction:column;gap:5px}
 .date-field label{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
   color:var(--ink-faint);padding-left:2px}
@@ -287,10 +312,10 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
         </div>
       </div>
       <div class="filters-row">
-        <select class="inp" id="fkat" onchange="applyFilter()"></select>
-        <select class="inp" id="fprov" onchange="applyFilter()"></select>
-        <select class="inp" id="fstatus" onchange="applyFilter()"></select>
-        <select class="inp" id="feks" onchange="applyFilter()"></select>
+        <div class="dd" id="ddKat"></div>
+        <div class="dd" id="ddProv"></div>
+        <div class="dd" id="ddStatus"></div>
+        <div class="dd" id="ddEks"></div>
         <div class="date-field"><label for="fdari">Dari tanggal</label>
           <input class="inp" type="date" id="fdari" onchange="applyFilter()"></div>
         <div class="date-field"><label for="fsampai">Sampai tanggal</label>
@@ -544,14 +569,40 @@ async function muat(){
 }
 
 
+const DD_CHEV='<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+const DD_CK='<svg class="ck" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+function ddEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function tutupSemuaDD(){ $$('.dd.open').forEach(d=>d.classList.remove('open')); }
+function ddStop(e){ e.stopPropagation(); }
+document.addEventListener('click',tutupSemuaDD);
+function buatDropdown(host,id,placeholder,options,current){
+  const items=[{value:'',label:placeholder},...options];
+  const cur=items.find(it=>it.value===(current||''))||items[0];
+  host.innerHTML=
+    `<input type="hidden" id="${id}">`+
+    `<button type="button" class="inp dd-btn"><span class="dd-lbl">${ddEsc(cur.label)}</span>${DD_CHEV}</button>`+
+    `<div class="dd-panel" role="listbox">`+
+      items.map(it=>`<button type="button" class="dd-opt${it.value===cur.value?' aktif':''}" data-val="${ddEsc(it.value)}">${ddEsc(it.label)}${DD_CK}</button>`).join('')+
+    `</div>`;
+  const hidden=host.querySelector('input'); hidden.value=cur.value;
+  const btn=host.querySelector('.dd-btn'), lbl=host.querySelector('.dd-lbl');
+  host.addEventListener('click',ddStop);
+  btn.addEventListener('click',()=>{ const open=host.classList.contains('open'); tutupSemuaDD(); if(!open)host.classList.add('open'); });
+  host.querySelectorAll('.dd-opt').forEach(o=>o.addEventListener('click',()=>{
+    hidden.value=o.dataset.val; lbl.textContent=o.textContent.trim();
+    host.querySelectorAll('.dd-opt').forEach(x=>x.classList.toggle('aktif',x===o));
+    host.classList.remove('open'); applyFilter();
+  }));
+}
 function populasiFilter(){
-  const opt=(arr,label)=>`<option value="">${label}</option>`+arr.map(v=>`<option>${v}</option>`).join('');
-  const kats=[...new Set(DATA.rows.map(r=>r.kategori))].map(katJudul);
-  const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort();
-  $('#fkat').innerHTML=`<option value="">Semua kategori</option>`+[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>`<option value="${k}">${katJudul(k)}</option>`).join('');
-  $('#fprov').innerHTML=opt(provs,'Semua provinsi');
-  $('#fstatus').innerHTML=opt(['Direview','Revisi','Disetujui','Ditolak'],'Semua status');
-  $('#feks').innerHTML=opt(DATA.eksekutors,'Semua eksekutor');
+  const kats=[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>({value:k,label:katJudul(k)}));
+  const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort().map(v=>({value:v,label:v}));
+  const stats=['Direview','Revisi','Disetujui','Ditolak'].map(v=>({value:v,label:v}));
+  const eks=(DATA.eksekutors||[]).map(v=>({value:v,label:v}));
+  buatDropdown($('#ddKat'),'fkat','Semua kategori',kats,filter.kategori);
+  buatDropdown($('#ddProv'),'fprov','Semua provinsi',provs,filter.provinsi);
+  buatDropdown($('#ddStatus'),'fstatus','Semua status',stats,filter.status);
+  buatDropdown($('#ddEks'),'feks','Semua eksekutor',eks,filter.eksekutor);
 }
 function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
   filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value;
