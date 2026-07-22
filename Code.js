@@ -66,20 +66,22 @@ function getStats() {
   const kini = new Date(), ym = kini.getFullYear() + pad2_(kini.getMonth() + 1);
   const idx = colIndex_();
   let bulanIni = 0, disetujui = 0, diputus = 0;
-  const satker = {};
+  const satker = {}, prov = {};
   rows.forEach(r => {
     const tid = String(r[idx.TicketID] || '');
     if (tid.indexOf('PKH-' + ym) === 0) bulanIni++;
     const st = String(r[idx.Status] || '').toLowerCase();
-    if (/setuju|selesai|terbit|complete/.test(st)) { disetujui++; diputus++; }
-    else if (/tolak|reject/.test(st)) diputus++;
+    const ok = /setuju|selesai|terbit|complete/.test(st);
+    if (ok) { disetujui++; diputus++; } else if (/tolak|reject/.test(st)) diputus++;
     const ins = String(r[idx.Instansi] || '').trim();
     if (ins) satker[ins] = 1;
+    if (ok) { const p = String(r[idx.Provinsi] || '').trim() || '—'; prov[p] = (prov[p] || 0) + 1; }
   });
   return {
     diproses: bulanIni,
     penerimaan: diputus ? Math.round((disetujui / diputus) * 100) : 0,
-    satker: Object.keys(satker).length
+    satker: Object.keys(satker).length,
+    perProvinsi: Object.keys(prov).map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah)
   };
 }
 
