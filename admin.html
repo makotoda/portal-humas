@@ -459,7 +459,6 @@ const Demo={
     let label='';
     if(p.aksi==='setujui'){rec.status='Disetujui';label='Disetujui';}
     else if(p.aksi==='tolak'){ if(!p.catatan)throw new Error('Alasan penolakan wajib diisi.'); rec.status='Ditolak';rec.keterangan=p.catatan;label='Ditolak';}
-    else if(p.aksi==='review'){rec.status='Direview';label='Ditandai direview';}
     else if(p.aksi==='assign'){ if(!p.eksekutor)throw new Error('Pilih eksekutor.'); rec.eksekutor=p.eksekutor;label='Ditugaskan';}
     rec.diperbarui=now; rec.riwayat=rec.riwayat||[];
     rec.riwayat.push({waktu:now,aksi:label,oleh:(this.codes[k]||{}).nama||'Admin',catatan:p.aksi==='tolak'?p.catatan:(p.aksi==='assign'?('Ditugaskan ke '+p.eksekutor):'')});
@@ -537,6 +536,7 @@ const badgeOf=(st)=>{ st=(st||'Direview'); const l=st.toLowerCase();
   return `<span class="badge ${c}">${st}</span>`; };
 const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
 const statusFinal=(st)=>/setuju|selesai|tolak/i.test(st||'');
+const sudahPernahRevisi=(r)=>(r.riwayat||[]).some(x=>x.aksi==='Inputan Direvisi');
 
 function render(){ renderStats(); (view==='tabel'?renderTabel:renderKanban)(); renderAnalitik(); }
 
@@ -582,7 +582,7 @@ function renderTabel(){ const allRows=terfilter();
       <td><div class="rowact">
         <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
         <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
-        <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Revisi" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
+        <button class="icon-btn" ${statusFinal(r.status)||sudahPernahRevisi(r)?'disabled':''} title="${sudahPernahRevisi(r)?'Tiket ini sudah pernah direvisi':'Revisi'}" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
         <button class="icon-btn" title="Detail" onclick="openDetail('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.eye}</svg></button>
       </div></td></tr>`).join('')}</tbody></table></div>${renderPagination(p)}`;
 }
@@ -617,10 +617,10 @@ function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada 
 
 async function doAksi(tiket,aksi,extra){ try{
     const payload=Object.assign({tiket,aksi},extra||{});
-    const label={setujui:'Menyetujui…',tolak:'Menolak…',revisi:'Mengirim revisi…',review:'Menandai direview…',assign:'Menugaskan…'}[aksi]||'Menyimpan…';
+    const label={setujui:'Menyetujui…',tolak:'Menolak…',revisi:'Mengirim revisi…',assign:'Menugaskan…'}[aksi]||'Menyimpan…';
     DATA=await withLoader(Backend.call('adminAksi',KODE,payload), label);
     render(); populasiFilter();
-    const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',review:'Ditandai sedang direview.',assign:'Eksekutor ditugaskan.'}[aksi];
+    const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',revisi:'Revisi diminta.',assign:'Eksekutor ditugaskan.'}[aksi];
     toast(pesan||'Tersimpan.','ok'); const m=$('#modal'); if(m.open)m.close();
   }catch(err){ toast(err.message||'Gagal.','err'); } }
 
@@ -717,8 +717,7 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
       <p class="sec-title">Riwayat</p><div class="riw">${riw}</div>
     </div>
     <div class="sheet-f">
-      <button class="btn btn-ghost" ${statusFinal(r.status)?'disabled':''} onclick="doAksi('${tiket}','review')">Tandai Direview</button>
-      <button class="btn btn-ghost" ${statusFinal(r.status)?'disabled':''} style="color:var(--warn)" onclick="openRevisi('${tiket}')">Revisi</button>
+      <button class="btn btn-ghost" ${statusFinal(r.status)||sudahPernahRevisi(r)?'disabled':''} style="color:var(--warn)" onclick="openRevisi('${tiket}')" title="${sudahPernahRevisi(r)?'Tiket ini sudah pernah direvisi':''}">Revisi</button>
       <button class="btn btn-bad" ${statusFinal(r.status)?'disabled':''} onclick="openTolak('${tiket}')">Tolak</button>
       <button class="btn btn-primary" ${statusFinal(r.status)?'disabled':''} onclick="doAksi('${tiket}','setujui')"><svg viewBox="0 0 24 24">${IK.check}</svg> Setujui</button>
     </div></div>`;

@@ -395,7 +395,7 @@ function adminData(kode) {
 
 /**
  * Aksi admin atas satu tiket. payload: { tiket, aksi, catatan?, eksekutor? }
- * aksi: 'setujui' | 'tolak'(catatan wajib) | 'review' | 'assign'(eksekutor wajib)
+ * aksi: 'setujui' | 'tolak'(catatan wajib) | 'revisi'(catatan wajib) | 'assign'(eksekutor wajib)
  * Mengembalikan adminData terbaru (pola "kembalikan state penuh").
  */
 function adminAksi(kode, payload) {
@@ -411,7 +411,6 @@ function adminAksi(kode, payload) {
   if (aksi === 'setujui') status = 'Disetujui';
   else if (aksi === 'tolak') { if (!catatan) throw new Error('Alasan penolakan wajib diisi.'); status = 'Ditolak'; }
   else if (aksi === 'revisi') { if (!catatan) throw new Error('Catatan revisi wajib diisi.'); status = 'Revisi'; }
-  else if (aksi === 'review') status = 'Direview';
   else if (aksi === 'assign') { if (!eksekutor) throw new Error('Pilih eksekutor.'); }
   else throw new Error('Aksi tidak dikenal.');
 
@@ -422,12 +421,16 @@ function adminAksi(kode, payload) {
     const idx = colIndex_();
     const rownum = findRow_(sh, tiket);
     if (!rownum) throw new Error('Tiket tidak ditemukan.');
+    if (aksi === 'revisi') {
+      const riwTiket = riwayatMap_()[tiket] || [];
+      if (riwTiket.some(x => x.aksi === 'Inputan Direvisi')) throw new Error('Tiket ini sudah pernah direvisi.');
+    }
     const now = new Date();
     if (status) sh.getRange(rownum, idx.Status + 1).setValue(status);
     if (aksi === 'tolak' || aksi === 'revisi') sh.getRange(rownum, idx.Keterangan + 1).setValue(catatan);
     if (eksekutor) sh.getRange(rownum, idx.Eksekutor + 1).setValue(eksekutor);
     sh.getRange(rownum, idx.LastUpdated + 1).setValue(now);
-    const label = { setujui: 'Disetujui', tolak: 'Ditolak', revisi: 'Minta Revisi', review: 'Ditandai direview', assign: 'Ditugaskan' }[aksi];
+    const label = { setujui: 'Disetujui', tolak: 'Ditolak', revisi: 'Minta Revisi', assign: 'Ditugaskan' }[aksi];
     const ket = (aksi === 'tolak' || aksi === 'revisi') ? catatan : (aksi === 'assign' ? ('Ditugaskan ke ' + eksekutor) : catatan);
     getSheet_(SHEET_RIWAYAT).appendRow([now, tiket, label, me.nama, ket]);
     return adminData(kode);
