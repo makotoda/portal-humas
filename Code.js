@@ -32,13 +32,13 @@ const HEADERS_RIWAYAT = ['Timestamp','TicketID','Aksi','Oleh','Catatan'];
 
 // Kategori valid + field organisasi wajibnya (kontrak dgn KATEGORI di index.html).
 const KATEGORI_VALID = {
-  'berita-daerah':     { org:'instansi',      penulis:false, video:false },
-  'berita-widyalaya':  { org:'namaWidyalaya', penulis:false, video:false },
-  'berita-ptkh':       { org:'instansi',      penulis:false, video:false },
+  'berita-daerah':     { org:'instansi',      penulis:true, video:false },
+  'berita-widyalaya':  { org:'namaWidyalaya', penulis:true, video:false },
+  'berita-ptkh':       { org:'instansi',      penulis:true, video:false },
   'naskah-mimbar':     { org:'instansi',      penulis:true,  video:false },
-  'wisata-religi':     { org:'instansi',      penulis:false, video:false },
-  'berita-pasraman':   { org:'namaPasraman',  penulis:false, video:false },
-  'konten-medsos':     { org:'instansi',      penulis:false, video:false },
+  'wisata-religi':     { org:'instansi',      penulis:true, video:false },
+  'berita-pasraman':   { org:'namaPasraman',  penulis:true, video:false },
+  'konten-medsos':     { org:'instansi',      penulis:true, video:false },
   'artikel-inspiratif':{ org:'instansi',      penulis:true,  video:false },
   'video-mimbar':      { org:'instansi',      penulis:true,  video:true  }
 };
