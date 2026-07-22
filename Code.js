@@ -148,7 +148,7 @@ function submitPermohonan(payload) {
       sheet.getRange(rownum, idx.NamaPenulis + 1).setValue(penulis);
       sheet.getRange(rownum, idx.NoWA + 1).setValue(noWA);
       sheet.getRange(rownum, idx.FileLinks + 1).setValue(JSON.stringify(mergedFiles));
-      sheet.getRange(rownum, idx.Status + 1).setValue('Direvisi');
+      sheet.getRange(rownum, idx.Status + 1).setValue('Direview');
       sheet.getRange(rownum, idx.LastUpdated + 1).setValue(now);
       getSheet_(SHEET_RIWAYAT).appendRow([now, tiket, 'Inputan Direvisi', penulis || noWA, 'Pengirim memperbaiki data inputan.']);
     } else {

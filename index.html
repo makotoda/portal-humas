@@ -933,7 +933,7 @@ const Status={
     const badge = ditolak?'bad':selesai?'ok':revisi?'warn':'info';
     const katJudul=(KATEGORI[r.kategori]&&KATEGORI[r.kategori].judul)||r.kategori||'—';
     const steps=LANGKAH.map((lb,i)=>{
-      if(i===1 && ditolak) lb='Ditolak'; if(i===1 && selesai) lb='Disetujui';
+      if(i===0 && revisi) lb='Revisi'; if(i===1 && ditolak) lb='Ditolak'; if(i===1 && selesai) lb='Disetujui';
       return `<div class="step ${i<idx?'done':i===idx?'now':''}">
         <div class="dot">${i<idx?`<svg viewBox="0 0 24 24">${IK.check}</svg>`:''}</div>
         <div class="lb">${lb}</div></div>`;
