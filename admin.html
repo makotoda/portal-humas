@@ -59,13 +59,21 @@ html.tema-terang .bg::before{opacity:.4}
 .btn-sm{padding:7px 11px;font-size:12.5px;border-radius:9px}
 .btn:active{transform:scale(.97)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
-.inp{width:100%;padding:10px 13px;border-radius:var(--radius-sm);font-size:14px;color:var(--ink);
-  background:var(--bg-1);border:1px solid var(--glass-brd);outline:none;transition:.2s var(--ease)}
+.inp{width:100%;padding:11px 14px;border-radius:var(--radius-sm);font-size:13.5px;color:var(--ink);
+  background:var(--bg-1);border:1px solid var(--glass-brd);outline:none;
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease)}
 html.tema-terang .inp{background:#fff}
-.inp:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,177,76,.15)}
-select.inp{appearance:none;cursor:pointer;padding-right:34px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239AA3B2' stroke-width='1.8'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 11px center}
+.inp::placeholder{color:var(--ink-faint)}
+.inp:hover{border-color:var(--glass-hi)}
+.inp:focus{border-color:var(--gold);box-shadow:0 0 0 3.5px rgba(245,177,76,.16), inset 0 1px 0 rgba(255,255,255,.03)}
+select.inp{appearance:none;cursor:pointer;padding-right:36px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23F5B14C' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;background-size:13px;
+  letter-spacing:.005em}
+input[type=date].inp{cursor:pointer;color-scheme:dark}
+html.tema-terang input[type=date].inp{color-scheme:light}
+input[type=date].inp::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.55;transition:opacity .2s var(--ease)}
+input[type=date].inp::-webkit-calendar-picker-indicator:hover{opacity:1}
 .card{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(9px)}
 .badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:100px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 .badge.ok{color:var(--ok);background:var(--ok-bg)} .badge.bad{color:var(--bad);background:var(--bad-bg)}
