@@ -481,7 +481,12 @@ const Tema={
 function toast(msg,tipe='info'){ const ic={ok:IK.check,err:IK.x,info:IK.info};
   const el=document.createElement('div'); el.className='toast '+tipe;
   el.innerHTML=`<span class="i"><svg viewBox="0 0 24 24">${ic[tipe]||IK.info}</svg></span><span>${msg}</span>`;
-  $('#toasts').appendChild(el); setTimeout(()=>{el.style.opacity=0;el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4000); }
+  // dialog modal (showModal) masuk browser top layer, di atas konten biasa apa pun z-index-nya —
+  // pindahkan wadah #toasts ke dalam dialog yang terbuka supaya ikut naik ke top layer & terlihat.
+  const dlg=$('#modal'), toasts=$('#toasts');
+  if(dlg&&dlg.open&&toasts.parentElement!==dlg) dlg.appendChild(toasts);
+  else if((!dlg||!dlg.open)&&toasts.parentElement!==document.body) document.body.appendChild(toasts);
+  toasts.appendChild(el); setTimeout(()=>{el.style.opacity=0;el.style.transition='.3s';setTimeout(()=>el.remove(),300)},4000); }
 
 
 $('#loginForm').addEventListener('submit',async e=>{
