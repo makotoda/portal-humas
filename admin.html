@@ -249,6 +249,12 @@ dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
 .sheet-b{padding:20px 22px}
 .kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13px;margin-bottom:16px}
 .kv .k{color:var(--ink-dim)} .kv .v{font-weight:500}
+.catatan-box{margin:0 0 16px;padding:12px 14px;border-radius:11px;font-size:13.5px;line-height:1.55;
+  background:var(--glass);border:1px solid var(--glass-brd)}
+.catatan-box b{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:5px}
+.catatan-box.bad{background:var(--bad-bg);border-color:transparent} .catatan-box.bad b{color:var(--bad)}
+.catatan-box.warn{background:var(--warn-bg);border-color:transparent} .catatan-box.warn b{color:var(--warn)}
 .files{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
 .file{width:88px;border-radius:10px;overflow:hidden;border:1px solid var(--glass-brd);cursor:pointer;background:var(--bg-1)}
 .file .fh{height:64px;display:grid;place-items:center;background:var(--glass);color:var(--ink-dim)}
@@ -867,6 +873,18 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
       <div class="rb"><b>${x.aksi}${x.oleh?` · ${x.oleh}`:''}</b>${cleanCatatan?`<div>${cleanCatatan}</div>`:''}<div class="rt">${new Date(x.waktu).toLocaleString('id-ID')}</div></div></div>`;
     }).join('')
       || '<div class="t-sub">Belum ada aktivitas.</div>';
+  // Alasan penolakan/catatan revisi disimpan di kolom Keterangan. Untuk data lama hasil migrasi
+  // sheet Riwayat kosong, jadi Keterangan inilah satu-satunya jejak alasannya.
+  const ditolak=/tolak/i.test(r.status||''), perluRevisi=/revisi/i.test(r.status||'');
+  let ket=r.keterangan||'';
+  const mRev=ket.match(/^\[REVISI:([^\]]+)\](.*)$/is); if(mRev) ket=mRev[2].trim();
+  const judulKet=ditolak?'Alasan penolakan':perluRevisi?'Catatan revisi':'Catatan';
+  const kelasKet=ditolak?' bad':perluRevisi?' warn':'';
+  const catatanBox = ket
+    ? `<div class="catatan-box${kelasKet}"><b>${judulKet}</b><div>${ket}</div></div>`
+    : ((ditolak||perluRevisi)
+        ? `<div class="catatan-box${kelasKet}"><b>${judulKet}</b><div class="t-sub">Tidak tercatat — kemungkinan data lama sebelum alasan mulai disimpan.</div></div>`
+        : '');
   const eksOpt=DATA.eksekutors.map(e=>`<option ${e===r.eksekutor?'selected':''}>${e}</option>`).join('');
   dlg.innerHTML=`<div class="sheet">
     <div class="sheet-h"><span class="tid">${r.tiket}</span> ${badgeOf(r.status)}
@@ -881,6 +899,7 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
         <span class="k">Dikirim</span><span class="v">${tgl(r.dibuat)}</span>
         <span class="k">Eksekutor</span><span class="v">${r.eksekutor||'Belum ditugaskan'}</span>
       </div>
+      ${catatanBox}
       <p class="sec-title">Berkas</p><div class="files">${files}</div>
       <div id="prevBox"></div>
       <p class="sec-title">Assign eksekutor</p>
