@@ -25,6 +25,19 @@ const SHEET_SUBMISSIONS = 'Submissions';
 const HEADERS = ['Timestamp','TicketID','Kategori','Provinsi','Kabupaten','Instansi',
                  'NamaPenulis','NoWA','FileLinks','Status','Eksekutor','Keterangan','LastUpdated'];
 
+// 38 provinsi resmi RI — kontrak dgn kunci WILAYAH di index.html (dropdown Provinsi).
+// Statistik per-provinsi dihitung dari daftar ini, BUKAN dari nilai apa adanya di kolom
+// Provinsi (data lama/pra-dropdown bisa berisi salah ketik/tak baku).
+const PROVINSI_VALID = [
+  'Bali','DI Yogyakarta','Jawa Tengah','Jawa Timur','Jawa Barat','Banten','DKI Jakarta',
+  'Lampung','Sumatera Utara','Sumatera Selatan','Sumatera Barat','Riau','Kepulauan Riau',
+  'Jambi','Bengkulu','Aceh','Kalimantan Tengah','Kalimantan Barat','Kalimantan Timur',
+  'Kalimantan Selatan','Kalimantan Utara','Sulawesi Tengah','Sulawesi Selatan',
+  'Sulawesi Tenggara','Sulawesi Utara','Sulawesi Barat','Gorontalo','Nusa Tenggara Barat',
+  'Nusa Tenggara Timur','Maluku','Maluku Utara','Papua','Papua Barat','Papua Tengah',
+  'Papua Pegunungan','Papua Selatan','Papua Barat Daya','Bangka Belitung'
+];
+
 const SHEET_ADMINS = 'Admins';
 const HEADERS_ADMIN = ['Nama','Kode','Role'];        // Role: 'super' | 'admin'
 const SHEET_RIWAYAT = 'Riwayat';
@@ -67,6 +80,7 @@ function getStats() {
   const idx = colIndex_();
   let bulanIni = 0, disetujui = 0, diputus = 0;
   const satker = {}, prov = {};
+  PROVINSI_VALID.forEach(p => { prov[p] = 0; });
   rows.forEach(r => {
     const tid = String(r[idx.TicketID] || '');
     if (tid.indexOf('PKH-' + ym) === 0) bulanIni++;
@@ -75,13 +89,13 @@ function getStats() {
     if (ok) { disetujui++; diputus++; } else if (/tolak|reject/.test(st)) diputus++;
     const ins = String(r[idx.Instansi] || '').trim();
     if (ins) satker[ins] = 1;
-    if (ok) { const p = String(r[idx.Provinsi] || '').trim() || '—'; prov[p] = (prov[p] || 0) + 1; }
+    if (ok) { const p = String(r[idx.Provinsi] || '').trim(); if (p in prov) prov[p]++; }
   });
   return {
     diproses: bulanIni,
     penerimaan: diputus ? Math.round((disetujui / diputus) * 100) : 0,
     satker: Object.keys(satker).length,
-    perProvinsi: Object.keys(prov).map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah)
+    perProvinsi: PROVINSI_VALID.map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah)
   };
 }
 

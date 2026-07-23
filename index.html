@@ -706,7 +706,8 @@ const Demo={
   _save(a){ LS.set(this._key, JSON.stringify(a)); },
   getStats(){ const a=this._all();
     const bulan=a.length+42, done=a.filter(x=>x.status==='Disetujui').length;
-    const prov={}; a.forEach(x=>{ if(x.status==='Disetujui'){ const p=x.provinsi||'—'; prov[p]=(prov[p]||0)+1; } });
+    const prov={}; Object.keys(WILAYAH).forEach(p=>{ prov[p]=0; });
+    a.forEach(x=>{ if(x.status==='Disetujui' && x.provinsi in prov) prov[x.provinsi]++; });
     return {diproses:bulan, penerimaan:59, satker:a.length?new Set(a.map(x=>x.instansi)).size+18:18,
       perProvinsi:Object.keys(prov).map(p=>({prov:p,jumlah:prov[p]})).sort((x,y)=>y.jumlah-x.jumlah)}; },
   submitPermohonan(p){
