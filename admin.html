@@ -688,7 +688,8 @@ function terfilter(){ return DATA.rows.filter(r=>{
   if(filter.provinsi&&r.provinsi!==filter.provinsi)return false;
   if(filter.status&&(r.status||'Direview')!==filter.status)return false;
   if(filter.eksekutor&&r.eksekutor!==filter.eksekutor)return false;
-  if(filter.dari||filter.sampai){ const d=(r.dibuat||'').slice(0,10);
+  if(filter.dari||filter.sampai){ const d=tglLokalISO(r.dibuat);
+    if(!d)return false;
     if(filter.dari&&d<filter.dari)return false;
     if(filter.sampai&&d>filter.sampai)return false; }
   if(filter.q){ const blob=[r.tiket,r.instansi,r.namaPenulis,r.kabupaten,r.provinsi].join(' ').toLowerCase(); if(!blob.includes(filter.q))return false; }
@@ -701,6 +702,9 @@ const badgeOf=(st)=>{ st=(st||'Direview'); const l=st.toLowerCase();
   const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/revisi/.test(l)?'warn':/review/.test(l)?'info':'warn';
   return `<span class="badge ${c}">${st}</span>`; };
 const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
+// Tanggal LOKAL (YYYY-MM-DD) — harus sebasis dengan tgl() di atas. Jangan pakai
+// iso.slice(0,10): itu tanggal UTC, meleset sehari utk kiriman 00:00-07:00 WIB.
+const tglLokalISO=(iso)=>{ const d=new Date(iso); return isNaN(d)?'':d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); };
 const statusFinal=(st)=>/setuju|selesai|tolak/i.test(st||'');
 const sudahPernahRevisi=(r)=>(r.riwayat||[]).some(x=>x.aksi==='Inputan Direvisi');
 
