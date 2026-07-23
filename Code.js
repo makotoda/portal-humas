@@ -79,7 +79,7 @@ function getStats() {
   const kini = new Date(), ym = kini.getFullYear() + pad2_(kini.getMonth() + 1);
   const idx = colIndex_();
   let bulanIni = 0, disetujui = 0, diputus = 0;
-  const satker = {}, prov = {};
+  const prov = {};
   PROVINSI_VALID.forEach(p => { prov[p] = 0; });
   rows.forEach(r => {
     const tid = String(r[idx.TicketID] || '');
@@ -87,14 +87,11 @@ function getStats() {
     const st = String(r[idx.Status] || '').toLowerCase();
     const ok = /setuju|selesai|terbit|complete/.test(st);
     if (ok) { disetujui++; diputus++; } else if (/tolak|reject/.test(st)) diputus++;
-    const ins = String(r[idx.Instansi] || '').trim();
-    if (ins) satker[ins] = 1;
     if (ok) { const p = String(r[idx.Provinsi] || '').trim(); if (p in prov) prov[p]++; }
   });
   return {
     diproses: bulanIni,
     penerimaan: diputus ? Math.round((disetujui / diputus) * 100) : 0,
-    satker: Object.keys(satker).length,
     perProvinsi: PROVINSI_VALID.map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah)
   };
 }

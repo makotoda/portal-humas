@@ -439,7 +439,6 @@ html.di-gas .grain{display:none}
       <div class="stats" id="stats">
         <div class="stat"><div class="n"><span class="tabular" data-count="0">0</span></div><div class="l">Bahan diproses bulan ini</div></div>
         <div class="stat"><div class="n"><span class="tabular" data-count="0">0</span><span class="u">%</span></div><div class="l">Tingkat penerimaan</div></div>
-        <div class="stat"><div class="n"><span class="tabular" data-count="0">0</span></div><div class="l">Satker berkontribusi</div></div>
       </div>
     </div>
 
@@ -708,7 +707,7 @@ const Demo={
     const bulan=a.length+42, done=a.filter(x=>x.status==='Disetujui').length;
     const prov={}; Object.keys(WILAYAH).forEach(p=>{ prov[p]=0; });
     a.forEach(x=>{ if(x.status==='Disetujui' && x.provinsi in prov) prov[x.provinsi]++; });
-    return {diproses:bulan, penerimaan:59, satker:a.length?new Set(a.map(x=>x.instansi)).size+18:18,
+    return {diproses:bulan, penerimaan:59,
       perProvinsi:Object.keys(prov).map(p=>({prov:p,jumlah:prov[p]})).sort((x,y)=>y.jumlah-x.jumlah)}; },
   submitPermohonan(p){
     const a=this._all();
@@ -781,7 +780,7 @@ function countUp(el,to){
 async function loadStats(){
   try{ const s=await Backend.call('getStats');
     const els=$$('#stats .n .tabular');
-    countUp(els[0], s.diproses); countUp(els[1], s.penerimaan); countUp(els[2], s.satker);
+    countUp(els[0], s.diproses); countUp(els[1], s.penerimaan);
     const pv=s.perProvinsi||[]; const maks=Math.max(1,...pv.map(p=>p.jumlah));
     $('#barProvPublik').innerHTML=pv.length?pv.map(p=>`
       <div class="bar-row"><span class="pn" title="${p.prov}">${p.prov}</span>
