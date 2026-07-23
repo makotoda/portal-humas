@@ -226,6 +226,35 @@ select.inp{appearance:none; cursor:pointer;
 .hint{font-size:11.5px; color:var(--ink-faint)}
 .err-msg{font-size:11.5px; color:var(--bad); display:none}
 .field.invalid .err-msg{display:block}
+/* custom dropdown (form) */
+.dd{position:relative; width:100%}
+.dd-btn{display:flex; align-items:center; gap:10px; width:100%; text-align:left; white-space:nowrap; cursor:pointer}
+.dd-btn .dd-lbl{flex:1; overflow:hidden; text-overflow:ellipsis}
+.dd-btn .dd-lbl.ph{color:var(--ink-faint)}
+.dd-btn .chev{width:16px; height:16px; flex:0 0 auto; fill:none; stroke:var(--ink-dim); stroke-width:2;
+  transition:transform .2s var(--ease), stroke .2s var(--ease)}
+.dd-btn:hover .chev{stroke:var(--gold)}
+.dd.open .dd-btn{border-color:var(--gold); box-shadow:0 0 0 3px rgba(245,177,76,.16)}
+.dd.open .chev{transform:rotate(180deg); stroke:var(--gold)}
+.dd.dd-disabled{opacity:.5}
+.dd.dd-disabled .dd-btn{cursor:not-allowed; pointer-events:none}
+.field.invalid .dd-btn{border-color:var(--bad); box-shadow:0 0 0 3px var(--bad-bg)}
+.dd-panel{position:absolute; top:calc(100% + 7px); left:0; min-width:100%; z-index:50;
+  background:var(--bg-2); border:1px solid var(--glass-brd); border-radius:13px;
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 18px 44px -20px rgba(0,0,0,.6), 0 8px 20px -12px rgba(0,0,0,.4);
+  padding:6px; opacity:0; transform:translateY(-8px) scale(.97); transform-origin:top; pointer-events:none;
+  transition:opacity .17s var(--ease-out), transform .17s var(--ease-out);
+  max-height:300px; overflow-y:auto; overscroll-behavior:contain}
+.dd.open .dd-panel{opacity:1; transform:none; pointer-events:auto}
+.dd-opt{display:flex; align-items:center; gap:9px; width:100%; text-align:left; white-space:nowrap;
+  padding:11px 13px; border:none; background:transparent; color:var(--ink-dim); font-family:inherit;
+  font-size:14px; border-radius:9px; cursor:pointer; transition:background .14s var(--ease), color .14s var(--ease)}
+.dd-opt:hover{background:var(--glass-2); color:var(--ink)}
+.dd-opt.aktif{color:var(--gold); font-weight:600}
+.dd-opt .ck{width:16px; height:16px; margin-left:auto; flex:0 0 auto; fill:none; stroke:var(--gold); stroke-width:2.5;
+  opacity:0; transition:opacity .14s var(--ease)}
+.dd-opt.aktif .ck{opacity:1}
+.dd-panel::-webkit-scrollbar{width:9px} .dd-panel::-webkit-scrollbar-thumb{background:var(--glass-2); border-radius:9px; border:3px solid transparent; background-clip:padding-box}
 
 /* upload dropzone */
 .drop{border:1.5px dashed var(--glass-brd); border-radius:var(--radius-sm); padding:18px;
@@ -759,6 +788,56 @@ async function loadStats(){
       :'<div class="t-sub" style="color:var(--ink-dim);font-size:13px">Belum ada data.</div>';
   }catch(e){  }
 }
+// ---- dropdown custom (form) ----
+const DD_CHEV='<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+const DD_CK='<svg class="ck" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+function ddEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function tutupSemuaDD(){ $$('.dd.open').forEach(d=>d.classList.remove('open')); }
+function ddStop(e){ e.stopPropagation(); }
+document.addEventListener('click',tutupSemuaDD);
+function buatFormDropdown(host,cfg){
+  host._ph=cfg.placeholder; host._onChange=cfg.onChange||null;
+  host.innerHTML=
+    `<input type="hidden" name="${cfg.name}"${cfg.required?' required':''}>`+
+    `<button type="button" class="inp dd-btn"><span class="dd-lbl ph">${ddEsc(cfg.placeholder)}</span>${DD_CHEV}</button>`+
+    `<div class="dd-panel" role="listbox"></div>`;
+  host.addEventListener('click',ddStop);
+  host.querySelector('.dd-btn').addEventListener('click',()=>{
+    if(host.classList.contains('dd-disabled'))return;
+    const open=host.classList.contains('open'); tutupSemuaDD(); if(!open)host.classList.add('open');
+  });
+  formDDOpsi(host,cfg.options||[]);
+}
+function formDDOpsi(host,options){
+  const panel=host.querySelector('.dd-panel'), hidden=host.querySelector('input'), lbl=host.querySelector('.dd-lbl');
+  panel.innerHTML=[{value:'',label:host._ph},...options].map(it=>
+    `<button type="button" class="dd-opt${it.value===''?' aktif':''}" data-val="${ddEsc(it.value)}">${ddEsc(it.label)}${DD_CK}</button>`).join('');
+  hidden.value=''; lbl.textContent=host._ph; lbl.classList.add('ph');
+  panel.querySelectorAll('.dd-opt').forEach(o=>o.addEventListener('click',()=>{
+    hidden.value=o.dataset.val;
+    if(o.dataset.val){ lbl.textContent=o.textContent.trim(); lbl.classList.remove('ph'); }
+    else { lbl.textContent=host._ph; lbl.classList.add('ph'); }
+    panel.querySelectorAll('.dd-opt').forEach(x=>x.classList.toggle('aktif',x===o));
+    host.classList.remove('open');
+    host.closest('.field').classList.remove('invalid');
+    if(host._onChange)host._onChange(hidden.value);
+  }));
+}
+function formDDNilai(host,val,fire){
+  const panel=host.querySelector('.dd-panel'), hidden=host.querySelector('input'), lbl=host.querySelector('.dd-lbl');
+  const opt=[...panel.querySelectorAll('.dd-opt')].find(o=>o.dataset.val===String(val||''));
+  if(!opt)return;
+  hidden.value=opt.dataset.val;
+  if(opt.dataset.val){ lbl.textContent=opt.textContent.trim(); lbl.classList.remove('ph'); }
+  else { lbl.textContent=host._ph; lbl.classList.add('ph'); }
+  panel.querySelectorAll('.dd-opt').forEach(x=>x.classList.toggle('aktif',x===opt));
+  if(fire&&host._onChange)host._onChange(hidden.value);
+}
+function formDDDisabled(host,bool){
+  host.classList.toggle('dd-disabled',!!bool);
+  host.querySelector('input').disabled=!!bool;
+  if(bool)host.classList.remove('open');
+}
 const Form={
   kat:null, files:{}, tiket_revisi:null, revisiFields:[],
   buka(kat){
@@ -787,6 +866,7 @@ const Form={
           if (d) d.classList.remove('disabled-drop');
         }
       });
+      $$('#fFields .dd-form').forEach(h=>formDDDisabled(h, !Form.revisiFields.includes(h.dataset.name)));
     }
     $('#fSisa').textContent='';
     Nav.go('form');
@@ -796,14 +876,13 @@ const Form={
     const req=d.req?'<span class="req">*</span>':'';
     const cls='field'+(d.full?' full':'');
     if(d.type==='prov'){
-      const opts=Object.keys(WILAYAH).sort().map(p=>`<option>${p}</option>`).join('');
       return `<div class="${cls}"><label>${d.label}${req}</label>
-        <select class="inp" name="provinsi" required><option value="">— pilih provinsi —</option>${opts}</select>
+        <div class="dd dd-form" data-name="provinsi"></div>
         <span class="err-msg">Wajib dipilih.</span></div>`;
     }
     if(d.type==='kab'){
       return `<div class="${cls}"><label>${d.label}${req}</label>
-        <select class="inp" name="kabupaten" required disabled><option value="">— pilih provinsi dulu —</option></select>
+        <div class="dd dd-form" data-name="kabupaten"></div>
         <span class="err-msg">Wajib dipilih.</span></div>`;
     }
     return this._raw(key,d.label,d.type==='tel'?'tel':'text',d.ph||'',d.req,d.full,d.hint);
@@ -826,14 +905,17 @@ const Form={
       <div class="thumbs"></div></div>`;
   },
   _wireWilayah(){
-    const prov=$('#fFields select[name=provinsi]'), kab=$('#fFields select[name=kabupaten]');
-    if(!prov||!kab)return;
-    prov.addEventListener('change',()=>{
-      const list=WILAYAH[prov.value]||[];
-      kab.innerHTML='<option value="">— pilih kabupaten/kota —</option>'+list.sort().map(c=>`<option>${c}</option>`).join('');
+    const provHost=$('#fFields .dd-form[data-name=provinsi]'), kabHost=$('#fFields .dd-form[data-name=kabupaten]');
+    if(!provHost||!kabHost)return;
+    const provOpts=Object.keys(WILAYAH).sort().map(p=>({value:p,label:p}));
+    buatFormDropdown(provHost,{name:'provinsi',placeholder:'— pilih provinsi —',options:provOpts,required:true,onChange:(val)=>{
+      const list=(WILAYAH[val]||[]).slice().sort().map(c=>({value:c,label:c}));
+      formDDOpsi(kabHost,list);
       const terkunci=Form.tiket_revisi && Form.revisiFields.length && !Form.revisiFields.includes('kabupaten');
-      kab.disabled=terkunci||!list.length;
-    });
+      formDDDisabled(kabHost, terkunci||!list.length);
+    }});
+    buatFormDropdown(kabHost,{name:'kabupaten',placeholder:'— pilih provinsi dulu —',options:[],required:true});
+    formDDDisabled(kabHost,true);
   },
   _wireUploads(){
     $$('#fFields [data-slot]').forEach(wrap=>{
@@ -989,9 +1071,9 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
     Form.revisiFields=fieldsStr ? fieldsStr.split(',') : [];
     Form.buka(d.kategori);
     setTimeout(()=>{
-      const pv=$('#fFields select[name=provinsi]'); if(pv){ pv.value=d.provinsi; pv.dispatchEvent(new Event('change')); }
+      const pv=$('#fFields .dd-form[data-name=provinsi]'); if(pv) formDDNilai(pv, d.provinsi, true);
       setTimeout(()=>{
-        const kb=$('#fFields select[name=kabupaten]'); if(kb)kb.value=d.kabupaten;
+        const kb=$('#fFields .dd-form[data-name=kabupaten]'); if(kb) formDDNilai(kb, d.kabupaten, false);
         $$('#fFields .inp').forEach(inp=>{
           const n=inp.name;
           if(n==='instansi'||n==='namaWidyalaya'||n==='namaPasraman') inp.value=d.instansi||'';
