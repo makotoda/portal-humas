@@ -791,7 +791,10 @@ async function loadStats(){
 // ---- dropdown custom (form) ----
 const DD_CHEV='<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
 const DD_CK='<svg class="ck" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
-function ddEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// GOTCHA GAS: sekuens kurung-sudut-tutup + garis-miring di-escape jadi backslash-slash oleh
+// HtmlService (cegah penutup script prematur). Aman di dalam string, TAPI merusak regex literal
+// seperti slash-kurangdari-slash-g. Pakai character class agar tak bersebelahan.
+function ddEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/[<]/g,'&lt;').replace(/[>]/g,'&gt;'); }
 function tutupSemuaDD(){ $$('.dd.open').forEach(d=>d.classList.remove('open')); }
 function ddStop(e){ e.stopPropagation(); }
 document.addEventListener('click',tutupSemuaDD);
@@ -850,7 +853,7 @@ const Form={
         <div class="body"><ul>${k.syarat.map(s=>`<li>${ikon('check')}<span>${s}</span></li>`).join('')}</ul></div>
       </details>`;
     let html=k.fields.map(f=>this._field(f)).join('');
-    if(k.linkVideo) html+=this._raw('linkVideo','Tautan Google Drive Video','url','https://drive.google.com/...',true,true);
+    if(k.linkVideo) html+=this._raw('linkVideo','Tautan Google Drive Video','url','https:'+'/'+'/'+'drive.google.com/...',true,true);
     html+=k.upload.map(u=>this._upload(u)).join('');
     $('#fFields').innerHTML=html;
     this._wireWilayah(); this._wireUploads();
