@@ -552,6 +552,7 @@ function hitungStats_(list) {
   const s = { total: list.length, terkirim: 0, direview: 0, disetujui: 0, ditolak: 0,
               penerimaan: 0, avgProsesJam: 0, perProvinsi: [], alasanTolak: [] };
   const prov = {}, alasan = {};
+  PROVINSI_VALID.forEach(p => { prov[p] = 0; });
   let diputus = 0, totalJam = 0, nProses = 0;
   list.forEach(r => {
     const st = String(r.status || '').toLowerCase();
@@ -559,9 +560,9 @@ function hitungStats_(list) {
     const ditolak = /tolak|reject/.test(st);
     if (disetujui) s.disetujui++; else if (ditolak) s.ditolak++;
     else if (/review|proses|progress/.test(st)) s.direview++; else s.terkirim++;
-    const P = r.provinsi || '—';
-    prov[P] = prov[P] || { total: 0, disetujui: 0 };
-    prov[P].total++; if (disetujui) prov[P].disetujui++;
+    // Sama dgn getStats() beranda publik: hitung dari 38 provinsi resmi, bukan nilai
+    // Provinsi apa adanya (data lama/salah ketik diam-diam tak dihitung).
+    if (disetujui) { const P = String(r.provinsi || '').trim(); if (P in prov) prov[P]++; }
     if (disetujui || ditolak) {
       diputus++;
       const t0 = Date.parse(r.dibuat), t1 = Date.parse(r.diperbarui);
@@ -571,10 +572,7 @@ function hitungStats_(list) {
   });
   s.penerimaan = diputus ? Math.round((s.disetujui / diputus) * 100) : 0;
   s.avgProsesJam = nProses ? Math.round(totalJam / nProses) : 0;
-  s.perProvinsi = Object.keys(prov).map(p => ({
-    prov: p, total: prov[p].total, disetujui: prov[p].disetujui,
-    rate: prov[p].total ? Math.round((prov[p].disetujui / prov[p].total) * 100) : 0
-  })).sort((a, b) => b.total - a.total);
+  s.perProvinsi = PROVINSI_VALID.map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah);
   s.alasanTolak = Object.keys(alasan).map(k => ({ teks: k, jumlah: alasan[k] }))
     .sort((a, b) => b.jumlah - a.jumlah).slice(0, 6);
   return s;

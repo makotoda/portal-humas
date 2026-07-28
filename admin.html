@@ -357,7 +357,7 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
     <div id="queue"></div>
 
     <div class="analytic">
-      <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg> Tingkat Penerimaan per Provinsi</h3><div id="barProv"></div></div>
+      <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg> Jumlah Penerimaan per Provinsi</h3><div id="barProv"></div></div>
       <div class="panel"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg> Alasan Penolakan Teratas</h3><div id="alasan"></div></div>
     </div>
   </main>
@@ -470,20 +470,29 @@ async function withLoader(promise,label){
 }
 
 
+// 38 provinsi resmi RI — samakan dgn PROVINSI_VALID di Code.js & WILAYAH di index.html.
+const PROVINSI_VALID=['Bali','DI Yogyakarta','Jawa Tengah','Jawa Timur','Jawa Barat','Banten','DKI Jakarta',
+  'Lampung','Sumatera Utara','Sumatera Selatan','Sumatera Barat','Riau','Kepulauan Riau',
+  'Jambi','Bengkulu','Aceh','Kalimantan Tengah','Kalimantan Barat','Kalimantan Timur',
+  'Kalimantan Selatan','Kalimantan Utara','Sulawesi Tengah','Sulawesi Selatan',
+  'Sulawesi Tenggara','Sulawesi Utara','Sulawesi Barat','Gorontalo','Nusa Tenggara Barat',
+  'Nusa Tenggara Timur','Maluku','Maluku Utara','Papua','Papua Barat','Papua Tengah',
+  'Papua Pegunungan','Papua Selatan','Papua Barat Daya','Bangka Belitung'];
 function statsOf(list){
   const s={total:list.length,terkirim:0,direview:0,disetujui:0,ditolak:0,penerimaan:0,avgProsesJam:0,perProvinsi:[],alasanTolak:[]};
-  const prov={},alasan={}; let diputus=0,totJam=0,nP=0;
+  const prov={},alasan={}; PROVINSI_VALID.forEach(p=>{ prov[p]=0; });
+  let diputus=0,totJam=0,nP=0;
   list.forEach(r=>{ const st=(r.status||'').toLowerCase();
     const ok=/setuju|selesai|terbit|complete/.test(st), bad=/tolak|reject/.test(st);
     if(ok)s.disetujui++; else if(bad)s.ditolak++; else if(/review|proses|progress/.test(st))s.direview++; else s.terkirim++;
-    const P=r.provinsi||'—'; prov[P]=prov[P]||{total:0,ok:0}; prov[P].total++; if(ok)prov[P].ok++;
+    // Sama dgn getStats() beranda publik: hitung dari 38 provinsi resmi.
+    if(ok){ const P=(r.provinsi||'').trim(); if(P in prov)prov[P]++; }
     if(ok||bad){ diputus++; const t0=Date.parse(r.dibuat),t1=Date.parse(r.diperbarui); if(t0&&t1&&t1>=t0){totJam+=(t1-t0)/3.6e6;nP++;} }
     if(bad&&r.keterangan){ const k=(''+r.keterangan).trim(); alasan[k]=(alasan[k]||0)+1; }
   });
   s.penerimaan=diputus?Math.round(s.disetujui/diputus*100):0;
   s.avgProsesJam=nP?Math.round(totJam/nP):0;
-  s.perProvinsi=Object.keys(prov).map(p=>({prov:p,total:prov[p].total,disetujui:prov[p].ok,
-    rate:prov[p].total?Math.round(prov[p].ok/prov[p].total*100):0})).sort((a,b)=>b.total-a.total);
+  s.perProvinsi=PROVINSI_VALID.map(p=>({prov:p,jumlah:prov[p]})).sort((a,b)=>b.jumlah-a.jumlah);
   s.alasanTolak=Object.keys(alasan).map(k=>({teks:k,jumlah:alasan[k]})).sort((a,b)=>b.jumlah-a.jumlah).slice(0,6);
   return s;
 }
@@ -782,9 +791,11 @@ function renderKanban(){ const rows=terfilter(); const kolom=['Direview','Revisi
 }
 
 function renderAnalitik(){ const s=DATA.stats||statsOf(DATA.rows);
-  $('#barProv').innerHTML=(s.perProvinsi||[]).slice(0,8).map(p=>`
+  const pv=s.perProvinsi||[]; const maks=Math.max(1,...pv.map(p=>p.jumlah));
+  $('#barProv').innerHTML=pv.length?pv.map(p=>`
     <div class="bar-row"><span class="pn" title="${p.prov}">${p.prov}</span>
-      <span class="bar"><i style="width:${p.rate}%"></i></span><span class="pct">${p.rate}%</span></div>`).join('')||'<div class="t-sub">Belum ada data.</div>';
+      <span class="bar"><i style="width:${Math.round(p.jumlah/maks*100)}%"></i></span><span class="pct">${p.jumlah}</span></div>`).join('')
+    :'<div class="t-sub">Belum ada data.</div>';
   $('#alasan').innerHTML=(s.alasanTolak||[]).map(a=>`<div class="reason"><span class="c">${a.jumlah}×</span><span>${a.teks}</span></div>`).join('')||'<div class="t-sub">Belum ada penolakan.</div>';
 }
 
