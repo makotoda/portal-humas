@@ -236,7 +236,7 @@ function getDetailRevisi(payload) {
     tiket: row[idx.TicketID], kategori: row[idx.Kategori],
     provinsi: row[idx.Provinsi], kabupaten: row[idx.Kabupaten],
     instansi: row[idx.Instansi], namaPenulis: row[idx.NamaPenulis],
-    noWA: row[idx.NoWA], linkVideo: linkVideo
+    noWA: perbaikiWA_(row[idx.NoWA]), linkVideo: linkVideo
   };
 }
 
@@ -354,6 +354,21 @@ function normalizeWA_(v) {
   return d.indexOf('62') === 0 ? '0' + d.slice(2) : d;
 }
 
+/**
+ * Perbaiki nomor WA yang DIBACA KEMBALI dari sheet. Google Sheets otomatis mengonversi
+ * teks angka jadi tipe number saat ditulis (kolom format Automatic) -> angka nol di depan
+ * hilang ("081234.." tersimpan jadi 81234..). Ini terjadi di level penyimpanan, di luar
+ * kendali kode saat menulis, jadi diperbaiki saat dibaca -- juga menormalkan data lama
+ * yang sudah terlanjur rusak. Bedakan dari normalizeWA_ (validasi input pengguna baru).
+ */
+function perbaikiWA_(v) {
+  let d = String(v || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.indexOf('62') === 0) return '0' + d.slice(2);
+  if (d[0] !== '0') return '0' + d;
+  return d;
+}
+
 function pad2_(n) { return String(n).padStart(2, '0'); }
 function pad4_(n) { return String(n).padStart(4, '0'); }
 
@@ -395,7 +410,7 @@ function adminData(kode) {
     const tiket = r[idx.TicketID];
     return {
       tiket: tiket, kategori: r[idx.Kategori], provinsi: r[idx.Provinsi], kabupaten: r[idx.Kabupaten],
-      instansi: r[idx.Instansi], namaPenulis: r[idx.NamaPenulis], noWA: r[idx.NoWA],
+      instansi: r[idx.Instansi], namaPenulis: r[idx.NamaPenulis], noWA: perbaikiWA_(r[idx.NoWA]),
       files: files, status: r[idx.Status] || 'Direview', eksekutor: r[idx.Eksekutor],
       keterangan: r[idx.Keterangan], dibuat: toIso_(r[idx.Timestamp]),
       diperbarui: toIso_(r[idx.LastUpdated]), riwayat: riw[tiket] || []
