@@ -142,10 +142,18 @@ function submitPermohonan(payload) {
     
     let mergedFiles = [];
     if (rownum) {
-      // Gabungkan berkas lama jika revisi
+      // Berkas lama tetap dipertahankan KECUALI slotnya diunggah ulang di revisi ini --
+      // slot yang diunggah ulang MENIMPA (bukan menumpuk), dan berkas lamanya dihapus
+      // permanen dari Drive (bukan cuma dilupakan di sheet, supaya tak jadi sampah).
       const oldStr = sheet.getRange(rownum, idx.FileLinks + 1).getValue();
       try { mergedFiles = JSON.parse(oldStr || '[]'); } catch(e) {}
-      if (spec.video && p.linkVideo) mergedFiles = mergedFiles.filter(f => f.slot !== 'linkVideo');
+      const slotDitimpa = new Set((p._files || []).map(f => f.slot));
+      if (spec.video && p.linkVideo) slotDitimpa.add('linkVideo');
+      mergedFiles = mergedFiles.filter(f => {
+        if (!slotDitimpa.has(f.slot)) return true;
+        if (f.slot !== 'linkVideo' && f.url) hapusFileDrive_(f.url); // linkVideo bukan file milik kita, jangan dihapus
+        return false;
+      });
     }
     mergedFiles.push(...links);
     if (spec.video && p.linkVideo) mergedFiles.push({ slot: 'linkVideo', url: String(p.linkVideo).trim() });
@@ -331,6 +339,16 @@ function simpanBerkas_(files, kategori, ym, tiket) {
     }
   });
   return out;
+}
+
+/** Hapus permanen berkas Drive dari URL-nya (dipakai saat revisi menimpa berkas lama). */
+function hapusFileDrive_(url) {
+  try {
+    const m = String(url || '').match(/[-\w]{25,}/);
+    if (m) DriveApp.getFileById(m[0]).setTrashed(true);
+  } catch (e) {
+    // Berkas mungkin sudah terhapus manual / di luar akses — abaikan, jangan gagalkan revisi.
+  }
 }
 
 function getFolderInduk_() {

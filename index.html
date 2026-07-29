@@ -1090,7 +1090,7 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
           if(n==='linkVideo') inp.value=d.linkVideo||'';
         });
         const m=document.createElement('div'); m.className='tl-note'; m.style.marginBottom='16px';
-        m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika Anda ingin mengganti/menambah berkas. Jika tidak diunggah ulang, berkas lama Anda akan tetap tersimpan aman.`;
+        m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika ingin menggantinya — berkas baru akan MENIMPA berkas lama pada bagian itu (berkas lama dihapus). Jika tidak diunggah ulang, berkas lama Anda tetap tersimpan aman.`;
         $('#fFields').prepend(m);
       }, 100);
     }, 50);
