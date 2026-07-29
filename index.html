@@ -231,6 +231,23 @@ html.pura-b .pura-scene::after{content:""; position:absolute; left:50%; bottom:9
   height:1px; transform:translateX(-50%); pointer-events:none; z-index:0;
   background:linear-gradient(90deg, transparent, rgba(245,177,76,.42), transparent)}
 
+/* ===== MODE C — latar penuh satu layar, ikut scroll (fixed) =====
+   Slot ini sengaja anak langsung <body>: position:fixed akan patah bila ada
+   ancestor ber-transform (mis. .reveal), jadi tak bisa ditaruh di dalam .hero. */
+.pura-bg{display:none}
+html.pura-c .pura-bg{display:block; position:fixed; inset:0; z-index:-1; pointer-events:none}
+html.pura-c .pura-bg #puraModel{width:100%; height:100%; opacity:0}
+html.pura-c .pura-bg #puraModel.tampil{opacity:.34}
+html.tema-terang.pura-c .pura-bg #puraModel.tampil{opacity:.26}
+/* Vignette + gradien bawah supaya teks tetap terbaca di atas model */
+html.pura-c .pura-bg::after{content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse 70% 55% at 50% 45%, rgba(10,13,20,.55), transparent 70%),
+             linear-gradient(to bottom, rgba(10,13,20,.5), transparent 22%, transparent 62%, rgba(10,13,20,.75))}
+html.tema-terang.pura-c .pura-bg::after{
+  background:radial-gradient(ellipse 70% 55% at 50% 45%, rgba(238,241,247,.6), transparent 70%),
+             linear-gradient(to bottom, rgba(238,241,247,.55), transparent 22%, transparent 62%, rgba(238,241,247,.8))}
+html.pura-c .pura-scene{display:none}
+
 /* ===== Toggle pembanding tata letak ===== */
 .pura-toggle{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; align-items:center; gap:8px;
   padding:7px 9px 7px 13px; border-radius:100px; font-size:12px;
@@ -518,6 +535,7 @@ html.di-gas .grain{display:none}
 </head>
 <body>
 <div class="bg"></div><div class="grain"></div>
+<div class="pura-bg" id="puraSlotBg" aria-hidden="true"></div>
 
 <header class="topbar">
   <div class="wrap">
@@ -664,6 +682,7 @@ html.di-gas .grain{display:none}
   <b>Tata letak pura</b>
   <button type="button" data-mode="a" onclick="PuraMode.set('a')">A · Latar hero</button>
   <button type="button" data-mode="b" onclick="PuraMode.set('b')">B · Panggung</button>
+  <button type="button" data-mode="c" onclick="PuraMode.set('c')">C · Latar penuh</button>
 </div>
 
 <div class="toasts" id="toasts"></div>
@@ -935,19 +954,25 @@ const PuraMode={
   kini:'b',
   init(){
     this.ukurScrollbar();
-    addEventListener('resize',()=>this.ukurScrollbar());
-    this.set(LS.get('pkh_pura_mode')==='a'?'a':'b');
+    addEventListener('resize',()=>{
+      this.ukurScrollbar();
+      // Mode C membingkai model relatif lebar layar — bingkai ulang saat ukuran berubah.
+      const mv=$('#puraModel'); if(mv&&this.kini==='c') this.kamera(mv);
+    });
+    const s=LS.get('pkh_pura_mode');
+    this.set(s==='a'||s==='c'?s:'b');
   },
   ukurScrollbar(){
     const sbw=window.innerWidth-document.documentElement.clientWidth;
     document.documentElement.style.setProperty('--sbw',(sbw>0?sbw:0)+'px');
   },
   set(m){
-    m = (m==='a') ? 'a' : 'b';
+    m = (m==='a'||m==='c') ? m : 'b';
     this.kini=m;
     const html=document.documentElement;
     html.classList.toggle('pura-a', m==='a');
     html.classList.toggle('pura-b', m==='b');
+    html.classList.toggle('pura-c', m==='c');
     $$('#puraToggle button').forEach(b=>b.classList.toggle('aktif', b.dataset.mode===m));
     LS.set('pkh_pura_mode', m);
     const mv=$('#puraModel');
@@ -956,12 +981,27 @@ const PuraMode={
       if(mv.parentElement!==tujuan) tujuan.appendChild(mv);
       this.kamera(mv);
     }
-    // Mode A tampil di hero yang langsung terlihat — tak perlu menunggu observer.
-    if(m==='a') Pura3D.muat();
+    // Mode A & C tampil sejak layar pertama — tak perlu menunggu observer.
+    if(m!=='b') Pura3D.muat();
   },
-  induk(){ return this.kini==='a' ? $('#puraSlotHero') : $('#puraScene'); },
+  induk(){
+    if(this.kini==='a') return $('#puraSlotHero');
+    if(this.kini==='c') return $('#puraSlotBg');
+    return $('#puraScene');
+  },
   kamera(mv){
-    if(this.kini==='a'){
+    if(this.kini==='c'){
+      // Menghadap lurus dari depan (azimut 0) & hampir setinggi mata, supaya penjor
+      // berdiri di kiri-kanan layar. Radius dirapatkan di layar lebar agar penjor
+      // mencapai tepi; di layar sempit dimundurkan supaya tak terpotong berlebihan.
+      const lebar=innerWidth, rasio=innerWidth/innerHeight;
+      const radius = rasio>1.6 ? '78%' : (rasio>1.1 ? '92%' : '132%');
+      mv.setAttribute('camera-orbit','0deg 86deg '+radius);
+      mv.setAttribute('field-of-view', lebar<620?'36deg':'30deg');
+      mv.setAttribute('exposure','1.45');
+      mv.removeAttribute('camera-controls');
+      mv.removeAttribute('auto-rotate');
+    } else if(this.kini==='a'){
       // Lebih jauh & lebih lebar supaya jadi latar; exposure dinaikkan utk mengimbangi opacity rendah.
       mv.setAttribute('camera-orbit','18deg 80deg 138%');
       mv.setAttribute('field-of-view','34deg');
