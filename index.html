@@ -199,6 +199,49 @@ html.tema-terang .topbar{background:linear-gradient(to bottom, rgba(255,255,255,
   background:transparent; --poster-color:transparent; --progress-bar-color:transparent;
   --progress-mask:transparent; outline:none; opacity:0; transition:opacity .9s var(--ease-out)}
 #puraModel.tampil{opacity:1}
+
+/* ===== MODE A — pura jadi latar hero ===== */
+.pura-slot-hero{display:none}
+html.pura-a .pura-slot-hero{display:block; position:absolute; inset:-6% -4% -12%; z-index:0; pointer-events:none}
+html.pura-a .hero{position:relative; overflow:hidden}
+/* Konten hero harus di ATAS model */
+html.pura-a .hero .eyebrow, html.pura-a .hero h1, html.pura-a .hero .lede,
+html.pura-a .hero .cta-row, html.pura-a .hero .stats{position:relative; z-index:2}
+/* Diredupkan + tepi dilarutkan supaya jadi atmosfer, bukan objek yang bersaing dgn teks */
+html.pura-a .pura-slot-hero #puraModel{opacity:0; pointer-events:none;
+  -webkit-mask-image:radial-gradient(ellipse 72% 68% at 50% 42%, #000 42%, transparent 82%);
+  mask-image:radial-gradient(ellipse 72% 68% at 50% 42%, #000 42%, transparent 82%)}
+html.pura-a .pura-slot-hero #puraModel.tampil{opacity:.42}
+html.tema-terang.pura-a .pura-slot-hero #puraModel.tampil{opacity:.3}
+html.pura-a .pura-scene{display:none}
+
+/* ===== MODE B — panggung selebar layar, kaki pura larut ke latar ===== */
+/* Melebar sampai tepi viewport. --sbw = lebar scrollbar (diukur di JS); tanpa itu
+   100vw ikut menghitung scrollbar dan memunculkan scroll horizontal beberapa piksel. */
+html.pura-b .pura-scene{max-width:none; width:auto; height:clamp(330px,48vw,520px);
+  margin-left:calc(-1 * (100vw - var(--sbw,0px) - 100%) / 2);
+  margin-right:calc(-1 * (100vw - var(--sbw,0px) - 100%) / 2);
+  margin-top:-8px; margin-bottom:-16px; padding:0}
+html.pura-b .pura-halo{width:52%; height:70%; top:50%}
+html.pura-b #puraModel{
+  -webkit-mask-image:linear-gradient(to bottom, #000 72%, rgba(0,0,0,.35) 92%, transparent 100%);
+  mask-image:linear-gradient(to bottom, #000 72%, rgba(0,0,0,.35) 92%, transparent 100%)}
+/* Garis cahaya tipis sbg "horizon" tempat pura berpijak */
+html.pura-b .pura-scene::after{content:""; position:absolute; left:50%; bottom:9%; width:min(760px,72%);
+  height:1px; transform:translateX(-50%); pointer-events:none; z-index:0;
+  background:linear-gradient(90deg, transparent, rgba(245,177,76,.42), transparent)}
+
+/* ===== Toggle pembanding tata letak ===== */
+.pura-toggle{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; align-items:center; gap:8px;
+  padding:7px 9px 7px 13px; border-radius:100px; font-size:12px;
+  background:var(--bg-2); border:1px solid var(--glass-brd); box-shadow:var(--shadow)}
+.pura-toggle b{font-weight:600; color:var(--ink-dim); font-size:11.5px}
+.pura-toggle button{border:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;
+  padding:6px 12px; border-radius:100px; background:var(--glass-2); color:var(--ink-dim);
+  transition:background .16s var(--ease), color .16s var(--ease)}
+.pura-toggle button:hover{color:var(--ink)}
+.pura-toggle button.aktif{background:linear-gradient(135deg,var(--gold),var(--amber)); color:#1A1206}
+@media (max-width:520px){ .pura-toggle{right:10px; bottom:10px; padding:6px 7px 6px 10px} .pura-toggle b{display:none} }
 /* Titik memuat sederhana; hilang begitu model siap */
 .pura-load{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; gap:7px; z-index:2}
 .pura-load span{width:8px; height:8px; border-radius:50%; background:var(--gold); opacity:.35;
@@ -495,6 +538,7 @@ html.di-gas .grain{display:none}
   <!-- ============ BERANDA ============ -->
   <section id="v-beranda" class="view aktif">
     <div class="hero">
+      <div class="pura-slot-hero" id="puraSlotHero" aria-hidden="true"></div>
       <span class="eyebrow"><span class="dot"></span> Portal Resmi Kehumasan Pusat &amp; Daerah</span>
       <h1>Satu Pintu untuk<br><span class="hl">Publikasi Kehumasan</span> Hindu</h1>
       <p class="lede">Portal Komunikasi Kehumasan adalah wadah digital yang menghubungkan Tim Publikasi Ditjen Bimas Hindu pusat dan daerah.</p>
@@ -615,6 +659,12 @@ html.di-gas .grain{display:none}
 <footer class="wrap">
   Portal Komunikasi Kehumasan Pusat &amp; Daerah · Direktorat Jenderal Bimbingan Masyarakat Hindu · Kementerian Agama RI · Dikelola oleh Tim Humas dan Prakom
 </footer>
+
+<div class="pura-toggle" id="puraToggle">
+  <b>Tata letak pura</b>
+  <button type="button" data-mode="a" onclick="PuraMode.set('a')">A · Latar hero</button>
+  <button type="button" data-mode="b" onclick="PuraMode.set('b')">B · Panggung</button>
+</div>
 
 <div class="toasts" id="toasts"></div>
 
@@ -878,10 +928,60 @@ const Tilt={
 // Model 3D pura+penjor (GLB). Dimuat MALAS: script model-viewer & data model baru diambil
 // saat ornamen mendekati viewport, supaya beranda tetap ringan bagi satker berkoneksi lambat.
 // Di GAS data datang lewat getPuraGLB() (base64 -> Blob); di preview lokal ambil file .glb.
+// Dua alternatif tata letak yang bisa dibandingkan langsung lewat toggle:
+//  A = pura jadi latar hero (atmosfer, diredupkan di belakang teks)
+//  B = panggung selebar layar dgn kaki pura dilarutkan ke latar
+const PuraMode={
+  kini:'b',
+  init(){
+    this.ukurScrollbar();
+    addEventListener('resize',()=>this.ukurScrollbar());
+    this.set(LS.get('pkh_pura_mode')==='a'?'a':'b');
+  },
+  ukurScrollbar(){
+    const sbw=window.innerWidth-document.documentElement.clientWidth;
+    document.documentElement.style.setProperty('--sbw',(sbw>0?sbw:0)+'px');
+  },
+  set(m){
+    m = (m==='a') ? 'a' : 'b';
+    this.kini=m;
+    const html=document.documentElement;
+    html.classList.toggle('pura-a', m==='a');
+    html.classList.toggle('pura-b', m==='b');
+    $$('#puraToggle button').forEach(b=>b.classList.toggle('aktif', b.dataset.mode===m));
+    LS.set('pkh_pura_mode', m);
+    const mv=$('#puraModel');
+    if(mv){
+      const tujuan=this.induk();
+      if(mv.parentElement!==tujuan) tujuan.appendChild(mv);
+      this.kamera(mv);
+    }
+    // Mode A tampil di hero yang langsung terlihat — tak perlu menunggu observer.
+    if(m==='a') Pura3D.muat();
+  },
+  induk(){ return this.kini==='a' ? $('#puraSlotHero') : $('#puraScene'); },
+  kamera(mv){
+    if(this.kini==='a'){
+      // Lebih jauh & lebih lebar supaya jadi latar; exposure dinaikkan utk mengimbangi opacity rendah.
+      mv.setAttribute('camera-orbit','18deg 80deg 138%');
+      mv.setAttribute('field-of-view','34deg');
+      mv.setAttribute('exposure','1.5');
+      mv.removeAttribute('camera-controls');
+      mv.removeAttribute('auto-rotate');
+    } else {
+      mv.setAttribute('camera-orbit','28deg 76deg 105%');
+      mv.setAttribute('field-of-view','28deg');
+      mv.setAttribute('exposure','1.15');
+      mv.setAttribute('camera-controls','');
+      mv.setAttribute('auto-rotate','');
+    }
+  }
+};
 const Pura3D={
   jalan:false,
   init(){
     const scene=$('#puraScene'); if(!scene)return;
+    if(PuraMode.kini==='a'){ this.muat(); return; }
     if(!('IntersectionObserver' in window)){ this.muat(); return; }
     const io=new IntersectionObserver(es=>{
       if(es.some(e=>e.isIntersecting)){ io.disconnect(); this.muat(); }
@@ -913,15 +1013,14 @@ const Pura3D={
       mv.setAttribute('shadow-intensity','0.55');
       mv.setAttribute('shadow-softness','1');
       mv.setAttribute('exposure','1.15');
-      mv.setAttribute('camera-orbit','28deg 76deg 105%');
       mv.setAttribute('min-camera-orbit','auto 55deg auto');
       mv.setAttribute('max-camera-orbit','auto 88deg auto');
-      mv.setAttribute('field-of-view','28deg');
+      PuraMode.kamera(mv);
       const tampilkan=()=>{ load.classList.add('selesai'); mv.classList.add('tampil'); };
       mv.addEventListener('load',tampilkan,{once:true});
       mv.addEventListener('error',()=>this._gagal(),{once:true});
       mv.src=src;
-      scene.appendChild(mv);
+      PuraMode.induk().appendChild(mv);
       // Jaring pengaman: sebagian lingkungan tak pernah men-dispatch 'load' walau model
       // sudah ter-parse (mis. tab yang sedang tak menggambar frame). Pantau flag `loaded`.
       const cek=setInterval(()=>{ if(mv.loaded){ clearInterval(cek); tampilkan(); } },250);
@@ -1340,6 +1439,7 @@ const Reveal={
 Tema.init();
 renderKategori();
 Reveal.init();
+PuraMode.init();
 Pura3D.init();
 loadStats();
 $('#formEl').addEventListener('submit',e=>Form.submit(e));
