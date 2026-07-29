@@ -187,6 +187,88 @@ html.tema-terang .topbar{background:linear-gradient(to bottom, rgba(255,255,255,
 .bar-row .bar{height:8px; border-radius:100px; background:var(--glass-2); overflow:hidden}
 .bar-row .bar i{display:block; height:100%; border-radius:100px; background:linear-gradient(90deg, var(--amber), var(--gold))}
 .bar-row .pct{text-align:right; font-weight:600; font-variant-numeric:tabular-nums}
+
+/* ---------- Ornamen Bali: pura + penjor ---------- */
+.pura-scene{position:relative; display:grid; grid-template-columns:1fr minmax(0,auto) 1fr;
+  align-items:end; justify-items:center; gap:clamp(8px,4vw,60px);
+  margin:56px auto 64px; max-width:960px; padding:0 8px; perspective:1100px}
+.pura-wrap{position:relative; width:clamp(190px,30vw,290px); transform-style:preserve-3d;
+  will-change:transform; transition:transform .5s var(--ease)}
+.pura-halo{position:absolute; left:50%; top:52%; width:150%; height:150%; transform:translate(-50%,-50%);
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle, rgba(245,177,76,.20), rgba(245,177,76,.07) 42%, transparent 70%)}
+.pura{position:relative; width:100%; height:auto; display:block; overflow:visible}
+.pura .pr-atap path{fill:#1B2130; stroke:var(--gold); stroke-width:1.6; stroke-linejoin:round}
+html.tema-terang .pura .pr-atap path{fill:#2A3346}
+.pura .pr-garis path{stroke:var(--amber); stroke-width:2.6; stroke-linecap:round; fill:none; opacity:.95}
+.pura .pr-badan path{fill:var(--bg-3); stroke:var(--gold); stroke-width:1.5}
+.pura .pr-badan path:last-child{fill:rgba(245,177,76,.22)}
+.pura .pr-tangga path{fill:var(--bg-3); stroke:var(--gold); stroke-width:1.3}
+.pura .pr-ukir path{fill:none; stroke:var(--gold); stroke-width:1.7; stroke-linecap:round}
+.penjor{width:clamp(70px,12vw,120px); opacity:.95}
+.penjor svg{width:100%; height:auto; display:block; transform-origin:50% 100%}
+.penjor path{fill:none; stroke-linecap:round; stroke-linejoin:round}
+.pj-batang{stroke:var(--amber); stroke-width:5}
+.pj-janur{stroke:var(--gold); stroke-width:2.4; opacity:.9}
+.pj-sampian{stroke:var(--gold); stroke-width:2.6}
+.pj-hias{stroke:var(--saffron); stroke-width:2.6; opacity:.85}
+.pj-mata{fill:var(--gold); stroke:none}
+@media (prefers-reduced-motion:no-preference){
+  .pura-scene.in .penjor-ki svg{animation:penjorKi 7s var(--ease) infinite alternate}
+  .pura-scene.in .penjor-ka svg{animation:penjorKa 7.6s var(--ease) infinite alternate}
+  .pura-scene.in .pura{animation:puraApung 6.5s var(--ease) infinite alternate}
+  .pura-scene.in .pura-halo{animation:haloDenyut 5s var(--ease) infinite alternate}
+}
+@keyframes penjorKi{from{transform:rotate(-2.2deg)} to{transform:rotate(1.6deg)}}
+@keyframes penjorKa{from{transform:rotate(2.2deg)} to{transform:rotate(-1.6deg)}}
+@keyframes puraApung{from{transform:translateY(0)} to{transform:translateY(-12px)}}
+@keyframes haloDenyut{from{opacity:.65; transform:translate(-50%,-50%) scale(.94)} to{opacity:1; transform:translate(-50%,-50%) scale(1.06)}}
+@media (max-width:620px){ .pura-scene{gap:2px; margin:40px auto 46px} }
+
+/* ---------- Papan peringkat (leaderboard) ---------- */
+.lb-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
+.lb{background:var(--glass); border:1px solid var(--glass-brd); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow); backdrop-filter:blur(10px); overflow:hidden}
+.lb-head{display:flex; align-items:center; gap:13px; padding:18px 20px; border-bottom:1px solid var(--glass-brd);
+  background:linear-gradient(120deg, rgba(245,177,76,.12), transparent 65%)}
+.lb-ico{width:42px; height:42px; flex:0 0 auto; border-radius:13px; display:grid; place-items:center;
+  background:linear-gradient(135deg, var(--gold), var(--amber)); box-shadow:0 6px 18px -8px rgba(245,177,76,.9)}
+.lb-ico svg{width:22px; height:22px; fill:none; stroke:#1A1206; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+.lb-ico-pt{background:linear-gradient(135deg, var(--violet), #6366F1); box-shadow:0 6px 18px -8px rgba(139,92,246,.9)}
+.lb-ico-pt svg{stroke:#fff}
+.lb-head b{display:block; font-size:14.5px; letter-spacing:-.01em}
+.lb-head span{display:block; font-size:11.5px; color:var(--ink-dim); margin-top:2px}
+.lb-body{padding:8px; max-height:420px; overflow-y:auto; overscroll-behavior:contain}
+.lb-body::-webkit-scrollbar{width:9px}
+.lb-body::-webkit-scrollbar-thumb{background:var(--glass-2); border-radius:9px; border:3px solid transparent; background-clip:padding-box}
+.lb-row{display:grid; grid-template-columns:34px 1fr auto; align-items:center; gap:11px;
+  padding:9px 11px; border-radius:12px; transition:background .18s var(--ease)}
+.lb-row:hover{background:var(--glass-2)}
+.lb-rank{width:30px; height:30px; border-radius:10px; display:grid; place-items:center;
+  font-size:12.5px; font-weight:700; font-variant-numeric:tabular-nums;
+  background:var(--glass-2); color:var(--ink-faint); border:1px solid var(--glass-brd)}
+.lb-nm{min-width:0}
+.lb-nm b{display:block; font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.lb-bar{height:5px; border-radius:100px; background:var(--glass-2); overflow:hidden; margin-top:5px}
+.lb-bar i{display:block; height:100%; border-radius:100px; background:linear-gradient(90deg, var(--amber), var(--gold))}
+.lb-val{font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; color:var(--ink)}
+.lb-row.kosong .lb-val{color:var(--ink-faint); font-weight:600}
+/* Tiga besar: medali emas / perak / perunggu */
+.lb-row.top .lb-nm b{font-weight:700}
+.lb-row.top1{background:linear-gradient(90deg, rgba(245,177,76,.16), transparent 70%)}
+.lb-row.top2{background:linear-gradient(90deg, rgba(203,213,225,.13), transparent 70%)}
+.lb-row.top3{background:linear-gradient(90deg, rgba(205,127,50,.14), transparent 70%)}
+.lb-row.top1 .lb-rank{background:linear-gradient(135deg,#FFD782,#E8A13A); color:#3A2708; border-color:transparent;
+  box-shadow:0 4px 12px -4px rgba(245,177,76,.85)}
+.lb-row.top2 .lb-rank{background:linear-gradient(135deg,#EEF2F7,#B6C2D2); color:#2B3444; border-color:transparent;
+  box-shadow:0 4px 12px -4px rgba(198,210,226,.7)}
+.lb-row.top3 .lb-rank{background:linear-gradient(135deg,#E5A671,#B06B2E); color:#3A2107; border-color:transparent;
+  box-shadow:0 4px 12px -4px rgba(205,127,50,.7)}
+.lb-row.top1 .lb-val{color:var(--gold)}
+.lb-medal{width:15px; height:15px; margin-left:5px; vertical-align:-2px; fill:none; stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round; display:inline-block}
+.lb-row.top1 .lb-medal{stroke:var(--gold)} .lb-row.top2 .lb-medal{stroke:#C6D2E2} .lb-row.top3 .lb-medal{stroke:#CD7F32}
+@media (max-width:860px){ .lb-grid{grid-template-columns:1fr} }
 .sosmed-row{display:flex; flex-wrap:wrap; justify-content:center; gap:14px}
 .sosmed-item{display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 18px;
   background:var(--glass); border:1px solid var(--glass-brd); border-radius:var(--radius);
@@ -213,6 +295,7 @@ html.tema-terang .topbar{background:linear-gradient(to bottom, rgba(255,255,255,
 .field{display:flex; flex-direction:column; gap:7px}
 .field.full{grid-column:1 / -1}
 .field label{font-size:13px; font-weight:550; color:var(--ink-dim)}
+.inp-lain{margin-top:8px}
 .field label .req{color:var(--bad); margin-left:2px}
 .inp{width:100%; padding:12px 14px; border-radius:var(--radius-sm); font-size:14.5px; color:var(--ink);
   background:var(--bg-1); border:1px solid var(--glass-brd); transition:.2s var(--ease); outline:none}
@@ -450,13 +533,72 @@ html.di-gas .grain{display:none}
       <div class="grid-kat" id="gridKat"></div>
     </div>
 
+    <div class="pura-scene reveal" id="puraScene" aria-hidden="true">
+      <div class="penjor penjor-ki">
+        <svg viewBox="0 0 120 420" preserveAspectRatio="xMidYMax meet">
+          <path class="pj-batang" d="M92 420C92 300 90 210 78 140 68 82 48 40 16 14"/>
+          <path class="pj-janur" d="M86 330c-14 6-22 16-26 30M84 288c-15 5-24 15-29 29M80 246c-15 4-25 13-31 27M74 204c-15 3-26 11-33 25M66 164c-14 2-26 9-34 22M56 126c-13 1-25 7-34 19"/>
+          <path class="pj-sampian" d="M16 14c-4 16-2 30 6 42M16 14c-14 8-21 20-22 36M16 14c10 12 14 26 12 42"/>
+          <circle class="pj-mata" cx="16" cy="14" r="5"/>
+          <path class="pj-hias" d="M94 400h-16M92 372h-15M90 344h-14"/>
+        </svg>
+      </div>
+
+      <div class="pura-wrap" data-pura>
+        <div class="pura-halo"></div>
+        <svg class="pura" viewBox="0 0 260 300" preserveAspectRatio="xMidYMax meet">
+          <g class="pr-atap">
+            <path d="M130 18L196 62H64z"/>
+            <path d="M130 52L204 100H56z"/>
+            <path d="M130 90L214 142H46z"/>
+            <path d="M130 132L226 190H34z"/>
+          </g>
+          <g class="pr-garis">
+            <path d="M64 62h132M56 100h148M46 142h168M34 190h192"/>
+          </g>
+          <g class="pr-badan">
+            <path d="M96 190h68v58H96z"/>
+            <path d="M118 210h24v38h-24z"/>
+          </g>
+          <g class="pr-tangga">
+            <path d="M84 248h92v10H84zM76 258h108v10H76zM68 268h124v12H68z"/>
+          </g>
+          <g class="pr-ukir">
+            <path d="M112 206c6-8 12-8 18 0M130 222v14M108 230h44"/>
+            <path d="M130 8v12M124 14h12"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="penjor penjor-ka">
+        <svg viewBox="0 0 120 420" preserveAspectRatio="xMidYMax meet">
+          <path class="pj-batang" d="M28 420C28 300 30 210 42 140 52 82 72 40 104 14"/>
+          <path class="pj-janur" d="M34 330c14 6 22 16 26 30M36 288c15 5 24 15 29 29M40 246c15 4 25 13 31 27M46 204c15 3 26 11 33 25M54 164c14 2 26 9 34 22M64 126c13 1 25 7 34 19"/>
+          <path class="pj-sampian" d="M104 14c4 16 2 30-6 42M104 14c14 8 21 20 22 36M104 14c-10 12-14 26-12 42"/>
+          <circle class="pj-mata" cx="104" cy="14" r="5"/>
+          <path class="pj-hias" d="M26 400h16M28 372h15M30 344h14"/>
+        </svg>
+      </div>
+    </div>
+
     <div class="section">
       <div class="terima-kasih-bar reveal">Terimakasih Atas Kontribusinya Rekan-Rekan Tim Publikasi Daerah</div>
-      <div class="sec-head sec-head-sm reveal">
-        <h2>Jumlah Penerimaan per Provinsi</h2>
-        <p>Total bahan yang telah disetujui, per provinsi.</p>
+      <div class="lb-grid">
+        <div class="lb reveal">
+          <div class="lb-head">
+            <span class="lb-ico"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/><path d="M6 6H3.5A2.5 2.5 0 006 10M18 6h2.5A2.5 2.5 0 0118 10"/></svg></span>
+            <div><b>Papan Peringkat Provinsi</b><span>Bahan disetujui per provinsi</span></div>
+          </div>
+          <div class="lb-body" id="lbProv"></div>
+        </div>
+        <div class="lb reveal">
+          <div class="lb-head">
+            <span class="lb-ico lb-ico-pt"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
+            <div><b>Papan Peringkat Perguruan Tinggi</b><span>Bahan disetujui per PTKH</span></div>
+          </div>
+          <div class="lb-body" id="lbPT"></div>
+        </div>
       </div>
-      <div class="card" id="barProvPublik"></div>
     </div>
 
     <div class="section">
@@ -623,10 +765,21 @@ const KATEGORI={
     linkVideo:true,
     syarat:['Video berbentuk Landscape Rasio: 16:9 (horizontal).','Format umum: MP4 (paling direkomendasikan).','Resolusi: minimal 720p (HD), ideal 1080p atau lebih.','Video harus karya sendiri (orisinal).','Tanpa menggunakan Editan apapun (audio/visual).','Unggah ke Google Drive, akses "siapa saja dgn link".','Tempel tautan Drive video pada isian di bawah.']}
 };
+// Daftar instansi baku. PERGURUAN_TINGGI dipakai juga utk leaderboard PT di beranda —
+// kontrak dgn PERGURUAN_TINGGI di Code.js, samakan bila daftarnya berubah.
+const PERGURUAN_TINGGI=[
+  'Universitas Hindu Negeri I Gusti Bagus Sugriwa',
+  'Institut Agama Hindu Negeri Tampung Penyang',
+  'Institut Agama Hindu Negeri Gde Pudja',
+  'Institut Agama Hindu Negeri Mpu Kuturan',
+  'Sekolah Tinggi Agama Hindu Negeri Jawa Dwipa'
+];
+const INSTANSI_OPSI=['Kanwil','Kankemenag',...PERGURUAN_TINGGI];
+const INSTANSI_LAIN='__lain__';
 const FIELD_DEF={
   provinsi:{label:'Provinsi',type:'prov',req:true},
   kabupaten:{label:'Kabupaten / Kota',type:'kab',req:true},
-  instansi:{label:'Instansi / Satuan Kerja',type:'text',req:true,ph:'mis. Kanwil Kemenag / Kemenag Kab. ...'},
+  instansi:{label:'Instansi / Satuan Kerja',type:'instansi',req:true},
   namaWidyalaya:{label:'Nama Widyalaya',type:'text',req:true,ph:'mis. Widyalaya ...'},
   namaPasraman:{label:'Nama Pasraman',type:'text',req:true,ph:'mis. Pasraman ...'},
   namaPenulis:{label:'Nama Penulis',type:'text',req:true,ph:'Nama lengkap penulis'},
@@ -706,9 +859,14 @@ const Demo={
   getStats(){ const a=this._all();
     const bulan=a.length+42, done=a.filter(x=>x.status==='Disetujui').length;
     const prov={}; Object.keys(WILAYAH).forEach(p=>{ prov[p]=0; });
-    a.forEach(x=>{ if(x.status==='Disetujui' && x.provinsi in prov) prov[x.provinsi]++; });
+    const pt={}; PERGURUAN_TINGGI.forEach(p=>{ pt[p]=0; });
+    a.forEach(x=>{ if(x.status==='Disetujui'){
+      if(x.provinsi in prov) prov[x.provinsi]++;
+      if(x.instansi in pt) pt[x.instansi]++;
+    }});
     return {diproses:bulan, penerimaan:59,
-      perProvinsi:Object.keys(prov).map(p=>({prov:p,jumlah:prov[p]})).sort((x,y)=>y.jumlah-x.jumlah)}; },
+      perProvinsi:Object.keys(prov).map(p=>({prov:p,jumlah:prov[p]})).sort((x,y)=>y.jumlah-x.jumlah),
+      perPT:Object.keys(pt).map(p=>({prov:p,jumlah:pt[p]})).sort((x,y)=>y.jumlah-x.jumlah)}; },
   submitPermohonan(p){
     const a=this._all();
     const seq=String(a.length+1).padStart(4,'0');
@@ -772,20 +930,47 @@ const Tilt={
     });
   }
 };
+// Pura ikut arah kursor (parallax 3D). Transform ditaruh di .pura-wrap saja —
+// animasi apung jalan di .pura (svg) supaya keduanya tak saling menimpa.
+const PuraTilt={
+  bind(){
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    const scene=$('#puraScene'), wrap=$('[data-pura]');
+    if(!scene||!wrap)return;
+    scene.addEventListener('mousemove',e=>{
+      const r=scene.getBoundingClientRect();
+      const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+      wrap.style.transform=`rotateY(${(x-.5)*16}deg) rotateX(${(.5-y)*10}deg)`;
+    });
+    scene.addEventListener('mouseleave',()=>{ wrap.style.transform=''; });
+  }
+};
 function countUp(el,to){
   const dur=1100, t0=performance.now();
   (function tick(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
     el.textContent=Math.round(to*e).toLocaleString('id-ID'); if(p<1)requestAnimationFrame(tick); })(t0);
 }
+const LB_MEDALI='<svg class="lb-medal" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M8.5 9.5L6 2h12l-2.5 7.5"/></svg>';
+function renderLeaderboard(el,list){
+  if(!el)return;
+  const maks=Math.max(1,...list.map(p=>p.jumlah));
+  el.innerHTML=list.length?list.map((p,i)=>{
+    const rank=i+1, top=rank<=3&&p.jumlah>0;
+    const cls=['lb-row',top?'top top'+rank:'',p.jumlah?'':'kosong'].filter(Boolean).join(' ');
+    return `<div class="${cls}">
+      <span class="lb-rank">${rank}</span>
+      <span class="lb-nm"><b title="${p.prov}">${p.prov}${top?LB_MEDALI:''}</b>
+        <span class="lb-bar"><i style="width:${Math.round(p.jumlah/maks*100)}%"></i></span></span>
+      <span class="lb-val">${p.jumlah}</span>
+    </div>`;
+  }).join(''):'<div class="t-sub" style="color:var(--ink-dim);font-size:13px;padding:14px">Belum ada data.</div>';
+}
 async function loadStats(){
   try{ const s=await Backend.call('getStats');
     const els=$$('#stats .n .tabular');
     countUp(els[0], s.diproses); countUp(els[1], s.penerimaan);
-    const pv=s.perProvinsi||[]; const maks=Math.max(1,...pv.map(p=>p.jumlah));
-    $('#barProvPublik').innerHTML=pv.length?pv.map(p=>`
-      <div class="bar-row"><span class="pn" title="${p.prov}">${p.prov}</span>
-        <span class="bar"><i style="width:${Math.round(p.jumlah/maks*100)}%"></i></span><span class="pct">${p.jumlah}</span></div>`).join('')
-      :'<div class="t-sub" style="color:var(--ink-dim);font-size:13px">Belum ada data.</div>';
+    renderLeaderboard($('#lbProv'), s.perProvinsi||[]);
+    renderLeaderboard($('#lbPT'), s.perPT||[]);
   }catch(e){  }
 }
 // ---- dropdown custom (form) ----
@@ -856,7 +1041,7 @@ const Form={
     if(k.linkVideo) html+=this._raw('linkVideo','Tautan Google Drive Video','url','https:'+'/'+'/'+'drive.google.com/...',true,true);
     html+=k.upload.map(u=>this._upload(u)).join('');
     $('#fFields').innerHTML=html;
-    this._wireWilayah(); this._wireUploads();
+    this._wireWilayah(); this._wireInstansi(); this._wireUploads();
     if(Form.tiket_revisi && Form.revisiFields && Form.revisiFields.length > 0) {
       $$('#fFields input, #fFields select, #fFields textarea').forEach(el => el.disabled = true);
       $$('#fFields .drop').forEach(el => el.classList.add('disabled-drop'));
@@ -873,6 +1058,9 @@ const Form={
           const fileInput = drop.querySelector('input[type=file]');
           if (fileInput) fileInput.disabled = false;
         }
+        // Input "Lainnya" juga tak ber-[name] — sama seperti input file di atas.
+        const lain = $(`#fFields .inp-lain[data-lain="${f}"]`);
+        if (lain) lain.disabled = false;
       });
       $$('#fFields .dd-form').forEach(h=>formDDDisabled(h, !Form.revisiFields.includes(h.dataset.name)));
     }
@@ -891,6 +1079,12 @@ const Form={
     if(d.type==='kab'){
       return `<div class="${cls}"><label>${d.label}${req}</label>
         <div class="dd dd-form" data-name="kabupaten"></div>
+        <span class="err-msg">Wajib dipilih.</span></div>`;
+    }
+    if(d.type==='instansi'){
+      return `<div class="${cls}"><label>${d.label}${req}</label>
+        <div class="dd dd-form" data-name="instansi"></div>
+        <input class="inp inp-lain" data-lain="instansi" placeholder="Tulis nama instansi/satuan kerja" style="display:none">
         <span class="err-msg">Wajib dipilih.</span></div>`;
     }
     return this._raw(key,d.label,d.type==='tel'?'tel':'text',d.ph||'',d.req,d.full,d.hint);
@@ -924,6 +1118,37 @@ const Form={
     }});
     buatFormDropdown(kabHost,{name:'kabupaten',placeholder:'— pilih provinsi dulu —',options:[],required:true});
     formDDDisabled(kabHost,true);
+  },
+  _wireInstansi(){
+    const host=$('#fFields .dd-form[data-name=instansi]');
+    if(!host)return;
+    const lain=$('#fFields .inp-lain[data-lain=instansi]');
+    const hidden=()=>host.querySelector('input');
+    const opts=INSTANSI_OPSI.map(v=>({value:v,label:v})).concat([{value:INSTANSI_LAIN,label:'Lainnya (tulis sendiri)'}]);
+    buatFormDropdown(host,{name:'instansi',placeholder:'— pilih instansi —',options:opts,required:true,onChange:(val)=>{
+      if(val===INSTANSI_LAIN){
+        // Sentinel bukan nilai yang sah dikirim ke server: kosongkan dulu supaya
+        // validasi [required] menolak sampai pengguna benar-benar mengetik namanya.
+        hidden().value=''; lain.style.display=''; lain.disabled=false; lain.focus();
+      } else {
+        lain.style.display='none'; lain.value='';
+      }
+    }});
+    lain.addEventListener('input',()=>{
+      hidden().value=lain.value.trim();
+      if(lain.value.trim()) lain.closest('.field').classList.remove('invalid');
+    });
+  },
+  // Prefill instansi saat revisi: cocokkan dgn opsi baku, kalau tak ada -> mode "Lainnya".
+  _setInstansi(nilai){
+    const host=$('#fFields .dd-form[data-name=instansi]');
+    if(!host)return;
+    const v=String(nilai||'').trim(); if(!v)return;
+    const lain=$('#fFields .inp-lain[data-lain=instansi]');
+    if(INSTANSI_OPSI.includes(v)){ formDDNilai(host,v,false); lain.style.display='none'; lain.value=''; return; }
+    formDDNilai(host,INSTANSI_LAIN,false);
+    lain.style.display=''; lain.value=v;
+    host.querySelector('input').value=v;
   },
   _wireUploads(){
     $$('#fFields [data-slot]').forEach(wrap=>{
@@ -1082,9 +1307,10 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
       const pv=$('#fFields .dd-form[data-name=provinsi]'); if(pv) formDDNilai(pv, d.provinsi, true);
       setTimeout(()=>{
         const kb=$('#fFields .dd-form[data-name=kabupaten]'); if(kb) formDDNilai(kb, d.kabupaten, false);
+        Form._setInstansi(d.instansi);
         $$('#fFields .inp').forEach(inp=>{
           const n=inp.name;
-          if(n==='instansi'||n==='namaWidyalaya'||n==='namaPasraman') inp.value=d.instansi||'';
+          if(n==='namaWidyalaya'||n==='namaPasraman') inp.value=d.instansi||'';
           if(n==='namaPenulis') inp.value=d.namaPenulis||'';
           if(n==='noWA') inp.value=d.noWA||'';
           if(n==='linkVideo') inp.value=d.linkVideo||'';
@@ -1112,6 +1338,7 @@ const Reveal={
 Tema.init();
 renderKategori();
 Reveal.init();
+PuraTilt.bind();
 loadStats();
 $('#formEl').addEventListener('submit',e=>Form.submit(e));
 if(!isGas) console.info('[PKH] Mode preview lokal (demo). Di GAS akan pakai google.script.run.');

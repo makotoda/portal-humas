@@ -38,6 +38,16 @@ const PROVINSI_VALID = [
   'Papua Pegunungan','Papua Selatan','Papua Barat Daya','Bangka Belitung'
 ];
 
+// Perguruan tinggi keagamaan Hindu — kontrak dgn PERGURUAN_TINGGI di index.html
+// (opsi dropdown Instansi). Dipakai utk leaderboard PT di beranda.
+const PERGURUAN_TINGGI = [
+  'Universitas Hindu Negeri I Gusti Bagus Sugriwa',
+  'Institut Agama Hindu Negeri Tampung Penyang',
+  'Institut Agama Hindu Negeri Gde Pudja',
+  'Institut Agama Hindu Negeri Mpu Kuturan',
+  'Sekolah Tinggi Agama Hindu Negeri Jawa Dwipa'
+];
+
 const SHEET_ADMINS = 'Admins';
 const HEADERS_ADMIN = ['Nama','Kode','Role'];        // Role: 'super' | 'admin'
 const SHEET_RIWAYAT = 'Riwayat';
@@ -79,20 +89,25 @@ function getStats() {
   const kini = new Date(), ym = kini.getFullYear() + pad2_(kini.getMonth() + 1);
   const idx = colIndex_();
   let bulanIni = 0, disetujui = 0, diputus = 0;
-  const prov = {};
+  const prov = {}, pt = {};
   PROVINSI_VALID.forEach(p => { prov[p] = 0; });
+  PERGURUAN_TINGGI.forEach(p => { pt[p] = 0; });
   rows.forEach(r => {
     const tid = String(r[idx.TicketID] || '');
     if (tid.indexOf('PKH-' + ym) === 0) bulanIni++;
     const st = String(r[idx.Status] || '').toLowerCase();
     const ok = /setuju|selesai|terbit|complete/.test(st);
     if (ok) { disetujui++; diputus++; } else if (/tolak|reject/.test(st)) diputus++;
-    if (ok) { const p = String(r[idx.Provinsi] || '').trim(); if (p in prov) prov[p]++; }
+    if (ok) {
+      const p = String(r[idx.Provinsi] || '').trim(); if (p in prov) prov[p]++;
+      const i = String(r[idx.Instansi] || '').trim(); if (i in pt) pt[i]++;
+    }
   });
   return {
     diproses: bulanIni,
     penerimaan: diputus ? Math.round((disetujui / diputus) * 100) : 0,
-    perProvinsi: PROVINSI_VALID.map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah)
+    perProvinsi: PROVINSI_VALID.map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah),
+    perPT: PERGURUAN_TINGGI.map(p => ({ prov: p, jumlah: pt[p] })).sort((a, b) => b.jumlah - a.jumlah)
   };
 }
 
