@@ -189,41 +189,28 @@ html.tema-terang .topbar{background:linear-gradient(to bottom, rgba(255,255,255,
 .bar-row .pct{text-align:right; font-weight:600; font-variant-numeric:tabular-nums}
 
 /* ---------- Ornamen Bali: pura + penjor ---------- */
-.pura-scene{position:relative; display:grid; grid-template-columns:1fr minmax(0,auto) 1fr;
-  align-items:end; justify-items:center; gap:clamp(8px,4vw,60px);
-  margin:56px auto 64px; max-width:960px; padding:0 8px; perspective:1100px}
-.pura-wrap{position:relative; width:clamp(190px,30vw,290px); transform-style:preserve-3d;
-  will-change:transform; transition:transform .5s var(--ease)}
-.pura-halo{position:absolute; left:50%; top:52%; width:150%; height:150%; transform:translate(-50%,-50%);
-  border-radius:50%; pointer-events:none;
-  background:radial-gradient(circle, rgba(245,177,76,.20), rgba(245,177,76,.07) 42%, transparent 70%)}
-.pura{position:relative; width:100%; height:auto; display:block; overflow:visible}
-.pura .pr-atap path{fill:#1B2130; stroke:var(--gold); stroke-width:1.6; stroke-linejoin:round}
-html.tema-terang .pura .pr-atap path{fill:#2A3346}
-.pura .pr-garis path{stroke:var(--amber); stroke-width:2.6; stroke-linecap:round; fill:none; opacity:.95}
-.pura .pr-badan path{fill:var(--bg-3); stroke:var(--gold); stroke-width:1.5}
-.pura .pr-badan path:last-child{fill:rgba(245,177,76,.22)}
-.pura .pr-tangga path{fill:var(--bg-3); stroke:var(--gold); stroke-width:1.3}
-.pura .pr-ukir path{fill:none; stroke:var(--gold); stroke-width:1.7; stroke-linecap:round}
-.penjor{width:clamp(70px,12vw,120px); opacity:.95}
-.penjor svg{width:100%; height:auto; display:block; transform-origin:50% 100%}
-.penjor path{fill:none; stroke-linecap:round; stroke-linejoin:round}
-.pj-batang{stroke:var(--amber); stroke-width:5}
-.pj-janur{stroke:var(--gold); stroke-width:2.4; opacity:.9}
-.pj-sampian{stroke:var(--gold); stroke-width:2.6}
-.pj-hias{stroke:var(--saffron); stroke-width:2.6; opacity:.85}
-.pj-mata{fill:var(--gold); stroke:none}
+.pura-scene{position:relative; margin:44px auto 56px; max-width:900px; padding:0 8px;
+  height:clamp(300px,46vw,460px)}
+/* Cahaya lembut di belakang model supaya menyatu dgn latar, bukan tampak seperti kotak tempelan */
+.pura-halo{position:absolute; left:50%; top:54%; width:78%; height:88%; transform:translate(-50%,-50%);
+  border-radius:50%; pointer-events:none; z-index:0;
+  background:radial-gradient(ellipse at center, rgba(245,177,76,.20), rgba(245,177,76,.07) 45%, transparent 72%)}
+#puraModel{position:relative; z-index:1; width:100%; height:100%; display:block;
+  background:transparent; --poster-color:transparent; --progress-bar-color:transparent;
+  --progress-mask:transparent; outline:none; opacity:0; transition:opacity .9s var(--ease-out)}
+#puraModel.tampil{opacity:1}
+/* Titik memuat sederhana; hilang begitu model siap */
+.pura-load{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; gap:7px; z-index:2}
+.pura-load span{width:8px; height:8px; border-radius:50%; background:var(--gold); opacity:.35;
+  animation:puraDot 1.1s ease-in-out infinite}
+.pura-load span:nth-child(2){animation-delay:.16s} .pura-load span:nth-child(3){animation-delay:.32s}
+.pura-load.selesai{display:none}
+@keyframes puraDot{0%,100%{opacity:.25; transform:translateY(0)} 50%{opacity:1; transform:translateY(-6px)}}
 @media (prefers-reduced-motion:no-preference){
-  .pura-scene.in .penjor-ki svg{animation:penjorKi 7s var(--ease) infinite alternate}
-  .pura-scene.in .penjor-ka svg{animation:penjorKa 7.6s var(--ease) infinite alternate}
-  .pura-scene.in .pura{animation:puraApung 6.5s var(--ease) infinite alternate}
   .pura-scene.in .pura-halo{animation:haloDenyut 5s var(--ease) infinite alternate}
 }
-@keyframes penjorKi{from{transform:rotate(-2.2deg)} to{transform:rotate(1.6deg)}}
-@keyframes penjorKa{from{transform:rotate(2.2deg)} to{transform:rotate(-1.6deg)}}
-@keyframes puraApung{from{transform:translateY(0)} to{transform:translateY(-12px)}}
-@keyframes haloDenyut{from{opacity:.65; transform:translate(-50%,-50%) scale(.94)} to{opacity:1; transform:translate(-50%,-50%) scale(1.06)}}
-@media (max-width:620px){ .pura-scene{gap:2px; margin:40px auto 46px} }
+@keyframes haloDenyut{from{opacity:.6; transform:translate(-50%,-50%) scale(.95)} to{opacity:1; transform:translate(-50%,-50%) scale(1.05)}}
+@media (prefers-reduced-motion:reduce){ .pura-load span{animation:none} }
 
 /* ---------- Papan peringkat (leaderboard) ---------- */
 .lb-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start}
@@ -533,52 +520,10 @@ html.di-gas .grain{display:none}
       <div class="grid-kat" id="gridKat"></div>
     </div>
 
-    <div class="pura-scene reveal" id="puraScene" aria-hidden="true">
-      <div class="penjor penjor-ki">
-        <svg viewBox="0 0 120 420" preserveAspectRatio="xMidYMax meet">
-          <path class="pj-batang" d="M92 420C92 300 90 210 78 140 68 82 48 40 16 14"/>
-          <path class="pj-janur" d="M86 330c-14 6-22 16-26 30M84 288c-15 5-24 15-29 29M80 246c-15 4-25 13-31 27M74 204c-15 3-26 11-33 25M66 164c-14 2-26 9-34 22M56 126c-13 1-25 7-34 19"/>
-          <path class="pj-sampian" d="M16 14c-4 16-2 30 6 42M16 14c-14 8-21 20-22 36M16 14c10 12 14 26 12 42"/>
-          <circle class="pj-mata" cx="16" cy="14" r="5"/>
-          <path class="pj-hias" d="M94 400h-16M92 372h-15M90 344h-14"/>
-        </svg>
-      </div>
-
-      <div class="pura-wrap" data-pura>
-        <div class="pura-halo"></div>
-        <svg class="pura" viewBox="0 0 260 300" preserveAspectRatio="xMidYMax meet">
-          <g class="pr-atap">
-            <path d="M130 18L196 62H64z"/>
-            <path d="M130 52L204 100H56z"/>
-            <path d="M130 90L214 142H46z"/>
-            <path d="M130 132L226 190H34z"/>
-          </g>
-          <g class="pr-garis">
-            <path d="M64 62h132M56 100h148M46 142h168M34 190h192"/>
-          </g>
-          <g class="pr-badan">
-            <path d="M96 190h68v58H96z"/>
-            <path d="M118 210h24v38h-24z"/>
-          </g>
-          <g class="pr-tangga">
-            <path d="M84 248h92v10H84zM76 258h108v10H76zM68 268h124v12H68z"/>
-          </g>
-          <g class="pr-ukir">
-            <path d="M112 206c6-8 12-8 18 0M130 222v14M108 230h44"/>
-            <path d="M130 8v12M124 14h12"/>
-          </g>
-        </svg>
-      </div>
-
-      <div class="penjor penjor-ka">
-        <svg viewBox="0 0 120 420" preserveAspectRatio="xMidYMax meet">
-          <path class="pj-batang" d="M28 420C28 300 30 210 42 140 52 82 72 40 104 14"/>
-          <path class="pj-janur" d="M34 330c14 6 22 16 26 30M36 288c15 5 24 15 29 29M40 246c15 4 25 13 31 27M46 204c15 3 26 11 33 25M54 164c14 2 26 9 34 22M64 126c13 1 25 7 34 19"/>
-          <path class="pj-sampian" d="M104 14c4 16 2 30-6 42M104 14c14 8 21 20 22 36M104 14c-10 12-14 26-12 42"/>
-          <circle class="pj-mata" cx="104" cy="14" r="5"/>
-          <path class="pj-hias" d="M26 400h16M28 372h15M30 344h14"/>
-        </svg>
-      </div>
+    <div class="pura-scene reveal" id="puraScene"
+         data-mv="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js">
+      <div class="pura-halo"></div>
+      <div class="pura-load" id="puraLoad"><span></span><span></span><span></span></div>
     </div>
 
     <div class="section">
@@ -930,19 +875,76 @@ const Tilt={
     });
   }
 };
-// Pura ikut arah kursor (parallax 3D). Transform ditaruh di .pura-wrap saja —
-// animasi apung jalan di .pura (svg) supaya keduanya tak saling menimpa.
-const PuraTilt={
-  bind(){
-    if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-    const scene=$('#puraScene'), wrap=$('[data-pura]');
-    if(!scene||!wrap)return;
-    scene.addEventListener('mousemove',e=>{
-      const r=scene.getBoundingClientRect();
-      const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
-      wrap.style.transform=`rotateY(${(x-.5)*16}deg) rotateX(${(.5-y)*10}deg)`;
+// Model 3D pura+penjor (GLB). Dimuat MALAS: script model-viewer & data model baru diambil
+// saat ornamen mendekati viewport, supaya beranda tetap ringan bagi satker berkoneksi lambat.
+// Di GAS data datang lewat getPuraGLB() (base64 -> Blob); di preview lokal ambil file .glb.
+const Pura3D={
+  jalan:false,
+  init(){
+    const scene=$('#puraScene'); if(!scene)return;
+    if(!('IntersectionObserver' in window)){ this.muat(); return; }
+    const io=new IntersectionObserver(es=>{
+      if(es.some(e=>e.isIntersecting)){ io.disconnect(); this.muat(); }
+    },{rootMargin:'250px'});
+    io.observe(scene);
+  },
+  async muat(){
+    if(this.jalan)return; this.jalan=true;
+    const scene=$('#puraScene'), load=$('#puraLoad');
+    try{
+      await this._muatScript(scene.dataset.mv);
+      const src = isGas ? await this._dariServer() : 'pura.glb';
+      // Elemen dibuat SETELAH script siap dan langsung ber-src. Menaruh <model-viewer>
+      // kosong di HTML statis bikin library memproses model hampa saat upgrade elemen
+      // (memuntahkan puluhan error "missing primitive index association" di console).
+      const mv=document.createElement('model-viewer');
+      mv.id='puraModel';
+      mv.setAttribute('alt','Pura Bali dengan penjor');
+      mv.setAttribute('loading','eager');
+      mv.setAttribute('camera-controls','');
+      mv.setAttribute('disable-zoom','');
+      mv.setAttribute('disable-tap','');
+      mv.setAttribute('touch-action','pan-y');
+      mv.setAttribute('auto-rotate','');
+      mv.setAttribute('auto-rotate-delay','600');
+      mv.setAttribute('rotation-per-second','14deg');
+      mv.setAttribute('interaction-prompt','none');
+      mv.setAttribute('environment-image','neutral');
+      mv.setAttribute('shadow-intensity','0.55');
+      mv.setAttribute('shadow-softness','1');
+      mv.setAttribute('exposure','1.15');
+      mv.setAttribute('camera-orbit','28deg 76deg 105%');
+      mv.setAttribute('min-camera-orbit','auto 55deg auto');
+      mv.setAttribute('max-camera-orbit','auto 88deg auto');
+      mv.setAttribute('field-of-view','28deg');
+      const tampilkan=()=>{ load.classList.add('selesai'); mv.classList.add('tampil'); };
+      mv.addEventListener('load',tampilkan,{once:true});
+      mv.addEventListener('error',()=>this._gagal(),{once:true});
+      mv.src=src;
+      scene.appendChild(mv);
+      // Jaring pengaman: sebagian lingkungan tak pernah men-dispatch 'load' walau model
+      // sudah ter-parse (mis. tab yang sedang tak menggambar frame). Pantau flag `loaded`.
+      const cek=setInterval(()=>{ if(mv.loaded){ clearInterval(cek); tampilkan(); } },250);
+      setTimeout(()=>clearInterval(cek),20000);
+    }catch(e){ this._gagal(); }
+  },
+  _gagal(){
+    // WebGL/CDN tak tersedia — sembunyikan ornamen, jangan biarkan kotak kosong.
+    const s=$('#puraScene'); if(s) s.style.display='none';
+  },
+  _muatScript(url){
+    return new Promise((res,rej)=>{
+      if(window.customElements && customElements.get('model-viewer')) return res();
+      const s=document.createElement('script');
+      s.type='module'; s.src=url; s.onload=res; s.onerror=()=>rej(new Error('model-viewer gagal dimuat'));
+      document.head.appendChild(s);
     });
-    scene.addEventListener('mouseleave',()=>{ wrap.style.transform=''; });
+  },
+  async _dariServer(){
+    const b64=await Backend.call('getPuraGLB');
+    const bin=atob(b64), arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([arr],{type:'model/gltf-binary'}));
   }
 };
 function countUp(el,to){
@@ -1338,7 +1340,7 @@ const Reveal={
 Tema.init();
 renderKategori();
 Reveal.init();
-PuraTilt.bind();
+Pura3D.init();
 loadStats();
 $('#formEl').addEventListener('submit',e=>Form.submit(e));
 if(!isGas) console.info('[PKH] Mode preview lokal (demo). Di GAS akan pakai google.script.run.');

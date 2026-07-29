@@ -1,0 +1,9 @@
+# Aset biner & dokumen tak boleh ikut ke Apps Script (GAS hanya menerima .js/.html/.json).
+# pura.glb dipakai untuk PREVIEW LOKAL saja; di produksi model dikirim sbg base64
+# lewat puradata.js -> getPuraGLB().
+**/*.glb
+**/*.md
+docs/**
+.git/**
+.github/**
+.claude/**
