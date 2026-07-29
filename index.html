@@ -867,6 +867,11 @@ const Form={
         if (drop) {
           const d = drop.querySelector('.drop');
           if (d) d.classList.remove('disabled-drop');
+          // Input file tak punya atribut [name], jadi tak tersentuh selector di atas —
+          // tanpa ini tetap disabled meski dropzone-nya sudah "aktif" secara visual,
+          // sehingga klik untuk buka dialog file tak merespon (drag tetap jalan).
+          const fileInput = drop.querySelector('input[type=file]');
+          if (fileInput) fileInput.disabled = false;
         }
       });
       $$('#fFields .dd-form').forEach(h=>formDDDisabled(h, !Form.revisiFields.includes(h.dataset.name)));
@@ -1086,7 +1091,7 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
         });
         const m=document.createElement('div'); m.className='tl-note'; m.style.marginBottom='16px';
         m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika Anda ingin mengganti/menambah berkas. Jika tidak diunggah ulang, berkas lama Anda akan tetap tersimpan aman.`;
-        $('#form-dynamic').prepend(m);
+        $('#fFields').prepend(m);
       }, 100);
     }, 50);
   }catch(e){ toast(e.message||'Gagal','err'); if(btn){btn.innerHTML='Revisi Inputan'; btn.disabled=false;} }
