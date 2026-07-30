@@ -332,9 +332,12 @@ html.pura-d .kamboja-lapis{display:block; position:absolute; inset:0; overflow:h
   background:linear-gradient(120deg, rgba(245,177,76,.12), transparent 65%)}
 .lb-ico{width:46px; height:46px; flex:0 0 auto; border-radius:14px; display:grid; place-items:center;
   background:linear-gradient(135deg, var(--gold), var(--amber)); box-shadow:0 6px 18px -8px rgba(245,177,76,.9)}
-.lb-ico svg{width:27px; height:27px; fill:none; stroke:#1A1206; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+/* viewBox tiap ikon sudah dirapatkan ke gambarnya, jadi ukuran di bawah ini
+   benar-benar terpakai penuh (bukan sebagian besar ruang kosong). */
+.lb-ico svg{width:32px; height:32px; fill:none; stroke:#1A1206; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
 .lb-ico-pt{background:linear-gradient(135deg, var(--violet), #6366F1); box-shadow:0 6px 18px -8px rgba(139,92,246,.9)}
-.lb-ico-pt svg{stroke:#fff}
+/* Toga lebih pendek dari piala, jadi diberi ukuran sendiri agar bobotnya seimbang */
+.lb-ico-pt svg{stroke:#fff; width:36px; height:36px}
 .lb-head b{display:block; font-size:14.5px; letter-spacing:-.01em}
 .lb-head span{display:block; font-size:11.5px; color:var(--ink-dim); margin-top:2px}
 .lb-body{padding:8px; max-height:420px; overflow-y:auto; overscroll-behavior:contain}
@@ -644,14 +647,14 @@ html.di-gas .grain{display:none}
       <div class="lb-grid">
         <div class="lb reveal">
           <div class="lb-head">
-            <span class="lb-ico"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/><path d="M6 6H3.5A2.5 2.5 0 006 10M18 6h2.5A2.5 2.5 0 0118 10"/></svg></span>
+            <span class="lb-ico"><svg viewBox="3.5 3.5 17 18"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/><path d="M6 6H3.5A2.5 2.5 0 006 10M18 6h2.5A2.5 2.5 0 0118 10"/></svg></span>
             <div><b>Papan Peringkat Provinsi</b><span>Bahan disetujui per provinsi</span></div>
           </div>
           <div class="lb-body" id="lbProv"></div>
         </div>
         <div class="lb reveal">
           <div class="lb-head">
-            <span class="lb-ico lb-ico-pt"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
+            <span class="lb-ico lb-ico-pt"><svg viewBox="2.5 2 19 17"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
             <div><b>Papan Peringkat Perguruan Tinggi</b><span>Bahan disetujui per PTKH</span></div>
           </div>
           <div class="lb-body" id="lbPT"></div>
