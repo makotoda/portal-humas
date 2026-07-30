@@ -300,17 +300,6 @@ html.pura-d .kamboja-lapis{display:block; position:absolute; inset:0; overflow:h
 }
 @media (prefers-reduced-motion:reduce){ .kamboja{animation:none; display:none} }
 
-/* ===== Toggle pembanding tata letak ===== */
-.pura-toggle{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; align-items:center; gap:8px;
-  padding:7px 9px 7px 13px; border-radius:100px; font-size:12px;
-  background:var(--bg-2); border:1px solid var(--glass-brd); box-shadow:var(--shadow)}
-.pura-toggle b{font-weight:600; color:var(--ink-dim); font-size:11.5px}
-.pura-toggle button{border:none; cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;
-  padding:6px 12px; border-radius:100px; background:var(--glass-2); color:var(--ink-dim);
-  transition:background .16s var(--ease), color .16s var(--ease)}
-.pura-toggle button:hover{color:var(--ink)}
-.pura-toggle button.aktif{background:linear-gradient(135deg,var(--gold),var(--amber)); color:#1A1206}
-@media (max-width:520px){ .pura-toggle{right:10px; bottom:10px; padding:6px 7px 6px 10px} .pura-toggle b{display:none} }
 /* Titik memuat sederhana; hilang begitu model siap */
 .pura-load{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; gap:7px; z-index:2}
 .pura-load span{width:8px; height:8px; border-radius:50%; background:var(--gold); opacity:.35;
@@ -332,14 +321,17 @@ html.pura-d .kamboja-lapis{display:block; position:absolute; inset:0; overflow:h
   background:linear-gradient(120deg, rgba(245,177,76,.12), transparent 65%)}
 .lb-ico{width:46px; height:46px; flex:0 0 auto; border-radius:14px; display:grid; place-items:center;
   background:linear-gradient(135deg, var(--gold), var(--amber)); box-shadow:0 6px 18px -8px rgba(245,177,76,.9)}
-/* viewBox tiap ikon sudah dirapatkan ke gambarnya, jadi ukuran di bawah ini
-   benar-benar terpakai penuh (bukan sebagian besar ruang kosong). */
-.lb-ico svg{width:32px; height:32px; fill:none; stroke:#1A1206; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
+/* viewBox tiap ikon dibuat PERSEGI dan berpusat tepat pada gambarnya (plus sedikit
+   ruang untuk tebal garis). Kalau viewBox tak persegi, sisi pendeknya kena
+   letterbox dan ikon terlihat melenceng dari tengah. */
+.lb-ico svg{width:36px; height:36px; fill:none; stroke:#1A1206; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round}
 .lb-ico-pt{background:linear-gradient(135deg, var(--violet), #6366F1); box-shadow:0 6px 18px -8px rgba(139,92,246,.9)}
-/* Toga lebih pendek dari piala, jadi diberi ukuran sendiri agar bobotnya seimbang */
-.lb-ico-pt svg{stroke:#fff; width:36px; height:36px}
+.lb-ico-pt svg{stroke:#fff}
 .lb-head b{display:block; font-size:14.5px; letter-spacing:-.01em}
-.lb-head span{display:block; font-size:11.5px; color:var(--ink-dim); margin-top:2px}
+/* Dibatasi ke span di dalam blok teks: sebelumnya '.lb-head span' juga mengenai
+   .lb-ico (yang juga span) dan menimpa display:grid-nya, sehingga ikon menempel
+   ke pojok kiri-atas alih-alih terpusat. */
+.lb-head > div span{display:block; font-size:11.5px; color:var(--ink-dim); margin-top:2px}
 .lb-body{padding:8px; max-height:420px; overflow-y:auto; overscroll-behavior:contain}
 .lb-body::-webkit-scrollbar{width:9px}
 .lb-body::-webkit-scrollbar-thumb{background:var(--glass-2); border-radius:9px; border:3px solid transparent; background-clip:padding-box}
@@ -647,14 +639,14 @@ html.di-gas .grain{display:none}
       <div class="lb-grid">
         <div class="lb reveal">
           <div class="lb-head">
-            <span class="lb-ico"><svg viewBox="3.5 3.5 17 18"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/><path d="M6 6H3.5A2.5 2.5 0 006 10M18 6h2.5A2.5 2.5 0 0118 10"/></svg></span>
+            <span class="lb-ico"><svg viewBox="2 2.5 20 20"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 01-12 0z"/><path d="M6 6H3.5A2.5 2.5 0 006 10M18 6h2.5A2.5 2.5 0 0118 10"/></svg></span>
             <div><b>Papan Peringkat Provinsi</b><span>Bahan disetujui per provinsi</span></div>
           </div>
           <div class="lb-body" id="lbProv"></div>
         </div>
         <div class="lb reveal">
           <div class="lb-head">
-            <span class="lb-ico lb-ico-pt"><svg viewBox="2.5 2 19 17"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
+            <span class="lb-ico lb-ico-pt"><svg viewBox="2.2 0.7 19.6 19.6"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></span>
             <div><b>Papan Peringkat Perguruan Tinggi</b><span>Bahan disetujui per PTKH</span></div>
           </div>
           <div class="lb-body" id="lbPT"></div>
@@ -729,14 +721,6 @@ html.di-gas .grain{display:none}
 <footer class="wrap">
   Portal Komunikasi Kehumasan Pusat &amp; Daerah · Direktorat Jenderal Bimbingan Masyarakat Hindu · Kementerian Agama RI · Dikelola oleh Tim Humas dan Prakom
 </footer>
-
-<div class="pura-toggle" id="puraToggle">
-  <b>Tata letak pura</b>
-  <button type="button" data-mode="a" onclick="PuraMode.set('a')">A · Latar hero</button>
-  <button type="button" data-mode="b" onclick="PuraMode.set('b')">B · Panggung</button>
-  <button type="button" data-mode="c" onclick="PuraMode.set('c')">C · Latar penuh</button>
-  <button type="button" data-mode="d" onclick="PuraMode.set('d')">D · Sinematik</button>
-</div>
 
 <div class="toasts" id="toasts"></div>
 
@@ -1000,20 +984,22 @@ const Tilt={
 // Model 3D pura+penjor (GLB). Dimuat MALAS: script model-viewer & data model baru diambil
 // saat ornamen mendekati viewport, supaya beranda tetap ringan bagi satker berkoneksi lambat.
 // Di GAS data datang lewat getPuraGLB() (base64 -> Blob); di preview lokal ambil file .glb.
-// Dua alternatif tata letak yang bisa dibandingkan langsung lewat toggle:
-//  A = pura jadi latar hero (atmosfer, diredupkan di belakang teks)
-//  B = panggung selebar layar dgn kaki pura dilarutkan ke latar
+// Tata letak yang dipakai di produksi: MODE D (sinematik golden hour).
+// Mesin mode tetap disimpan supaya tata letak bisa diganti lewat satu nilai di
+// bawah tanpa menulis ulang apa pun: 'a' latar hero, 'b' panggung, 'c' latar
+// penuh, 'd' sinematik.
+const PURA_MODE_AKTIF='d';
 const PuraMode={
-  kini:'b',
+  kini:PURA_MODE_AKTIF,
   init(){
     this.ukurScrollbar();
     addEventListener('resize',()=>{
       this.ukurScrollbar();
-      // Mode C membingkai model relatif lebar layar — bingkai ulang saat ukuran berubah.
-      const mv=$('#puraModel'); if(mv&&this.kini==='c') this.kamera(mv);
+      // Mode C & D membingkai model relatif lebar layar — bingkai ulang saat ukuran berubah.
+      const mv=$('#puraModel');
+      if(mv && (this.kini==='c'||this.kini==='d')) this.kamera(mv);
     });
-    const s=LS.get('pkh_pura_mode');
-    this.set(s==='a'||s==='c'||s==='d'?s:'b');
+    this.set(PURA_MODE_AKTIF);
   },
   ukurScrollbar(){
     const sbw=window.innerWidth-document.documentElement.clientWidth;
@@ -1028,8 +1014,6 @@ const PuraMode={
     html.classList.toggle('pura-c', m==='c');
     html.classList.toggle('pura-d', m==='d');
     if(m==='d') this.kamboja(); else this.hentikanDrift();
-    $$('#puraToggle button').forEach(b=>b.classList.toggle('aktif', b.dataset.mode===m));
-    LS.set('pkh_pura_mode', m);
     const mv=$('#puraModel');
     if(mv){
       const tujuan=this.induk();
