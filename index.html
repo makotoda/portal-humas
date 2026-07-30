@@ -991,24 +991,46 @@ const PuraMode={
   },
   kamera(mv){
     if(this.kini==='c'){
-      // Menghadap lurus dari depan (azimut 0) & hampir setinggi mata, supaya penjor
-      // berdiri di kiri-kanan layar. Radius dirapatkan di layar lebar agar penjor
-      // mencapai tepi; di layar sempit dimundurkan supaya tak terpotong berlebihan.
-      const lebar=innerWidth, rasio=innerWidth/innerHeight;
-      const radius = rasio>1.6 ? '78%' : (rasio>1.1 ? '92%' : '132%');
-      mv.setAttribute('camera-orbit','0deg 86deg '+radius);
-      mv.setAttribute('field-of-view', lebar<620?'36deg':'30deg');
+      // Menghadap lurus dari depan (azimut 0), hampir setinggi mata.
+      // Jarak dihitung dari geometri, BUKAN persen: radius otomatis model-viewer memakai
+      // bounding sphere yg ikut menghitung kedalaman model (~12 unit) padahal dari depan
+      // yg terlihat hanya lebarnya (~11) — akibatnya kamera terlalu mundur & penjor
+      // tak pernah sampai tepi layar.
+      const fovDeg=30, fovV=fovDeg*Math.PI/180, tanH=Math.tan(fovV/2);
+      const rasio=Math.max(.3, innerWidth/innerHeight);
+      let lebar=10.9, tinggi=7.93, pusatY=3.6;
+      try{
+        if(mv.loaded && mv.getDimensions){
+          const d=mv.getDimensions(); lebar=d.x; tinggi=d.y;
+          if(mv.getBoundingBoxCenter) pusatY=mv.getBoundingBoxCenter().y;
+        }
+      }catch(e){}
+      const jarakLebar=(lebar/2)/(tanH*rasio);   // agar lebar model tepat mengisi lebar layar
+      const jarakTinggi=(tinggi/2)/tanH;         // agar tinggi model muat utuh
+      // Layar mendatar: utamakan lebar supaya penjor menyentuh tepi (dasar boleh terpotong).
+      // Layar tegak: jangan terlalu mundur, nanti pura jadi mungil di tengah.
+      const jarak = rasio>=1 ? jarakLebar*0.94 : Math.min(jarakLebar, jarakTinggi*1.25);
+      // Bidik dihitung supaya PUNCAK (ujung penjor & atap meru) selalu masuk bingkai;
+      // yang keluar bingkai hanya bagian dasar/paving yang memang tak penting.
+      const setengahTinggiTerlihat=jarak*tanH;
+      const puncak=pusatY + tinggi/2;
+      const bidikY=Math.max(pusatY, puncak - setengahTinggiTerlihat*0.97);
+      mv.setAttribute('camera-orbit','0deg 86deg '+jarak.toFixed(2)+'m');
+      mv.setAttribute('camera-target','0m '+bidikY.toFixed(2)+'m 0m');
+      mv.setAttribute('field-of-view', fovDeg+'deg');
       mv.setAttribute('exposure','1.45');
       mv.removeAttribute('camera-controls');
       mv.removeAttribute('auto-rotate');
     } else if(this.kini==='a'){
       // Lebih jauh & lebih lebar supaya jadi latar; exposure dinaikkan utk mengimbangi opacity rendah.
+      mv.removeAttribute('camera-target');   // dibersihkan: mode C membidik di atas pusat
       mv.setAttribute('camera-orbit','18deg 80deg 138%');
       mv.setAttribute('field-of-view','34deg');
       mv.setAttribute('exposure','1.5');
       mv.removeAttribute('camera-controls');
       mv.removeAttribute('auto-rotate');
     } else {
+      mv.removeAttribute('camera-target');
       mv.setAttribute('camera-orbit','28deg 76deg 105%');
       mv.setAttribute('field-of-view','28deg');
       mv.setAttribute('exposure','1.15');
@@ -1056,7 +1078,9 @@ const Pura3D={
       mv.setAttribute('min-camera-orbit','auto 55deg auto');
       mv.setAttribute('max-camera-orbit','auto 88deg auto');
       PuraMode.kamera(mv);
-      const tampilkan=()=>{ load.classList.add('selesai'); mv.classList.add('tampil'); };
+      // Dimensi asli model baru diketahui setelah termuat — bingkai ulang supaya
+      // perhitungan jarak mode C memakai ukuran sebenarnya, bukan perkiraan.
+      const tampilkan=()=>{ load.classList.add('selesai'); mv.classList.add('tampil'); PuraMode.kamera(mv); };
       mv.addEventListener('load',tampilkan,{once:true});
       mv.addEventListener('error',()=>this._gagal(),{once:true});
       mv.src=src;
