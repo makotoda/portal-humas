@@ -248,6 +248,52 @@ html.tema-terang.pura-c .pura-bg::after{
              linear-gradient(to bottom, rgba(238,241,247,.55), transparent 22%, transparent 62%, rgba(238,241,247,.8))}
 html.pura-c .pura-scene{display:none}
 
+/* ===== MODE D — sinematik "golden hour": pura di kanan, ruang teks di kiri =====
+   Memakai slot fixed yg sama dgn mode C, dibedakan lewat kelas .pura-d. */
+html.pura-d .pura-bg{display:block; position:fixed; inset:0; z-index:-1; pointer-events:none}
+html.pura-d .pura-bg #puraModel{width:100%; height:100%; opacity:0;
+  /* Menghangatkan render netral jadi nuansa senja keemasan */
+  filter:saturate(1.18) contrast(1.04) sepia(.2) hue-rotate(-8deg) brightness(1.03)}
+html.pura-d .pura-bg #puraModel.tampil{opacity:.62}
+html.tema-terang.pura-d .pura-bg #puraModel.tampil{opacity:.5}
+html.pura-d .pura-scene{display:none}
+/* Cahaya senja + kabut dupa: hangat dari kanan-atas, gelap melindungi teks di kiri */
+html.pura-d .pura-bg::before{content:""; position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse 55% 70% at 78% 38%, rgba(255,157,61,.30), transparent 62%),
+             radial-gradient(ellipse 45% 55% at 88% 22%, rgba(245,177,76,.26), transparent 60%)}
+html.pura-d .pura-bg::after{content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(100deg, rgba(10,13,20,.94) 8%, rgba(10,13,20,.82) 34%, rgba(10,13,20,.34) 58%, transparent 80%),
+             linear-gradient(to bottom, rgba(10,13,20,.55), transparent 26%, transparent 58%, rgba(10,13,20,.8))}
+html.tema-terang.pura-d .pura-bg::after{
+  background:linear-gradient(100deg, rgba(238,241,247,.94) 6%, rgba(238,241,247,.76) 30%, rgba(238,241,247,.2) 56%, transparent 78%),
+             linear-gradient(to bottom, rgba(238,241,247,.5), transparent 26%, transparent 58%, rgba(238,241,247,.82))}
+/* Teks hero pindah ke kiri, mengisi ruang kosong yg disediakan komposisi */
+html.pura-d .hero{text-align:left; padding-top:92px}
+html.pura-d .hero .lede{margin-left:0; margin-right:0; max-width:min(460px,43%)}
+html.pura-d .hero h1{max-width:min(560px,49%)}
+html.pura-d .cta-row{justify-content:flex-start}
+html.pura-d .stats{justify-content:flex-start}
+@media (max-width:820px){
+  html.pura-d .hero{text-align:center; padding-top:78px}
+  html.pura-d .hero h1, html.pura-d .hero .lede{max-width:none; margin-left:auto; margin-right:auto}
+  html.pura-d .cta-row, html.pura-d .stats{justify-content:center}
+}
+/* Kelopak kamboja berguguran — transform/opacity saja supaya ringan & aman di iframe GAS */
+.kamboja-lapis{display:none}
+html.pura-d .kamboja-lapis{display:block; position:absolute; inset:0; overflow:hidden; pointer-events:none}
+.kamboja{position:absolute; top:-8%; width:22px; height:22px; opacity:0;
+  animation:kambojaJatuh linear infinite}
+.kamboja svg{width:100%; height:100%; display:block}
+.kamboja .kl{fill:#FFF6E8} .kamboja .kt{fill:var(--gold)}
+@keyframes kambojaJatuh{
+  0%{opacity:0; transform:translate3d(0,-10vh,0) rotate(0deg)}
+  8%{opacity:.85}
+  50%{transform:translate3d(38px,50vh,0) rotate(180deg)}
+  85%{opacity:.7}
+  100%{opacity:0; transform:translate3d(-14px,108vh,0) rotate(392deg)}
+}
+@media (prefers-reduced-motion:reduce){ .kamboja{animation:none; display:none} }
+
 /* ===== Toggle pembanding tata letak ===== */
 .pura-toggle{position:fixed; right:16px; bottom:16px; z-index:70; display:flex; align-items:center; gap:8px;
   padding:7px 9px 7px 13px; border-radius:100px; font-size:12px;
@@ -535,7 +581,7 @@ html.di-gas .grain{display:none}
 </head>
 <body>
 <div class="bg"></div><div class="grain"></div>
-<div class="pura-bg" id="puraSlotBg" aria-hidden="true"></div>
+<div class="pura-bg" id="puraSlotBg" aria-hidden="true"><div class="kamboja-lapis" id="kambojaLapis"></div></div>
 
 <header class="topbar">
   <div class="wrap">
@@ -683,6 +729,7 @@ html.di-gas .grain{display:none}
   <button type="button" data-mode="a" onclick="PuraMode.set('a')">A · Latar hero</button>
   <button type="button" data-mode="b" onclick="PuraMode.set('b')">B · Panggung</button>
   <button type="button" data-mode="c" onclick="PuraMode.set('c')">C · Latar penuh</button>
+  <button type="button" data-mode="d" onclick="PuraMode.set('d')">D · Sinematik</button>
 </div>
 
 <div class="toasts" id="toasts"></div>
@@ -960,19 +1007,21 @@ const PuraMode={
       const mv=$('#puraModel'); if(mv&&this.kini==='c') this.kamera(mv);
     });
     const s=LS.get('pkh_pura_mode');
-    this.set(s==='a'||s==='c'?s:'b');
+    this.set(s==='a'||s==='c'||s==='d'?s:'b');
   },
   ukurScrollbar(){
     const sbw=window.innerWidth-document.documentElement.clientWidth;
     document.documentElement.style.setProperty('--sbw',(sbw>0?sbw:0)+'px');
   },
   set(m){
-    m = (m==='a'||m==='c') ? m : 'b';
+    m = (m==='a'||m==='c'||m==='d') ? m : 'b';
     this.kini=m;
     const html=document.documentElement;
     html.classList.toggle('pura-a', m==='a');
     html.classList.toggle('pura-b', m==='b');
     html.classList.toggle('pura-c', m==='c');
+    html.classList.toggle('pura-d', m==='d');
+    if(m==='d') this.kamboja(); else this.hentikanDrift();
     $$('#puraToggle button').forEach(b=>b.classList.toggle('aktif', b.dataset.mode===m));
     LS.set('pkh_pura_mode', m);
     const mv=$('#puraModel');
@@ -986,11 +1035,78 @@ const PuraMode={
   },
   induk(){
     if(this.kini==='a') return $('#puraSlotHero');
-    if(this.kini==='c') return $('#puraSlotBg');
+    if(this.kini==='c'||this.kini==='d') return $('#puraSlotBg');
     return $('#puraScene');
   },
+  // Kelopak kamboja berguguran (dibuat sekali, lalu dipakai ulang).
+  kamboja(){
+    const wadah=$('#kambojaLapis');
+    if(!wadah || wadah.childElementCount) return;
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    const bunga='<svg viewBox="0 0 24 24">'
+      +'<g class="kl"><ellipse cx="12" cy="6.2" rx="3.1" ry="5.4"/>'
+      +'<ellipse cx="12" cy="6.2" rx="3.1" ry="5.4" transform="rotate(72 12 12)"/>'
+      +'<ellipse cx="12" cy="6.2" rx="3.1" ry="5.4" transform="rotate(144 12 12)"/>'
+      +'<ellipse cx="12" cy="6.2" rx="3.1" ry="5.4" transform="rotate(216 12 12)"/>'
+      +'<ellipse cx="12" cy="6.2" rx="3.1" ry="5.4" transform="rotate(288 12 12)"/></g>'
+      +'<circle class="kt" cx="12" cy="12" r="2.5"/></svg>';
+    let html='';
+    for(let i=0;i<12;i++){
+      const kiri=6+Math.random()*90, ukuran=13+Math.random()*15;
+      const durasi=13+Math.random()*11, tunda=-Math.random()*24;
+      html+='<span class="kamboja" style="left:'+kiri.toFixed(1)+'%;width:'+ukuran.toFixed(0)+'px;height:'
+        +ukuran.toFixed(0)+'px;animation-duration:'+durasi.toFixed(1)+'s;animation-delay:'+tunda.toFixed(1)+'s">'
+        +bunga+'</span>';
+    }
+    wadah.innerHTML=html;
+  },
+  // Drift kamera lembut yang berulang mulus (osilasi sinus), bukan auto-rotate
+  // 360 derajat yg akan merusak komposisi "pura di kanan".
+  mulaiDrift(mv){
+    this.hentikanDrift();
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    const t0=performance.now();
+    const langkah=(t)=>{
+      if(this.kini!=='d'){ this._drift=null; return; }
+      const d=(t-t0)/1000;
+      const az=this._driftAz + Math.sin(d*0.105)*5.5;      // ±5.5 derajat, periode ~60 dtk
+      const pol=this._driftPol + Math.sin(d*0.071)*2.2;
+      mv.setAttribute('camera-orbit',az.toFixed(2)+'deg '+pol.toFixed(2)+'deg '+this._driftJarak+'m');
+      this._drift=requestAnimationFrame(langkah);
+    };
+    this._drift=requestAnimationFrame(langkah);
+  },
+  hentikanDrift(){ if(this._drift){ cancelAnimationFrame(this._drift); this._drift=null; } },
   kamera(mv){
-    if(this.kini==='c'){
+    if(this.kini==='d'){
+      // Komposisi sinematik: sudut serong hangat, pura didorong ke KANAN dgn membidik
+      // titik di sebelah kirinya — sisi kiri layar jadi ruang kosong untuk teks.
+      const fovDeg=32, tanH=Math.tan(fovDeg*Math.PI/360);
+      const rasio=Math.max(.3, innerWidth/innerHeight);
+      let lebar=10.9, tinggi=7.93, pusatY=3.83;
+      try{
+        if(mv.loaded && mv.getDimensions){
+          const d=mv.getDimensions(); lebar=d.x; tinggi=d.y;
+          if(mv.getBoundingBoxCenter) pusatY=mv.getBoundingBoxCenter().y;
+        }
+      }catch(e){}
+      const sempit=rasio<1;
+      const jarak=(sempit? (tinggi/2)/tanH*1.2 : (lebar/2)/(tanH*rasio)*1.32);
+      const setengahTinggiTerlihat=jarak*tanH;
+      const bidikY=Math.max(pusatY, (pusatY+tinggi/2) - setengahTinggiTerlihat*0.94);
+      // Geser bidikan ke kiri -> objek bergeser ke kanan layar. Di layar sempit
+      // komposisi dikembalikan ke tengah krn teks ikut jadi rata tengah.
+      const geserX = sempit ? 0 : -(jarak*tanH*rasio)*0.42;
+      this._driftAz=14; this._driftPol=84; this._driftJarak=jarak.toFixed(2);
+      mv.setAttribute('camera-orbit','14deg 84deg '+jarak.toFixed(2)+'m');
+      mv.setAttribute('camera-target',geserX.toFixed(2)+'m '+bidikY.toFixed(2)+'m 0m');
+      mv.setAttribute('field-of-view',fovDeg+'deg');
+      mv.setAttribute('exposure','1.6');
+      mv.setAttribute('shadow-intensity','0.75');
+      mv.removeAttribute('camera-controls');
+      mv.removeAttribute('auto-rotate');
+      this.mulaiDrift(mv);
+    } else if(this.kini==='c'){
       // Menghadap lurus dari depan (azimut 0), hampir setinggi mata.
       // Jarak dihitung dari geometri, BUKAN persen: radius otomatis model-viewer memakai
       // bounding sphere yg ikut menghitung kedalaman model (~12 unit) padahal dari depan
@@ -1019,14 +1135,16 @@ const PuraMode={
       mv.setAttribute('camera-target','0m '+bidikY.toFixed(2)+'m 0m');
       mv.setAttribute('field-of-view', fovDeg+'deg');
       mv.setAttribute('exposure','1.45');
+      mv.setAttribute('shadow-intensity','0.55');
       mv.removeAttribute('camera-controls');
       mv.removeAttribute('auto-rotate');
     } else if(this.kini==='a'){
       // Lebih jauh & lebih lebar supaya jadi latar; exposure dinaikkan utk mengimbangi opacity rendah.
-      mv.removeAttribute('camera-target');   // dibersihkan: mode C membidik di atas pusat
+      mv.removeAttribute('camera-target');   // dibersihkan: mode C & D membidik di luar pusat
       mv.setAttribute('camera-orbit','18deg 80deg 138%');
       mv.setAttribute('field-of-view','34deg');
       mv.setAttribute('exposure','1.5');
+      mv.setAttribute('shadow-intensity','0.55');
       mv.removeAttribute('camera-controls');
       mv.removeAttribute('auto-rotate');
     } else {
@@ -1034,6 +1152,7 @@ const PuraMode={
       mv.setAttribute('camera-orbit','28deg 76deg 105%');
       mv.setAttribute('field-of-view','28deg');
       mv.setAttribute('exposure','1.15');
+      mv.setAttribute('shadow-intensity','0.55');
       mv.setAttribute('camera-controls','');
       mv.setAttribute('auto-rotate','');
     }
@@ -1043,7 +1162,7 @@ const Pura3D={
   jalan:false,
   init(){
     const scene=$('#puraScene'); if(!scene)return;
-    if(PuraMode.kini==='a'){ this.muat(); return; }
+    if(PuraMode.kini!=='b'){ this.muat(); return; }
     if(!('IntersectionObserver' in window)){ this.muat(); return; }
     const io=new IntersectionObserver(es=>{
       if(es.some(e=>e.isIntersecting)){ io.disconnect(); this.muat(); }
