@@ -237,6 +237,29 @@ html.tema-terang .kcard{background:#fff}
 .reason:last-child{border-bottom:none} .reason .c{flex:0 0 auto;font-weight:700;color:var(--bad);
   background:var(--bad-bg);border-radius:8px;padding:2px 9px;font-size:12px}
 
+/* ---- papan peringkat (sama seperti beranda publik) ---- */
+.lb-body{padding:2px}
+.lb-row{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:11px;padding:8px 6px;border-radius:10px}
+.lb-row:hover{background:var(--glass-2)}
+.lb-rank{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:700;
+  background:var(--glass-2);border:1px solid var(--glass-brd)}
+.lb-nm{min-width:0}
+.lb-nm b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-bar{height:5px;border-radius:100px;background:var(--glass-2);overflow:hidden;margin-top:5px}
+.lb-bar i{display:block;height:100%;border-radius:100px;background:linear-gradient(90deg,var(--amber),var(--gold))}
+.lb-val{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.lb-row.kosong .lb-val{color:var(--ink-faint);font-weight:600}
+.lb-row.top .lb-nm b{font-weight:700}
+.lb-row.top1{background:linear-gradient(90deg,rgba(245,177,76,.16),transparent 70%)}
+.lb-row.top2{background:linear-gradient(90deg,rgba(203,213,225,.13),transparent 70%)}
+.lb-row.top3{background:linear-gradient(90deg,rgba(205,127,50,.14),transparent 70%)}
+.lb-row.top1 .lb-rank{background:linear-gradient(135deg,#FFD782,#E8A13A);color:#3A2708;border-color:transparent}
+.lb-row.top2 .lb-rank{background:linear-gradient(135deg,#EEF2F7,#B6C2D2);color:#2B3444;border-color:transparent}
+.lb-row.top3 .lb-rank{background:linear-gradient(135deg,#E5A671,#B06B2E);color:#3A2107;border-color:transparent}
+.lb-row.top1 .lb-val{color:var(--gold)}
+.lb-medal{width:14px;height:14px;margin-left:5px;vertical-align:-2px;fill:none;stroke-width:2}
+.lb-row.top1 .lb-medal{stroke:var(--gold)} .lb-row.top2 .lb-medal{stroke:#C6D2E2} .lb-row.top3 .lb-medal{stroke:#CD7F32}
+
 /* ---- detail modal ---- */
 dialog{border:none;padding:0;background:transparent;color:var(--ink);max-width:min(94vw,640px);width:100%}
 dialog::backdrop{background:rgba(6,8,13,.62);backdrop-filter:blur(6px)}
@@ -359,6 +382,7 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
     <div class="analytic">
       <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg> Jumlah Penerimaan per Provinsi</h3><div id="barProv"></div></div>
       <div class="panel"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg> Alasan Penolakan Teratas</h3><div id="alasan"></div></div>
+      <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg> Papan Peringkat PTKH</h3><div class="lb-body" id="lbPT"></div></div>
     </div>
   </main>
 </div>
@@ -478,21 +502,26 @@ const PROVINSI_VALID=['Bali','DI Yogyakarta','Jawa Tengah','Jawa Timur','Jawa Ba
   'Sulawesi Tenggara','Sulawesi Utara','Sulawesi Barat','Gorontalo','Nusa Tenggara Barat',
   'Nusa Tenggara Timur','Maluku','Maluku Utara','Papua','Papua Barat','Papua Tengah',
   'Papua Pegunungan','Papua Selatan','Papua Barat Daya','Bangka Belitung'];
+// Kontrak dgn PERGURUAN_TINGGI di Code.js & index.html.
+const PERGURUAN_TINGGI=['Universitas Hindu Negeri I Gusti Bagus Sugriwa',
+  'Institut Agama Hindu Negeri Tampung Penyang','Institut Agama Hindu Negeri Gde Pudja',
+  'Institut Agama Hindu Negeri Mpu Kuturan','Sekolah Tinggi Agama Hindu Negeri Jawa Dwipa'];
 function statsOf(list){
-  const s={total:list.length,terkirim:0,direview:0,disetujui:0,ditolak:0,penerimaan:0,avgProsesJam:0,perProvinsi:[],alasanTolak:[]};
-  const prov={},alasan={}; PROVINSI_VALID.forEach(p=>{ prov[p]=0; });
+  const s={total:list.length,terkirim:0,direview:0,disetujui:0,ditolak:0,penerimaan:0,avgProsesJam:0,perProvinsi:[],perPT:[],alasanTolak:[]};
+  const prov={},pt={},alasan={}; PROVINSI_VALID.forEach(p=>{ prov[p]=0; }); PERGURUAN_TINGGI.forEach(p=>{ pt[p]=0; });
   let diputus=0,totJam=0,nP=0;
   list.forEach(r=>{ const st=(r.status||'').toLowerCase();
     const ok=/setuju|selesai|terbit|complete/.test(st), bad=/tolak|reject/.test(st);
     if(ok)s.disetujui++; else if(bad)s.ditolak++; else if(/review|proses|progress/.test(st))s.direview++; else s.terkirim++;
     // Sama dgn getStats() beranda publik: hitung dari 38 provinsi resmi.
-    if(ok){ const P=(r.provinsi||'').trim(); if(P in prov)prov[P]++; }
+    if(ok){ const P=(r.provinsi||'').trim(); if(P in prov)prov[P]++; const I=(r.instansi||'').trim(); if(I in pt)pt[I]++; }
     if(ok||bad){ diputus++; const t0=Date.parse(r.dibuat),t1=Date.parse(r.diperbarui); if(t0&&t1&&t1>=t0){totJam+=(t1-t0)/3.6e6;nP++;} }
     if(bad&&r.keterangan){ const k=(''+r.keterangan).trim(); alasan[k]=(alasan[k]||0)+1; }
   });
   s.penerimaan=diputus?Math.round(s.disetujui/diputus*100):0;
   s.avgProsesJam=nP?Math.round(totJam/nP):0;
   s.perProvinsi=PROVINSI_VALID.map(p=>({prov:p,jumlah:prov[p]})).sort((a,b)=>b.jumlah-a.jumlah);
+  s.perPT=PERGURUAN_TINGGI.map(p=>({prov:p,jumlah:pt[p]})).sort((a,b)=>b.jumlah-a.jumlah);
   s.alasanTolak=Object.keys(alasan).map(k=>({teks:k,jumlah:alasan[k]})).sort((a,b)=>b.jumlah-a.jumlah).slice(0,6);
   return s;
 }
@@ -797,6 +826,22 @@ function renderAnalitik(){ const s=DATA.stats||statsOf(DATA.rows);
       <span class="bar"><i style="width:${Math.round(p.jumlah/maks*100)}%"></i></span><span class="pct">${p.jumlah}</span></div>`).join('')
     :'<div class="t-sub">Belum ada data.</div>';
   $('#alasan').innerHTML=(s.alasanTolak||[]).map(a=>`<div class="reason"><span class="c">${a.jumlah}×</span><span>${a.teks}</span></div>`).join('')||'<div class="t-sub">Belum ada penolakan.</div>';
+  renderLeaderboard($('#lbPT'), s.perPT||[]);
+}
+const LB_MEDALI='<svg class="lb-medal" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M8.5 9.5L6 2h12l-2.5 7.5"/></svg>';
+function renderLeaderboard(el,list){
+  if(!el)return;
+  const maks=Math.max(1,...list.map(p=>p.jumlah));
+  el.innerHTML=list.length?list.map((p,i)=>{
+    const rank=i+1, top=rank<=3&&p.jumlah>0;
+    const cls=['lb-row',top?'top top'+rank:'',p.jumlah?'':'kosong'].filter(Boolean).join(' ');
+    return `<div class="${cls}">
+      <span class="lb-rank">${rank}</span>
+      <span class="lb-nm"><b title="${p.prov}">${p.prov}${top?LB_MEDALI:''}</b>
+        <span class="lb-bar"><i style="width:${Math.round(p.jumlah/maks*100)}%"></i></span></span>
+      <span class="lb-val">${p.jumlah}</span>
+    </div>`;
+  }).join(''):'<div class="t-sub" style="color:var(--ink-dim);font-size:13px;padding:14px">Belum ada data.</div>';
 }
 
 function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada bahan yang cocok dengan filter.</div></div>`; }

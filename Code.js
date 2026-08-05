@@ -598,9 +598,10 @@ function daftarEksekutor_() {
 
 function hitungStats_(list) {
   const s = { total: list.length, terkirim: 0, direview: 0, disetujui: 0, ditolak: 0,
-              penerimaan: 0, avgProsesJam: 0, perProvinsi: [], alasanTolak: [] };
-  const prov = {}, alasan = {};
+              penerimaan: 0, avgProsesJam: 0, perProvinsi: [], perPT: [], alasanTolak: [] };
+  const prov = {}, pt = {}, alasan = {};
   PROVINSI_VALID.forEach(p => { prov[p] = 0; });
+  PERGURUAN_TINGGI.forEach(p => { pt[p] = 0; });
   let diputus = 0, totalJam = 0, nProses = 0;
   list.forEach(r => {
     const st = String(r.status || '').toLowerCase();
@@ -610,7 +611,10 @@ function hitungStats_(list) {
     else if (/review|proses|progress/.test(st)) s.direview++; else s.terkirim++;
     // Sama dgn getStats() beranda publik: hitung dari 38 provinsi resmi, bukan nilai
     // Provinsi apa adanya (data lama/salah ketik diam-diam tak dihitung).
-    if (disetujui) { const P = String(r.provinsi || '').trim(); if (P in prov) prov[P]++; }
+    if (disetujui) {
+      const P = String(r.provinsi || '').trim(); if (P in prov) prov[P]++;
+      const I = String(r.instansi || '').trim(); if (I in pt) pt[I]++;
+    }
     if (disetujui || ditolak) {
       diputus++;
       const t0 = Date.parse(r.dibuat), t1 = Date.parse(r.diperbarui);
@@ -621,6 +625,7 @@ function hitungStats_(list) {
   s.penerimaan = diputus ? Math.round((s.disetujui / diputus) * 100) : 0;
   s.avgProsesJam = nProses ? Math.round(totalJam / nProses) : 0;
   s.perProvinsi = PROVINSI_VALID.map(p => ({ prov: p, jumlah: prov[p] })).sort((a, b) => b.jumlah - a.jumlah);
+  s.perPT = PERGURUAN_TINGGI.map(p => ({ prov: p, jumlah: pt[p] })).sort((a, b) => b.jumlah - a.jumlah);
   s.alasanTolak = Object.keys(alasan).map(k => ({ teks: k, jumlah: alasan[k] }))
     .sort((a, b) => b.jumlah - a.jumlah).slice(0, 6);
   return s;
