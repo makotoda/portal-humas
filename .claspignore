@@ -2,6 +2,9 @@
 # pura.glb dipakai untuk PREVIEW LOKAL saja; di produksi model dikirim sbg base64
 # lewat puradata.js -> getPuraGLB().
 **/*.glb
+# bg-landing.jpg: sumber asli wallpaper beranda, sudah ditanam sbg data URI base64
+# langsung di .bg (index.html). File ini cuma referensi, tak perlu ikut ke GAS.
+**/*.jpg
 **/*.md
 docs/**
 .git/**
