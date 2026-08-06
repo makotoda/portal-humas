@@ -207,6 +207,7 @@ tbody tr:last-child td{border-bottom:none}
 tbody tr{transition:background .15s} tbody tr:hover{background:var(--glass)}
 .t-tiket{font-weight:700;font-size:12.5px;cursor:pointer;color:var(--gold)}
 .t-sub{color:var(--ink-dim);font-size:11.5px}
+.klaim{cursor:pointer;text-decoration:underline;text-underline-offset:2px} .klaim:hover{color:var(--gold)}
 .rowact{display:flex;gap:6px;justify-content:flex-end}
 .rowact .icon-btn{width:30px;height:30px} .rowact .icon-btn svg{width:14px;height:14px}
 
@@ -381,8 +382,8 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
 
     <div class="analytic">
       <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg> Jumlah Penerimaan per Provinsi</h3><div id="barProv"></div></div>
-      <div class="panel"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg> Alasan Penolakan Teratas</h3><div id="alasan"></div></div>
       <div class="panel"><h3><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M6 10v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg> Papan Peringkat PTKH</h3><div class="lb-body" id="lbPT"></div></div>
+      <div class="panel" style="grid-column:1/-1"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg> Alasan Penolakan Teratas</h3><div id="alasan"></div></div>
     </div>
   </main>
 </div>
@@ -623,7 +624,18 @@ $('#loginForm').addEventListener('submit',async e=>{
   try{ const me=await withLoader(Backend.call('adminLogin',kode), 'Memeriksa kode akses…'); KODE=kode; SS.set('pkh_kode',kode); boot(me); }
   catch(err){ toast(err.message||'Kode salah.','err'); btn.disabled=false; btn.textContent=o; $('#kodeInp').select(); }
 });
-function logout(){ KODE=null; SS.del('pkh_kode'); location.reload(); }
+// GOTCHA GAS: location.reload() di dalam iframe sandbox HtmlService membuat layar putih
+// kosong (URL sandbox google.script.googleusercontent.com jadi stale setelah reload).
+// Reset state secara manual & tampilkan lagi form login, tanpa reload halaman.
+function logout(){
+  KODE=null; SS.del('pkh_kode');
+  DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}};
+  const dlg=$('#modal'); if(dlg&&dlg.open)dlg.close();
+  $('#app').style.display='none'; $('#loginWrap').style.display='';
+  const f=$('#loginForm'); f.reset();
+  const btn=$('#loginBtn'); btn.disabled=false; btn.textContent='Masuk';
+  $('#kodeInp').focus();
+}
 
 async function boot(me){
   $('#loginWrap').style.display='none'; $('#app').style.display='block';
@@ -791,7 +803,7 @@ function renderTabel(){ const allRows=terfilter();
       <td>${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')}</td>
       <td>${r.instansi||'—'}</td>
       <td class="t-sub">${tgl(r.dibuat)}</td>
-      <td>${r.eksekutor||'<span class="t-sub">—</span>'}</td>
+      <td>${r.eksekutor||`<span class="t-sub klaim" onclick="klaimEksekutor('${r.tiket}')">Klaim</span>`}</td>
       <td>${badgeOf(r.status)}</td>
       <td><div class="rowact">
         <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
@@ -915,6 +927,8 @@ function kirimRevisi(tiket){
 // (bahkan di dalam string, bila pelacakan string-nya sudah desync). Rakit lewat konkatenasi.
 function drivePreview(url){ const m=String(url||'').match(/[-\w]{25,}/); return m?('https:'+'/'+'/'+'drive.google.com/file/d/'+m[0]+'/preview'):''; }
 
+function klaimEksekutor(tiket){ doAksi(tiket,'assign',{eksekutor:$('#whoNama').textContent}); }
+
 function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)return; const dlg=$('#modal');
   const files=(r.files||[]).map((f,i)=>{ const img=/(jpg|jpeg|png|gif|webp)/i.test(f.name||'')||/=w\d+/.test(f.url||'');
     return `<div class="file" onclick="previewFile('${tiket}',${i})"><div class="fh">${img&&f.url?`<img src="${f.url}">`:ikon('doc')}</div><div class="fn" title="${f.name||f.slot}">${f.name||f.slot}</div></div>`;
@@ -941,7 +955,6 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
     : ((ditolak||perluRevisi)
         ? `<div class="catatan-box${kelasKet}"><b>${judulKet}</b><div class="t-sub">Tidak tercatat — kemungkinan data lama sebelum alasan mulai disimpan.</div></div>`
         : '');
-  const eksOpt=DATA.eksekutors.map(e=>`<option ${e===r.eksekutor?'selected':''}>${e}</option>`).join('');
   dlg.innerHTML=`<div class="sheet">
     <div class="sheet-h"><span class="tid">${r.tiket}</span> ${badgeOf(r.status)}
       <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
@@ -958,9 +971,6 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
       ${catatanBox}
       <p class="sec-title">Berkas</p><div class="files">${files}</div>
       <div id="prevBox"></div>
-      <p class="sec-title">Assign eksekutor</p>
-      <div style="display:flex;gap:8px;margin-bottom:16px"><select class="inp" id="assignSel">${eksOpt}</select>
-        <button class="btn btn-ghost btn-sm" onclick="doAksi('${tiket}','assign',{eksekutor:$('#assignSel').value})">Tugaskan</button></div>
       <p class="sec-title">Riwayat</p><div class="riw">${riw}</div>
     </div>
     <div class="sheet-f">
