@@ -66,19 +66,42 @@ const KATEGORI_VALID = {
   'video-mimbar':      { org:'instansi',      penulis:true,  video:true  }
 };
 
-/* ===================== WEB APP ENTRY ===================== */
+/* ===================== WEB APP ENTRY (REST API) ===================== */
+function doPost(e) {
+  setupSheets_();
+  try {
+    let body;
+    if (e && e.postData && e.postData.contents) {
+      body = JSON.parse(e.postData.contents);
+    } else {
+      throw new Error("No payload found.");
+    }
+    
+    const action = body.action;
+    const args = body.args || [];
+    let result;
+
+    if (action === 'getStats') result = getStats();
+    else if (action === 'submitPermohonan') result = submitPermohonan(args[0]);
+    else if (action === 'cekStatus') result = cekStatus(args[0]);
+    else if (action === 'getDetailRevisi') result = getDetailRevisi(args[0]);
+    else if (action === 'adminLogin') result = adminLogin(args[0]);
+    else if (action === 'adminData') result = adminData(args[0]);
+    else if (action === 'adminAksi') result = adminAksi(args[0], args[1]);
+    else if (action === 'adminKelola') result = adminKelola(args[0], args[1]);
+    else throw new Error("Unknown action: " + action);
+
+    return ContentService.createTextOutput(JSON.stringify({status: 'success', data: result}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: String(err.message || err)}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doGet(e) {
-  setupSheets_(); // self-heal: pastikan sheet & header ada
-  const page = (e && e.parameter && e.parameter.page) || '';
-  const file = page === 'admin' ? 'admin' : 'index';
-  const judul = page === 'admin'
-    ? 'Dashboard Humas — Portal Komunikasi Kehumasan'
-    : 'Portal Komunikasi Kehumasan — Ditjen Bimas Hindu';
-  return HtmlService.createHtmlOutputFromFile(file)
-    .setTitle(judul)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    // ALLOWALL agar bisa disematkan (embed) di Google Sites portal.
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return ContentService.createTextOutput(JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ===================== API (dipanggil frontend) ===================== */

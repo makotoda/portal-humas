@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="tema-gelap">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Portal Komunikasi Kehumasan &mdash; Ditjen Bimas Hindu</title>
+<title>Portal Komunikasi Kehumasan &mdash;Â Ditjen Bimas Hindu</title>
 <base target="_top">
 <style>
 /* ============================================================
-   PORTAL KOMUNIKASI KEHUMASAN &mdash; "Cinematic Glass" design system
+   PORTAL KOMUNIKASI KEHUMASAN &mdash;Â "Cinematic Glass" design system
    Vanilla CSS, nol dependensi. Gelap = default; .tema-terang = override.
    ============================================================ */
 :root{
@@ -465,7 +465,7 @@ footer{margin-top:40px; padding:30px 0; border-top:1px solid var(--glass-brd); c
   *{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important}
   .bg::before,.bg::after{animation:none}
 }
-/* Di iframe GAS/Sites, compositing sering software-only &mdash; blur besar beranimasi
+/* Di iframe GAS/Sites, compositing sering software-only &mdash;Â blur besar beranimasi
    membekukan renderer. Mesh dibuat statis di sana (class di-set dari JS). */
 html.di-gas .bg::before, html.di-gas .grain{display:none}
 
@@ -590,7 +590,7 @@ html.di-gas .bg::before, html.di-gas .grain{display:none}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7"/></svg>
       </button>
       <div class="ico-lg" id="fIco"></div>
-      <div><h2 id="fJudul">&mdash;</h2><p id="fDesk">&mdash;</p></div>
+      <div><h2 id="fJudul">&mdash;Â</h2><p id="fDesk">&mdash;Â</p></div>
     </div>
     <div id="fSyarat"></div>
     <form class="card" id="formEl" novalidate>
@@ -631,7 +631,7 @@ html.di-gas .bg::before, html.di-gas .grain{display:none}
   <div class="loader-box">
     <svg class="loader-spin" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/></svg>
     <div class="loader-pct" id="loaderPct">0%</div>
-    <div class="loader-label" id="loaderLabel">MemprosesÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦</div>
+    <div class="loader-label" id="loaderLabel">MemprosesÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</div>
   </div>
 </div>
 
@@ -689,11 +689,11 @@ const KATEGORI={
     fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
     upload:[{key:'naskah',label:'Naskah / Artikel',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto',accept:IMG,min:3}],
     syarat:[
-      '<b>1. Data Historis, Teologis, dan Filosofis Sites</b><br>Fondasi untuk menjelaskan mengapa tempat tersebut dianggap suci dan penting.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Sejarah dan Mitologi: asal-usul pura/tempat suci, kaitan dengan tokoh suci (mis. Dang Hyang Nirartha atau Rsi Markandeya di Bali), atau cerita mitologi yang melatarbelakanginya.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Struktur Arsitektur dan Kosmologi: tata letak pura &mdash; konsep Sanga Mandala (sembilan arah mata angin) atau Tri Mandala (utama, madya, nista mandala); makna filosofis arsitektur dominan (mis. jumlah tumpang pada Pura Meru).<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dewa/Pratima Utama: manifestasi Tuhan (Ida Sang Hyang Widhi Wasa) atau Bhatara-Bhatari yang dipuja secara spesifik di tempat tersebut.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Aspek Moderasi dan Akulturasi Budaya: jejak akulturasi budaya setempat (mis. perpaduan arsitektur Hindu dengan budaya Jawa, Bali, Sasak, atau Tionghoa); interaksi dengan masyarakat non-Hindu di sekitar situs &mdash; panggung utama untuk konten Moderasi Beragama.',
-      '<b>2. Data Ritual, Aktivitas Keagamaan, dan Kalender Event</b><br>Wisata religi sangat erat kaitannya dengan waktu-waktu sakral.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Jadwal Piodalan/Pujawali: kapan hari jadi atau upacara besar di pura tersebut dilaksanakan (berdasarkan kalender Saka atau Wuku).<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Bentuk Ritual Unik: ritual spesifik yang hanya ada di sana, mis. prosesi Pengelukatan (penyucian diri dengan air suci) di Pura Tirta Empul, atau tradisi turun-temurun tertentu.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Aturan/Dresta Setempat: aturan adat khusus yang berlaku (awig-awig lokal) yang mungkin berbeda dengan pura lainnya.',
-      '<b>3. Data Fenomena Sosial dan Interaksi Manusia (Etnografi)</b><br>Memberi "nyawa" pada tulisan melalui perspektif pelaku langsung.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Wawancara dengan Tokoh Adat/Agama: Pemedek Pangempon (pengelola/penanggung jawab pura), Pemangku (pemimpin ritual), atau Sulinggih.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Pengalaman Pemedek/Wisatawan: mengapa mereka datang, apa yang dirasakan secara spiritual setelah berkunjung.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dampak Ekonomi dan Sosial bagi Warga Lokal: bagaimana objek wisata religi ini menghidupkan ekonomi sekitar (pedagang sarana upakara/banten, pemandu lokal, akomodasi).',
-      '<b>4. Data Fasilitas dan Manajemen Pariwisata (Aspek Praktis)</b><br>Panduan bagi pembaca yang ingin berkunjung.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Aksesibilitas Wisata Religi: kemudahan akses transportasi, ketersediaan akomodasi ramah umat, informasi tiket/punia, fasilitas bagi kelompok rentan (lansia dan disabilitas).<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Zonasi Wisatawan vs. Tempat Ibadah: pemisahan area suci untuk persembahyangan (Utama Mandala) dengan area yang boleh diakses wisatawan umum.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Fasilitas Penunjang: penyewaan kain (sarung/kamen), tempat ganti pakaian (mis. utk melukat), toilet, area parkir, aksesibilitas lansia/disabilitas.<br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Etika dan Aturan Pengunjung: larangan bagi wanita yang sedang datang bulan, aturan berpakaian, etika mengambil foto saat ritual berlangsung, pembiayaan (tiket masuk atau sistem donasi/punia).',
-      '<b>5. Dokumentasi</b><br>ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dokumentasi Visual yang Sensitif: foto atau video yang representatif (arsitektur, detail ukiran, suasana alam).'
+      '<b>1. Data Historis, Teologis, dan Filosofis Sites</b><br>Fondasi untuk menjelaskan mengapa tempat tersebut dianggap suci dan penting.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Sejarah dan Mitologi: asal-usul pura/tempat suci, kaitan dengan tokoh suci (mis. Dang Hyang Nirartha atau Rsi Markandeya di Bali), atau cerita mitologi yang melatarbelakanginya.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Struktur Arsitektur dan Kosmologi: tata letak pura &mdash;Â konsep Sanga Mandala (sembilan arah mata angin) atau Tri Mandala (utama, madya, nista mandala); makna filosofis arsitektur dominan (mis. jumlah tumpang pada Pura Meru).<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Dewa/Pratima Utama: manifestasi Tuhan (Ida Sang Hyang Widhi Wasa) atau Bhatara-Bhatari yang dipuja secara spesifik di tempat tersebut.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Aspek Moderasi dan Akulturasi Budaya: jejak akulturasi budaya setempat (mis. perpaduan arsitektur Hindu dengan budaya Jawa, Bali, Sasak, atau Tionghoa); interaksi dengan masyarakat non-Hindu di sekitar situs &mdash;Â panggung utama untuk konten Moderasi Beragama.',
+      '<b>2. Data Ritual, Aktivitas Keagamaan, dan Kalender Event</b><br>Wisata religi sangat erat kaitannya dengan waktu-waktu sakral.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Jadwal Piodalan/Pujawali: kapan hari jadi atau upacara besar di pura tersebut dilaksanakan (berdasarkan kalender Saka atau Wuku).<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Bentuk Ritual Unik: ritual spesifik yang hanya ada di sana, mis. prosesi Pengelukatan (penyucian diri dengan air suci) di Pura Tirta Empul, atau tradisi turun-temurun tertentu.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Aturan/Dresta Setempat: aturan adat khusus yang berlaku (awig-awig lokal) yang mungkin berbeda dengan pura lainnya.',
+      '<b>3. Data Fenomena Sosial dan Interaksi Manusia (Etnografi)</b><br>Memberi "nyawa" pada tulisan melalui perspektif pelaku langsung.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Wawancara dengan Tokoh Adat/Agama: Pemedek Pangempon (pengelola/penanggung jawab pura), Pemangku (pemimpin ritual), atau Sulinggih.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Pengalaman Pemedek/Wisatawan: mengapa mereka datang, apa yang dirasakan secara spiritual setelah berkunjung.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Dampak Ekonomi dan Sosial bagi Warga Lokal: bagaimana objek wisata religi ini menghidupkan ekonomi sekitar (pedagang sarana upakara/banten, pemandu lokal, akomodasi).',
+      '<b>4. Data Fasilitas dan Manajemen Pariwisata (Aspek Praktis)</b><br>Panduan bagi pembaca yang ingin berkunjung.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Aksesibilitas Wisata Religi: kemudahan akses transportasi, ketersediaan akomodasi ramah umat, informasi tiket/punia, fasilitas bagi kelompok rentan (lansia dan disabilitas).<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Zonasi Wisatawan vs. Tempat Ibadah: pemisahan area suci untuk persembahyangan (Utama Mandala) dengan area yang boleh diakses wisatawan umum.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Fasilitas Penunjang: penyewaan kain (sarung/kamen), tempat ganti pakaian (mis. utk melukat), toilet, area parkir, aksesibilitas lansia/disabilitas.<br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Etika dan Aturan Pengunjung: larangan bagi wanita yang sedang datang bulan, aturan berpakaian, etika mengambil foto saat ritual berlangsung, pembiayaan (tiket masuk atau sistem donasi/punia).',
+      '<b>5. Dokumentasi</b><br>ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ Dokumentasi Visual yang Sensitif: foto atau video yang representatif (arsitektur, detail ukiran, suasana alam).'
     ]},
   'berita-pasraman':{judul:'Berita Pasraman',ico:'pasraman',desk:'Kegiatan pendidikan keagamaan Hindu nonformal (Pasraman).',
     fields:['provinsi','kabupaten','namaPasraman','namaPenulis','noWA'],
@@ -719,7 +719,7 @@ const KATEGORI={
     linkVideo:true,
     syarat:['Video berbentuk Landscape Rasio: 16:9 (horizontal).','Format umum: MP4 (paling direkomendasikan).','Resolusi: minimal 720p (HD), ideal 1080p atau lebih.','Video harus karya sendiri (orisinal).','Tanpa menggunakan Editan apapun (audio/visual).','Unggah ke Google Drive, akses "siapa saja dgn link".','Tempel tautan Drive video pada isian di bawah.']}
 };
-// Daftar instansi baku. PERGURUAN_TINGGI dipakai juga utk leaderboard PT di beranda &mdash;
+// Daftar instansi baku. PERGURUAN_TINGGI dipakai juga utk leaderboard PT di beranda &mdash;Â
 // kontrak dgn PERGURUAN_TINGGI di Code.js, samakan bila daftarnya berubah.
 const PERGURUAN_TINGGI=[
   'Universitas Hindu Negeri I Gusti Bagus Sugriwa',
@@ -783,7 +783,7 @@ const Loader={
   pct:0, timer:null,
   show(label){
     this.pct=0; clearInterval(this.timer);
-    $('#loaderLabel').textContent=label||'MemprosesÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦'; $('#loaderPct').textContent='0%';
+    $('#loaderLabel').textContent=label||'MemprosesÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦'; $('#loaderPct').textContent='0%';
     $('#loaderOverlay').classList.add('aktif');
     this.timer=setInterval(()=>{ this.pct+=(90-this.pct)*.12+.6; if(this.pct>90)this.pct=90;
       $('#loaderPct').textContent=Math.round(this.pct)+'%'; },150);
@@ -796,14 +796,23 @@ async function withLoader(promise,label){
   try{ const r=await promise; Loader.hide(); return r; }
   catch(e){ Loader.hide(); throw e; }
 }
-const isGas = typeof google!=='undefined' && google.script && google.script.run;
-if(isGas) document.documentElement.classList.add('di-gas');
-const Backend={
-  call(fn,payload){
-    return new Promise((res,rej)=>{
-      if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](payload); }
-      else { setTimeout(()=>{ try{res(Demo[fn](payload));}catch(e){rej(e);} }, 420); }
-    });
+const API_URL = 'https://script.google.com/macros/s/AKfycbyvyBUjYlx97GXcdkrtDfk5BbhNstWj33F28hEeZTKoc5K8NUJJz3M3DzjxVk_kjnmu/exec';
+const Backend = {
+  async call(fn, ...args) {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: fn, args: args }),
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+      });
+      const result = await res.json();
+      if (result.status === 'success') return result.data;
+      throw new Error(result.message || 'Terjadi kesalahan pada server.');
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   }
 };
 const Demo={
@@ -992,13 +1001,13 @@ const Form={
         if (drop) {
           const d = drop.querySelector('.drop');
           if (d) d.classList.remove('disabled-drop');
-          // Input file tak punya atribut [name], jadi tak tersentuh selector di atas &mdash;
+          // Input file tak punya atribut [name], jadi tak tersentuh selector di atas &mdash;Â
           // tanpa ini tetap disabled meski dropzone-nya sudah "aktif" secara visual,
           // sehingga klik untuk buka dialog file tak merespon (drag tetap jalan).
           const fileInput = drop.querySelector('input[type=file]');
           if (fileInput) fileInput.disabled = false;
         }
-        // Input "Lainnya" juga tak ber-[name] &mdash; sama seperti input file di atas.
+        // Input "Lainnya" juga tak ber-[name] &mdash;Â sama seperti input file di atas.
         const lain = $(`#fFields .inp-lain[data-lain="${f}"]`);
         if (lain) lain.disabled = false;
       });
@@ -1050,13 +1059,13 @@ const Form={
     const provHost=$('#fFields .dd-form[data-name=provinsi]'), kabHost=$('#fFields .dd-form[data-name=kabupaten]');
     if(!provHost||!kabHost)return;
     const provOpts=Object.keys(WILAYAH).sort().map(p=>({value:p,label:p}));
-    buatFormDropdown(provHost,{name:'provinsi',placeholder:'&mdash; pilih provinsi &mdash;',options:provOpts,required:true,onChange:(val)=>{
+    buatFormDropdown(provHost,{name:'provinsi',placeholder:'&mdash;Â pilih provinsi &mdash;Â',options:provOpts,required:true,onChange:(val)=>{
       const list=(WILAYAH[val]||[]).slice().sort().map(c=>({value:c,label:c}));
       formDDOpsi(kabHost,list);
       const terkunci=Form.tiket_revisi && Form.revisiFields.length && !Form.revisiFields.includes('kabupaten');
       formDDDisabled(kabHost, terkunci||!list.length);
     }});
-    buatFormDropdown(kabHost,{name:'kabupaten',placeholder:'&mdash; pilih provinsi dulu &mdash;',options:[],required:true});
+    buatFormDropdown(kabHost,{name:'kabupaten',placeholder:'&mdash;Â pilih provinsi dulu &mdash;Â',options:[],required:true});
     formDDDisabled(kabHost,true);
   },
   _wireInstansi(){
@@ -1065,7 +1074,7 @@ const Form={
     const lain=$('#fFields .inp-lain[data-lain=instansi]');
     const hidden=()=>host.querySelector('input');
     const opts=INSTANSI_OPSI.map(v=>({value:v,label:v})).concat([{value:INSTANSI_LAIN,label:'Lainnya (tulis sendiri)'}]);
-    buatFormDropdown(host,{name:'instansi',placeholder:'&mdash; pilih instansi &mdash;',options:opts,required:true,onChange:(val)=>{
+    buatFormDropdown(host,{name:'instansi',placeholder:'&mdash;Â pilih instansi &mdash;Â',options:opts,required:true,onChange:(val)=>{
       if(val===INSTANSI_LAIN){
         // Sentinel bukan nilai yang sah dikirim ke server: kosongkan dulu supaya
         // validasi [required] menolak sampai pengguna benar-benar mengetik namanya.
@@ -1115,7 +1124,7 @@ const Form={
       const img=it.file.type.startsWith('image/');
       const src=img?URL.createObjectURL(it.file):'';
       return `<div class="thumb">${img?`<img src="${src}">`:`<div class="doc">${it.name}</div>`}
-        <button class="x" onclick="Form.hapusFile('${slot}',${i})">${'ÃƒÆ’Ã¢â‚¬â€'}</button></div>`;
+        <button class="x" onclick="Form.hapusFile('${slot}',${i})">${'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â'}</button></div>`;
     }).join('');
   },
   hapusFile(slot,i){ this.files[slot].splice(i,1); this._renderThumbs(slot,$(`[data-slot="${slot}"] .thumbs`)); },
@@ -1149,7 +1158,7 @@ const Form={
     const btn=$('#fSubmit'); btn.disabled=true; const orig=btn.innerHTML;
     btn.innerHTML='<span class="sk" style="width:80px;height:14px;display:inline-block"></span>';
     try{
-      // siapkan berkas: GAS ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ base64; demo ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ hanya nama
+      // siapkan berkas: GAS ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ base64; demo ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ hanya nama
       const fileNames=[];
       if(isGas){
         fd._files=[];
@@ -1161,7 +1170,7 @@ const Form={
         for(const arr of Object.values(this.files)) arr.forEach(it=>fileNames.push(it.name));
         fd._fileNames=fileNames;
       }
-      const r=await withLoader(Backend.call('submitPermohonan',fd), 'Mengirim bahanÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦');
+      const r=await withLoader(Backend.call('submitPermohonan',fd), 'Mengirim bahanÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦');
       this._sukses(r.tiket, r.isRevisi);
       form.reset();
     }catch(err){ toast(err.message||'Gagal mengirim. Coba lagi.','err'); }
@@ -1196,7 +1205,7 @@ const Status={
     if(!q){ toast('Masukkan nomor tiket atau WhatsApp.','err'); return; }
     box.innerHTML=`<div class="timeline"><div class="tl-card"><div class="sk" style="height:80px"></div></div></div>`;
     try{
-      const rows=await withLoader(Backend.call('cekStatus',q), 'Melacak statusÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦');
+      const rows=await withLoader(Backend.call('cekStatus',q), 'Melacak statusÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦');
       if(!rows||!rows.length){ box.innerHTML=`<div class="empty">${ikon('inbox')}<div>Tidak ada kiriman untuk "<b>${q}</b>".<br>Periksa kembali nomor tiket/WhatsApp Anda.</div></div>`; return; }
       box.innerHTML=`<div class="timeline">${rows.map(r=>this._card(r)).join('')}</div>`;
     }catch(e){ box.innerHTML=`<div class="empty">${ikon('inbox')}<div>Gagal memuat. Coba lagi.</div></div>`; }
@@ -1209,7 +1218,7 @@ const Status={
     const ditolak=/tolak|reject/i.test(st), selesai=/setuju|complete|selesai|terbit/i.test(st), revisi=/revisi/i.test(st);
     let idx = ditolak||selesai ? 1 : 0;
     const badge = ditolak?'bad':selesai?'ok':revisi?'warn':'info';
-    const katJudul=(KATEGORI[r.kategori]&&KATEGORI[r.kategori].judul)||r.kategori||'&mdash;';
+    const katJudul=(KATEGORI[r.kategori]&&KATEGORI[r.kategori].judul)||r.kategori||'&mdash;Â';
     const steps=LANGKAH.map((lb,i)=>{
       if(i===0 && revisi) lb='Revisi'; if(i===1 && ditolak) lb='Ditolak'; if(i===1 && selesai) lb='Disetujui';
       return `<div class="step ${i<idx?'done':i===idx?'now':''}">
@@ -1218,10 +1227,10 @@ const Status={
     }).join('');
     const wilayah=[r.kabupaten,r.provinsi].filter(Boolean).join(', ');
     return `<div class="tl-card">
-      <div class="tl-top"><span class="tid">${r.tiket||'&mdash;'}</span>
+      <div class="tl-top"><span class="tid">${r.tiket||'&mdash;Â'}</span>
         <span class="kat-tag">${katJudul}</span>
         <span class="badge ${badge}" style="margin-left:auto">${ditolak?'Ditolak':selesai?'Disetujui':revisi?'Minta Revisi':'Direview'}</span></div>
-      <div class="tl-meta">${[r.instansi,wilayah].filter(Boolean).join(' &middot; ')||'&mdash;'}</div>
+      <div class="tl-meta">${[r.instansi,wilayah].filter(Boolean).join(' &middot; ')||'&mdash;Â'}</div>
       <div class="steps">${steps}</div>
       ${ket?`<div class="tl-note"><b>Catatan Tim Humas:</b> ${ket}</div>`:''}
       ${revisi?`<div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="BukaRevisi('${r.tiket}','${$('#qStatus').value.trim()}',this,'${revFields}')">Revisi Inputan</button></div>`:''}
@@ -1238,7 +1247,7 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
       if(!wa) return;
     }
     const orig=btn.innerHTML; btn.innerHTML='Memuat...'; btn.disabled=true;
-    const d=await withLoader(Backend.call('getDetailRevisi', {tiket: tiket, wa: wa}), 'Memuat data revisiÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦');
+    const d=await withLoader(Backend.call('getDetailRevisi', {tiket: tiket, wa: wa}), 'Memuat data revisiÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦');
     Nav.go('form');
     Form.tiket_revisi=tiket;
     Form.revisiFields=fieldsStr ? fieldsStr.split(',') : [];
@@ -1256,7 +1265,7 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
           if(n==='linkVideo') inp.value=d.linkVideo||'';
         });
         const m=document.createElement('div'); m.className='tl-note'; m.style.marginBottom='16px';
-        m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika ingin menggantinya &mdash; berkas baru akan MENIMPA berkas lama pada bagian itu (berkas lama dihapus). Jika tidak diunggah ulang, berkas lama Anda tetap tersimpan aman.`;
+        m.innerHTML=`<b>Mode Revisi:</b> Anda sedang memperbaiki tiket <b>${tiket}</b>.<br>Unggah berkas baru hanya jika ingin menggantinya &mdash;Â berkas baru akan MENIMPA berkas lama pada bagian itu (berkas lama dihapus). Jika tidak diunggah ulang, berkas lama Anda tetap tersimpan aman.`;
         $('#fFields').prepend(m);
       }, 100);
     }, 50);
@@ -1319,10 +1328,11 @@ window.addEventListener('scroll', () => {
     }
   }
 });
-if(!isGas) console.info('[PKH] Mode preview lokal (demo). Di GAS akan pakai google.script.run.');
+console.info('[PKH] Berjalan di GitHub Pages.');
 </script>
 </body>
 </html>
+
 
 
 
