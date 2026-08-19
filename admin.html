@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="tema-gelap">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dashboard Humas — Portal Komunikasi Kehumasan</title>
+<title>Dashboard Humas â€” Portal Komunikasi Kehumasan</title>
 <base target="_top">
 <style>
 /* ============================================================
-   DASHBOARD HUMAS — memakai design token yang sama dgn index.html
+   DASHBOARD HUMAS â€” memakai design token yang sama dgn index.html
    (glass, gelap default, .tema-terang override). Vanilla, nol dependensi.
    ============================================================ */
 :root{
@@ -345,7 +345,7 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
         <div><b>Dashboard Humas</b><span>Portal Komunikasi Kehumasan</span></div>
       </div>
       <div class="top-right">
-        <div class="who"><b id="whoNama">—</b><div class="r" id="whoRole">—</div></div>
+        <div class="who"><b id="whoNama">â€”</b><div class="r" id="whoRole">â€”</div></div>
         <button class="icon-btn" id="btnKelola" title="Kelola admin" style="display:none" onclick="openKelola()"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M17 8h5M19.5 5.5v5"/></svg></button>
         <button class="icon-btn" id="btnExport" title="Ekspor CSV" onclick="exportCSV()"></button>
         <button class="icon-btn" id="btnTema" title="Ganti tema" onclick="Tema.toggle()"></button>
@@ -360,7 +360,7 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
     <div class="filters">
       <div class="filters-row">
         <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
-          <input class="inp" id="fq" placeholder="Cari tiket, instansi, penulis…" oninput="applyFilter()"></div>
+          <input class="inp" id="fq" placeholder="Cari tiket, instansi, penulisâ€¦" oninput="applyFilter()"></div>
         <div class="viewtog">
           <button id="vTabel" class="aktif" onclick="setView('tabel')" title="Tabel"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
           <button id="vKanban" onclick="setView('kanban')" title="Kanban"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="10"/><rect x="17" y="4" width="4" height="13"/></svg></button>
@@ -395,7 +395,7 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
   <div class="loader-box">
     <svg class="loader-spin" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/></svg>
     <div class="loader-pct" id="loaderPct">0%</div>
-    <div class="loader-label" id="loaderLabel">Memproses…</div>
+    <div class="loader-label" id="loaderLabel">Memprosesâ€¦</div>
   </div>
 </dialog>
 
@@ -420,10 +420,10 @@ const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
 const KATJUDUL={'berita-daerah':'Berita Daerah','berita-widyalaya':'Berita Widyalaya','berita-ptkh':'Berita PTKH',
   'naskah-mimbar':'Naskah Mimbar Hindu','wisata-religi':'Wisata Religi','berita-pasraman':'Berita Pasraman',
   'konten-medsos':'Bahan Konten Medsos','artikel-inspiratif':'Artikel Kisah Inspiratif','video-mimbar':'Video Mimbar Hindu'};
-const katJudul=(k)=>KATJUDUL[k]||k||'—';
+const katJudul=(k)=>KATJUDUL[k]||k||'â€”';
 
 // GOTCHA GAS: literal image + slash + asterisk dalam string diperlakukan sebagai
-// komentar blok oleh stripper GAS dan memutilasi script tersaji — selalu pakai IMG.
+// komentar blok oleh stripper GAS dan memutilasi script tersaji â€” selalu pakai IMG.
 const IMG='image/'+'*';
 const FIELD_DEF={
   provinsi:{label:'Provinsi',type:'prov',req:true},
@@ -470,17 +470,30 @@ let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel', 
 const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:'',dari:'',sampai:''};
 
 
-const isGas=typeof google!=='undefined'&&google.script&&google.script.run;
-const Backend={ call(fn,...args){ return new Promise((res,rej)=>{
-  if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](...args); }
-  else { setTimeout(()=>{ try{res(Demo[fn](...args))}catch(e){rej(e)} },320); }
-}); } };
-
+const API_URL = 'https://script.google.com/macros/s/AKfycbyvyBUjYlx97GXcdkrtDfk5BbhNstWj33F28hEeZTKoc5K8NUJJz3M3DzjxVk_kjnmu/exec';
+const Backend = {
+  async call(fn, ...args) {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: "payload=" + encodeURIComponent(JSON.stringify({ action: fn, args: args })),
+        redirect: 'follow',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      const result = await res.json();
+      if (result.status === 'success') return result.data;
+      throw new Error(result.message || 'Terjadi kesalahan pada server.');
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+};
 const Loader={
   pct:0, timer:null,
   show(label){
     this.pct=0; clearInterval(this.timer);
-    $('#loaderLabel').textContent=label||'Memproses…'; $('#loaderPct').textContent='0%';
+    $('#loaderLabel').textContent=label||'Memprosesâ€¦'; $('#loaderPct').textContent='0%';
     const dlg=$('#loaderOverlay'); if(!dlg.open)dlg.showModal();
     this.timer=setInterval(()=>{ this.pct+=(90-this.pct)*.12+.6; if(this.pct>90)this.pct=90;
       $('#loaderPct').textContent=Math.round(this.pct)+'%'; },150);
@@ -495,7 +508,7 @@ async function withLoader(promise,label){
 }
 
 
-// 38 provinsi resmi RI — samakan dgn PROVINSI_VALID di Code.js & WILAYAH di index.html.
+// 38 provinsi resmi RI â€” samakan dgn PROVINSI_VALID di Code.js & WILAYAH di index.html.
 const PROVINSI_VALID=['Bali','DI Yogyakarta','Jawa Tengah','Jawa Timur','Jawa Barat','Banten','DKI Jakarta',
   'Lampung','Sumatera Utara','Sumatera Selatan','Sumatera Barat','Riau','Kepulauan Riau',
   'Jambi','Bengkulu','Aceh','Kalimantan Tengah','Kalimantan Barat','Kalimantan Timur',
@@ -610,7 +623,7 @@ const Tema={
 function toast(msg,tipe='info'){ const ic={ok:IK.check,err:IK.x,info:IK.info};
   const el=document.createElement('div'); el.className='toast '+tipe;
   el.innerHTML=`<span class="i"><svg viewBox="0 0 24 24">${ic[tipe]||IK.info}</svg></span><span>${msg}</span>`;
-  // dialog modal (showModal) masuk browser top layer, di atas konten biasa apa pun z-index-nya —
+  // dialog modal (showModal) masuk browser top layer, di atas konten biasa apa pun z-index-nya â€”
   // pindahkan wadah #toasts ke dalam dialog yang terbuka supaya ikut naik ke top layer & terlihat.
   const dlg=$('#modal'), toasts=$('#toasts');
   if(dlg&&dlg.open&&toasts.parentElement!==dlg) dlg.appendChild(toasts);
@@ -620,8 +633,8 @@ function toast(msg,tipe='info'){ const ic={ok:IK.check,err:IK.x,info:IK.info};
 
 $('#loginForm').addEventListener('submit',async e=>{
   e.preventDefault(); const kode=$('#kodeInp').value.trim(); if(!kode)return;
-  const btn=$('#loginBtn'); btn.disabled=true; const o=btn.textContent; btn.textContent='Memeriksa…';
-  try{ const me=await withLoader(Backend.call('adminLogin',kode), 'Memeriksa kode akses…'); KODE=kode; SS.set('pkh_kode',kode); boot(me); }
+  const btn=$('#loginBtn'); btn.disabled=true; const o=btn.textContent; btn.textContent='Memeriksaâ€¦';
+  try{ const me=await withLoader(Backend.call('adminLogin',kode), 'Memeriksa kode aksesâ€¦'); KODE=kode; SS.set('pkh_kode',kode); boot(me); }
   catch(err){ toast(err.message||'Kode salah.','err'); btn.disabled=false; btn.textContent=o; $('#kodeInp').select(); }
 });
 // GOTCHA GAS: location.reload() di dalam iframe sandbox HtmlService membuat layar putih
@@ -757,8 +770,8 @@ function setView(v){ view=v; $('#vTabel').classList.toggle('aktif',v==='tabel');
 const badgeOf=(st)=>{ st=(st||'Direview'); const l=st.toLowerCase();
   const c=/setuju|selesai/.test(l)?'ok':/tolak/.test(l)?'bad':/revisi/.test(l)?'warn':/review/.test(l)?'info':'warn';
   return `<span class="badge ${c}">${st}</span>`; };
-const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'—':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
-// Tanggal LOKAL (YYYY-MM-DD) — harus sebasis dengan tgl() di atas. Jangan pakai
+const tgl=(iso)=>{ const d=new Date(iso); return isNaN(d)?'â€”':d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); };
+// Tanggal LOKAL (YYYY-MM-DD) â€” harus sebasis dengan tgl() di atas. Jangan pakai
 // iso.slice(0,10): itu tanggal UTC, meleset sehari utk kiriman 00:00-07:00 WIB.
 const tglLokalISO=(iso)=>{ const d=new Date(iso); return isNaN(d)?'':d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); };
 const statusFinal=(st)=>/setuju|selesai|tolak/i.test(st||'');
@@ -774,9 +787,9 @@ function paginate(rows, page, pageSize){
 function renderPagination(p){
   if(p.totalPages<=1)return '';
   return `<div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px">
-    <button class="btn btn-ghost btn-sm" ${p.page===1?'disabled':''} onclick="paginationPage=Math.max(1,paginationPage-1);render()">← Sebelumnya</button>
+    <button class="btn btn-ghost btn-sm" ${p.page===1?'disabled':''} onclick="paginationPage=Math.max(1,paginationPage-1);render()">â† Sebelumnya</button>
     <span style="font-size:13px">Halaman ${p.page} dari ${p.totalPages}</span>
-    <button class="btn btn-ghost btn-sm" ${p.page===p.totalPages?'disabled':''} onclick="paginationPage=Math.min(${p.totalPages},paginationPage+1);render()">Berikutnya →</button>
+    <button class="btn btn-ghost btn-sm" ${p.page===p.totalPages?'disabled':''} onclick="paginationPage=Math.min(${p.totalPages},paginationPage+1);render()">Berikutnya â†’</button>
   </div>`;
 }
 
@@ -801,7 +814,7 @@ function renderTabel(){ const allRows=terfilter();
       <td><span class="t-tiket" onclick="openDetail('${r.tiket}')">${r.tiket}</span></td>
       <td>${katJudul(r.kategori)}${r.namaPenulis?`<div class="t-sub">${r.namaPenulis}</div>`:''}</td>
       <td>${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')}</td>
-      <td>${r.instansi||'—'}</td>
+      <td>${r.instansi||'â€”'}</td>
       <td class="t-sub">${tgl(r.dibuat)}</td>
       <td>${r.eksekutor||`<span class="t-sub klaim" onclick="klaimEksekutor('${r.tiket}')">Klaim</span>`}</td>
       <td>${badgeOf(r.status)}</td>
@@ -820,7 +833,7 @@ function renderKanban(){ const rows=terfilter(); const kolom=['Direview','Revisi
     const allInCol=grup[k]||[]; const p=paginate(allInCol, paginationPage, 10);
     const cardsHtml=(p.rows||[]).map(r=>`<div class="kcard" onclick="openDetail('${r.tiket}')">
       <div class="kt">${r.tiket}</div><div class="kk">${katJudul(r.kategori)}</div>
-      <div class="km">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'—'}</div>
+      <div class="km">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'â€”'}</div>
       ${r.eksekutor?`<div class="keks"><span class="kdot"></span>${r.eksekutor}</div>`:''}
     </div>`).join('')||'<div class="t-sub" style="padding:8px 4px">Kosong</div>';
     const pageHtml=p.totalPages>1?`<div style="padding:8px 4px;font-size:12px;color:var(--ink-dim)">Halaman ${p.page}/${p.totalPages}</div>`:'';
@@ -837,7 +850,7 @@ function renderAnalitik(){ const s=DATA.stats||statsOf(DATA.rows);
     <div class="bar-row"><span class="pn" title="${p.prov}">${p.prov}</span>
       <span class="bar"><i style="width:${Math.round(p.jumlah/maks*100)}%"></i></span><span class="pct">${p.jumlah}</span></div>`).join('')
     :'<div class="t-sub">Belum ada data.</div>';
-  $('#alasan').innerHTML=(s.alasanTolak||[]).map(a=>`<div class="reason"><span class="c">${a.jumlah}×</span><span>${a.teks}</span></div>`).join('')||'<div class="t-sub">Belum ada penolakan.</div>';
+  $('#alasan').innerHTML=(s.alasanTolak||[]).map(a=>`<div class="reason"><span class="c">${a.jumlah}Ã—</span><span>${a.teks}</span></div>`).join('')||'<div class="t-sub">Belum ada penolakan.</div>';
   renderLeaderboard($('#lbPT'), s.perPT||[]);
 }
 const LB_MEDALI='<svg class="lb-medal" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M8.5 9.5L6 2h12l-2.5 7.5"/></svg>';
@@ -861,7 +874,7 @@ function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada 
 
 async function doAksi(tiket,aksi,extra){ try{
     const payload=Object.assign({tiket,aksi},extra||{});
-    const label={setujui:'Menyetujui…',tolak:'Menolak…',revisi:'Mengirim revisi…',assign:'Menugaskan…'}[aksi]||'Menyimpan…';
+    const label={setujui:'Menyetujuiâ€¦',tolak:'Menolakâ€¦',revisi:'Mengirim revisiâ€¦',assign:'Menugaskanâ€¦'}[aksi]||'Menyimpanâ€¦';
     DATA=await withLoader(Backend.call('adminAksi',KODE,payload), label);
     render(); populasiFilter();
     const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',revisi:'Revisi diminta.',assign:'Eksekutor ditugaskan.'}[aksi];
@@ -921,7 +934,7 @@ function kirimRevisi(tiket){
   doAksi(tiket,'revisi',{catatan:finalCatatan}); 
 }
 
-// GOTCHA GAS: stripper // GAS mengenali string '...' tapi TIDAK template literal —
+// GOTCHA GAS: stripper // GAS mengenali string '...' tapi TIDAK template literal â€”
 // jangan pernah menaruh URL (https:...) di dalam backtick. Pakai konkatenasi string.
 // GOTCHA GAS: dua garis-miring berurutan di sumber bisa dipotong stripper komentar
 // (bahkan di dalam string, bila pelacakan string-nya sudah desync). Rakit lewat konkatenasi.
@@ -940,7 +953,7 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
         if(m) cleanCatatan = m[2].trim();
       }
       return `<div class="riw-item"><span class="rd"></span>
-      <div class="rb"><b>${x.aksi}${x.oleh?` · ${x.oleh}`:''}</b>${cleanCatatan?`<div>${cleanCatatan}</div>`:''}<div class="rt">${new Date(x.waktu).toLocaleString('id-ID')}</div></div></div>`;
+      <div class="rb"><b>${x.aksi}${x.oleh?` Â· ${x.oleh}`:''}</b>${cleanCatatan?`<div>${cleanCatatan}</div>`:''}<div class="rt">${new Date(x.waktu).toLocaleString('id-ID')}</div></div></div>`;
     }).join('')
       || '<div class="t-sub">Belum ada aktivitas.</div>';
   // Alasan penolakan/catatan revisi disimpan di kolom Keterangan. Untuk data lama hasil migrasi
@@ -953,7 +966,7 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
   const catatanBox = ket
     ? `<div class="catatan-box${kelasKet}"><b>${judulKet}</b><div>${ket}</div></div>`
     : ((ditolak||perluRevisi)
-        ? `<div class="catatan-box${kelasKet}"><b>${judulKet}</b><div class="t-sub">Tidak tercatat — kemungkinan data lama sebelum alasan mulai disimpan.</div></div>`
+        ? `<div class="catatan-box${kelasKet}"><b>${judulKet}</b><div class="t-sub">Tidak tercatat â€” kemungkinan data lama sebelum alasan mulai disimpan.</div></div>`
         : '');
   dlg.innerHTML=`<div class="sheet">
     <div class="sheet-h"><span class="tid">${r.tiket}</span> ${badgeOf(r.status)}
@@ -961,10 +974,10 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
     <div class="sheet-b">
       <div class="kv">
         <span class="k">Kategori</span><span class="v">${katJudul(r.kategori)}</span>
-        <span class="k">Instansi</span><span class="v">${r.instansi||'—'}</span>
-        <span class="k">Wilayah</span><span class="v">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'—'}</span>
+        <span class="k">Instansi</span><span class="v">${r.instansi||'â€”'}</span>
+        <span class="k">Wilayah</span><span class="v">${[r.kabupaten,r.provinsi].filter(Boolean).join(', ')||'â€”'}</span>
         ${r.namaPenulis?`<span class="k">Penulis</span><span class="v">${r.namaPenulis}</span>`:''}
-        <span class="k">No. WhatsApp</span><span class="v">${r.noWA||'—'}</span>
+        <span class="k">No. WhatsApp</span><span class="v">${r.noWA||'â€”'}</span>
         <span class="k">Dikirim</span><span class="v">${tgl(r.dibuat)}</span>
         <span class="k">Eksekutor</span><span class="v">${r.eksekutor||'Belum ditugaskan'}</span>
       </div>
@@ -989,7 +1002,7 @@ function previewFile(tiket,i){ const r=DATA.rows.find(x=>x.tiket===tiket); const
 
 
 async function openKelola(){
-  try{ const daftar=await withLoader(Backend.call('adminKelola',KODE,{sub:'list'}), 'Memuat daftar admin…'); renderKelola(daftar); }
+  try{ const daftar=await withLoader(Backend.call('adminKelola',KODE,{sub:'list'}), 'Memuat daftar adminâ€¦'); renderKelola(daftar); }
   catch(err){ toast(err.message||'Gagal memuat admin.','err'); }
 }
 function renderKelola(daftar){
@@ -1020,7 +1033,7 @@ function renderKelola(daftar){
   dlg.showModal();
 }
 async function aksiKelola(sub,extra){
-  try{ const daftar=await withLoader(Backend.call('adminKelola',KODE,Object.assign({sub},extra)), 'Menyimpan…');
+  try{ const daftar=await withLoader(Backend.call('adminKelola',KODE,Object.assign({sub},extra)), 'Menyimpanâ€¦');
     renderKelola(daftar); DATA.eksekutors=daftar.map(a=>a.nama); populasiFilter();
     toast({tambah:'Admin ditambahkan.',hapus:'Admin dihapus.',ubahRole:'Role diubah.'}[sub]||'Tersimpan.','ok');
   }catch(err){ toast(err.message||'Gagal.','err'); }
@@ -1031,16 +1044,22 @@ function exportCSV(){ const rows=terfilter(); if(!rows.length){toast('Tidak ada 
   const head=['Tiket','Kategori','Provinsi','Kabupaten','Instansi','Penulis','NoWA','Status','Eksekutor','Keterangan','Dikirim'];
   const esc=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
   const body=rows.map(r=>[r.tiket,katJudul(r.kategori),r.provinsi,r.kabupaten,r.instansi,r.namaPenulis,r.noWA,r.status,r.eksekutor,r.keterangan,tgl(r.dibuat)].map(esc).join(',')).join('\n');
-  const blob=new Blob(['﻿'+head.join(',')+'\n'+body],{type:'text/csv;charset=utf-8'});
+  const blob=new Blob(['ï»¿'+head.join(',')+'\n'+body],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bahan-kehumasan.csv'; a.click();
   toast('CSV diunduh.','ok');
 }
 
 
 Tema.init();
-if(!isGas) console.info('[PKH-admin] Mode demo. Kode: "super" atau "admin".');
+console.info('[PKH-admin] Berjalan di GitHub Pages.');
 (function autologin(){ const k=SS.get('pkh_kode'); if(!k)return;
   Backend.call('adminLogin',k).then(me=>{ KODE=k; boot(me); }).catch(()=>SS.del('pkh_kode')); })();
 </script>
 </body>
 </html>
+
+
+
+
+
+

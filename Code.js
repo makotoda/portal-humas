@@ -1,5 +1,5 @@
-/**
- * PORTAL KOMUNIKASI KEHUMASAN — Ditjen Bimas Hindu
+﻿/**
+ * PORTAL KOMUNIKASI KEHUMASAN â€” Ditjen Bimas Hindu
  * Backend Google Apps Script. Google Sheets = database, Google Drive = berkas.
  *
  * File .js di sini = file .gs di editor Apps Script (disinkron via clasp).
@@ -10,7 +10,7 @@
 
 /* ===================== KONFIGURASI ===================== */
 // Boleh diisi langsung di sini ATAU lewat Script Properties (kunci sama).
-// Script Properties menang bila diisi — berguna agar ID tak ikut ter-commit.
+// Script Properties menang bila diisi â€” berguna agar ID tak ikut ter-commit.
 const CONFIG_DEFAULT = {
   SPREADSHEET_ID: '1j_tuEOaKeoUAdZXGhbwaTdnDL8zg87LCZ_GLIKrV3NI', // ID Google Sheet database
   DRIVE_FOLDER_ID: 'GANTI_DENGAN_ID_FOLDER_DRIVE', // folder Drive induk untuk unggahan
@@ -25,7 +25,7 @@ const SHEET_SUBMISSIONS = 'Submissions';
 const HEADERS = ['Timestamp','TicketID','Kategori','Provinsi','Kabupaten','Instansi',
                  'NamaPenulis','NoWA','FileLinks','Status','Eksekutor','Keterangan','LastUpdated'];
 
-// 38 provinsi resmi RI — kontrak dgn kunci WILAYAH di index.html (dropdown Provinsi).
+// 38 provinsi resmi RI â€” kontrak dgn kunci WILAYAH di index.html (dropdown Provinsi).
 // Statistik per-provinsi dihitung dari daftar ini, BUKAN dari nilai apa adanya di kolom
 // Provinsi (data lama/pra-dropdown bisa berisi salah ketik/tak baku).
 const PROVINSI_VALID = [
@@ -38,7 +38,7 @@ const PROVINSI_VALID = [
   'Papua Pegunungan','Papua Selatan','Papua Barat Daya','Bangka Belitung'
 ];
 
-// Perguruan tinggi keagamaan Hindu — kontrak dgn PERGURUAN_TINGGI di index.html
+// Perguruan tinggi keagamaan Hindu â€” kontrak dgn PERGURUAN_TINGGI di index.html
 // (opsi dropdown Instansi). Dipakai utk leaderboard PT di beranda.
 const PERGURUAN_TINGGI = [
   'Universitas Hindu Negeri I Gusti Bagus Sugriwa',
@@ -66,19 +66,44 @@ const KATEGORI_VALID = {
   'video-mimbar':      { org:'instansi',      penulis:true,  video:true  }
 };
 
-/* ===================== WEB APP ENTRY ===================== */
+/* ===================== WEB APP ENTRY (REST API) ===================== */
+function doPost(e) {
+  try {
+    setupSheets_();
+    let body;
+    if (e && e.parameter && e.parameter.payload) {
+      body = JSON.parse(e.parameter.payload);
+    } else if (e && e.postData && e.postData.contents) {
+      body = JSON.parse(e.postData.contents);
+    } else {
+      throw new Error("No payload found.");
+    }
+    
+    const action = body.action;
+    const args = body.args || [];
+    let result;
+
+    if (action === 'getStats') result = getStats();
+    else if (action === 'submitPermohonan') result = submitPermohonan(args[0]);
+    else if (action === 'cekStatus') result = cekStatus(args[0]);
+    else if (action === 'getDetailRevisi') result = getDetailRevisi(args[0]);
+    else if (action === 'adminLogin') result = adminLogin(args[0]);
+    else if (action === 'adminData') result = adminData(args[0]);
+    else if (action === 'adminAksi') result = adminAksi(args[0], args[1]);
+    else if (action === 'adminKelola') result = adminKelola(args[0], args[1]);
+    else throw new Error("Unknown action: " + action);
+
+    return ContentService.createTextOutput(JSON.stringify({status: 'success', data: result}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({status: 'error', message: String(err.message || err)}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doGet(e) {
-  setupSheets_(); // self-heal: pastikan sheet & header ada
-  const page = (e && e.parameter && e.parameter.page) || '';
-  const file = page === 'admin' ? 'admin' : 'index';
-  const judul = page === 'admin'
-    ? 'Dashboard Humas — Portal Komunikasi Kehumasan'
-    : 'Portal Komunikasi Kehumasan — Ditjen Bimas Hindu';
-  return HtmlService.createHtmlOutputFromFile(file)
-    .setTitle(judul)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    // ALLOWALL agar bisa disematkan (embed) di Google Sites portal.
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return ContentService.createTextOutput(JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'}))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ===================== API (dipanggil frontend) ===================== */
@@ -235,7 +260,7 @@ function getDetailRevisi(payload) {
   const queryWa = payload.wa;
   const t = String(tiket || '').trim().toLowerCase();
   const waQ = String(queryWa || '').replace(/\D/g, '').replace(/^0+/, '');
-  // Syarat panjang WA disamakan dgn cekStatus — cegah tembus-cocok pakai 1-2 digit
+  // Syarat panjang WA disamakan dgn cekStatus â€” cegah tembus-cocok pakai 1-2 digit
   // saat tiket (berurutan, gampang ditebak) sudah diketahui penyerang.
   if (!t || waQ.length < 6) throw new Error('Tiket atau nomor WhatsApp tidak valid.');
 
@@ -305,7 +330,7 @@ function setupSheets_() {
   }
 }
 
-/** Peta nama kolom → indeks (0-based), mengikuti HEADERS. */
+/** Peta nama kolom â†’ indeks (0-based), mengikuti HEADERS. */
 function colIndex_() {
   const m = {};
   HEADERS.forEach((h, i) => m[h] = i);
@@ -333,7 +358,7 @@ function nextSeq_(sheet, prefix) {
 
 /**
  * Simpan berkas base64 ke Drive terstruktur. Kembalikan [{slot,name,url}].
- * ponytail: unggah via base64 lewat google.script.run — batas payload ~50MB.
+ * ponytail: unggah via base64 lewat google.script.run â€” batas payload ~50MB.
  *           Untuk berkas besar/banyak, ganti ke Drive Picker/resumable nanti.
  */
 function simpanBerkas_(files, kategori, ym, tiket) {
@@ -362,7 +387,7 @@ function hapusFileDrive_(url) {
     const m = String(url || '').match(/[-\w]{25,}/);
     if (m) DriveApp.getFileById(m[0]).setTrashed(true);
   } catch (e) {
-    // Berkas mungkin sudah terhapus manual / di luar akses — abaikan, jangan gagalkan revisi.
+    // Berkas mungkin sudah terhapus manual / di luar akses â€” abaikan, jangan gagalkan revisi.
   }
 }
 
@@ -407,10 +432,10 @@ function pad4_(n) { return String(n).padStart(4, '0'); }
 
 /* ===================== API ADMIN (dashboard humas) ===================== */
 // TRUST BOUNDARY: setiap fungsi admin* WAJIB memanggil cekAdmin_ dulu.
-// Web app anonymous → tak ada identitas Google; auth = kode akses di sheet Admins.
-// Kode diverifikasi ULANG di server tiap aksi (stateless) — jangan percaya klien.
+// Web app anonymous â†’ tak ada identitas Google; auth = kode akses di sheet Admins.
+// Kode diverifikasi ULANG di server tiap aksi (stateless) â€” jangan percaya klien.
 
-/** Verifikasi kode → {nama, role} atau null. Tak pernah mengembalikan kode. */
+/** Verifikasi kode â†’ {nama, role} atau null. Tak pernah mengembalikan kode. */
 function cekAdmin_(kode) {
   const k = String(kode || '').trim();
   if (!k) return null;
@@ -500,11 +525,11 @@ function adminAksi(kode, payload) {
 
 /**
  * Kelola admin/eksekutor (KHUSUS super admin). payload.sub:
- *  'list'  → daftar admin (tanpa kode)
- *  'tambah'→ {nama, kode, role}
- *  'hapus' → {nama}
- *  'ubahRole' → {nama, role}
- * Mengembalikan daftar admin terbaru [{nama, role}] — kode TIDAK pernah dikirim balik.
+ *  'list'  â†’ daftar admin (tanpa kode)
+ *  'tambah'â†’ {nama, kode, role}
+ *  'hapus' â†’ {nama}
+ *  'ubahRole' â†’ {nama, role}
+ * Mengembalikan daftar admin terbaru [{nama, role}] â€” kode TIDAK pernah dikirim balik.
  */
 function adminKelola(kode, payload) {
   const me = cekAdmin_(kode);
@@ -643,7 +668,7 @@ function toIso_(v) {
  * respons Google Form lama) ke sheet Submissions database baru.
  * - Baca-saja terhadap sumber; aman dijalankan pemilik akses view.
  * - Idempotent: dijaga Script Property MIGRASI_DONE (hapus properti itu untuk mengulang).
- * - Header tiap tab lama tidak seragam → dicocokkan per kata kunci.
+ * - Header tiap tab lama tidak seragam â†’ dicocokkan per kata kunci.
  * Jalankan `migrasiDariRespon` dari editor Apps Script, lihat Log hasilnya.
  */
 function migrasiDariRespon() {
@@ -793,6 +818,10 @@ function uji_() {
   const me = adminLogin(cfg_('ADMIN_SUPER_CODE'));
   Logger.log('Admin: ' + JSON.stringify(me));
   const d = adminAksi(cfg_('ADMIN_SUPER_CODE'), { tiket: r.tiket, aksi: 'setujui' });
-  Logger.log('Setelah setujui — stats: ' + JSON.stringify(d.stats));
+  Logger.log('Setelah setujui â€” stats: ' + JSON.stringify(d.stats));
 }
 // trigger push
+
+
+
+

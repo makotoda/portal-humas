@@ -796,14 +796,23 @@ async function withLoader(promise,label){
   try{ const r=await promise; Loader.hide(); return r; }
   catch(e){ Loader.hide(); throw e; }
 }
-const isGas = typeof google!=='undefined' && google.script && google.script.run;
-if(isGas) document.documentElement.classList.add('di-gas');
-const Backend={
-  call(fn,payload){
-    return new Promise((res,rej)=>{
-      if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](payload); }
-      else { setTimeout(()=>{ try{res(Demo[fn](payload));}catch(e){rej(e);} }, 420); }
-    });
+const API_URL = 'https://script.google.com/macros/s/AKfycbyvyBUjYlx97GXcdkrtDfk5BbhNstWj33F28hEeZTKoc5K8NUJJz3M3DzjxVk_kjnmu/exec';
+const Backend = {
+  async call(fn, ...args) {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: "payload=" + encodeURIComponent(JSON.stringify({ action: fn, args: args })),
+        redirect: 'follow',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      const result = await res.json();
+      if (result.status === 'success') return result.data;
+      throw new Error(result.message || 'Terjadi kesalahan pada server.');
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   }
 };
 const Demo={
@@ -1319,10 +1328,15 @@ window.addEventListener('scroll', () => {
     }
   }
 });
-if(!isGas) console.info('[PKH] Mode preview lokal (demo). Di GAS akan pakai google.script.run.');
+console.info('[PKH] Berjalan di GitHub Pages.');
 </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
