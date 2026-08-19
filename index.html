@@ -804,7 +804,6 @@ const Backend = {
         method: 'POST',
         body: "payload=" + encodeURIComponent(JSON.stringify({ action: fn, args: args })),
         redirect: 'follow',
-        credentials: 'omit',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       const result = await res.json();
@@ -1333,6 +1332,7 @@ console.info('[PKH] Berjalan di GitHub Pages.');
 </script>
 </body>
 </html>
+
 
 
 
