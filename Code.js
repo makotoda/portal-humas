@@ -67,7 +67,10 @@ const KATEGORI_VALID = {
 };
 
 /* ===================== WEB APP ENTRY (REST API) ===================== */
-function doPost(e) {
+function doGet(e) { return handleRequest_(e); }
+function doPost(e) { return handleRequest_(e); }
+
+function handleRequest_(e) {
   try {
     setupSheets_();
     let body;
@@ -101,10 +104,7 @@ function doPost(e) {
   }
 }
 
-function doGet(e) {
-  return ContentService.createTextOutput(JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+
 
 /* ===================== API (dipanggil frontend) ===================== */
 
@@ -821,6 +821,7 @@ function uji_() {
   Logger.log('Setelah setujui â€” stats: ' + JSON.stringify(d.stats));
 }
 // trigger push
+
 
 
 
