@@ -476,9 +476,9 @@ const Backend = {
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: fn, args: args }),
+        body: "payload=" + encodeURIComponent(JSON.stringify({ action: fn, args: args })),
         redirect: 'follow',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
       const result = await res.json();
       if (result.status === 'success') return result.data;
@@ -1057,4 +1057,5 @@ console.info('[PKH-admin] Berjalan di GitHub Pages.');
 </script>
 </body>
 </html>
+
 
