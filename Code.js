@@ -68,8 +68,8 @@ const KATEGORI_VALID = {
 
 /* ===================== WEB APP ENTRY (REST API) ===================== */
 function doPost(e) {
-  setupSheets_();
   try {
+    setupSheets_();
     let body;
     if (e && e.parameter && e.parameter.payload) {
       body = JSON.parse(e.parameter.payload);
@@ -821,4 +821,7 @@ function uji_() {
   Logger.log('Setelah setujui â€” stats: ' + JSON.stringify(d.stats));
 }
 // trigger push
+
+
+
 
