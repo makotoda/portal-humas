@@ -93,14 +93,14 @@ function doPost(e) {
     else if (action === 'adminKelola') result = adminKelola(args[0], args[1]);
     else throw new Error("Unknown action: " + action);
 
-    return HtmlService.createHtmlOutput('<div id="api-response" style="display:none;">' + JSON.stringify({status: 'success', data: result}) + '</div>');
+    return ContentService.createTextOutput(JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'})).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return HtmlService.createHtmlOutput('<div id="api-response" style="display:none;">' + JSON.stringify({status: 'error', message: String(err.message || err)}) + '</div>');
+    return ContentService.createTextOutput(JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'})).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 function doGet(e) {
-  return HtmlService.createHtmlOutput('<div id="api-response" style="display:none;">' + JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'}) + '</div>');
+  return ContentService.createTextOutput(JSON.stringify({status: 'ok', message: 'API Portal Humas is running.'})).setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ===================== API (dipanggil frontend) ===================== */
@@ -818,6 +818,7 @@ function uji_() {
   Logger.log('Setelah setujui â€” stats: ' + JSON.stringify(d.stats));
 }
 // trigger push
+
 
 
 
