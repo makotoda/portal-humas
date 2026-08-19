@@ -1052,7 +1052,6 @@ function exportCSV(){ const rows=terfilter(); if(!rows.length){toast('Tidak ada 
 
 
 Tema.init();
-if(!isGas) console.info('[PKH-admin] Mode demo. Kode: "super" atau "admin".');
 (function autologin(){ const k=SS.get('pkh_kode'); if(!k)return;
   Backend.call('adminLogin',k).then(me=>{ KODE=k; boot(me); }).catch(()=>SS.del('pkh_kode')); })();
 </script>

@@ -1158,17 +1158,15 @@ const Form={
     const btn=$('#fSubmit'); btn.disabled=true; const orig=btn.innerHTML;
     btn.innerHTML='<span class="sk" style="width:80px;height:14px;display:inline-block"></span>';
     try{
-      // siapkan berkas: GAS -> base64; demo -> hanya nama
+      // siapkan berkas: kirim base64 ke Google Drive backend
       const fileNames=[];
-      if(isGas){
-        fd._files=[];
-        for(const [slot,arr] of Object.entries(this.files)){
-          for(const it of arr){ const b64=await toBase64(it.file);
-            fd._files.push({slot,name:it.name,mime:it.file.type,data:b64}); fileNames.push(it.name); }
+      fd._files=[];
+      for(const [slot,arr] of Object.entries(this.files)){
+        for(const it of arr){
+          const b64=await toBase64(it.file);
+          fd._files.push({slot,name:it.name,mime:it.file.type,data:b64});
+          fileNames.push(it.name);
         }
-      } else {
-        for(const arr of Object.values(this.files)) arr.forEach(it=>fileNames.push(it.name));
-        fd._fileNames=fileNames;
       }
       const r=await withLoader(Backend.call('submitPermohonan',fd), 'Mengirim bahan…');
       this._sukses(r.tiket, r.isRevisi);
@@ -1328,7 +1326,6 @@ window.addEventListener('scroll', () => {
     }
   }
 });
-if(!isGas) console.info('[PKH] Mode preview lokal (demo). Di GAS akan pakai google.script.run.');
 </script>
 </body>
 </html>
