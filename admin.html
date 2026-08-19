@@ -470,11 +470,25 @@ let KODE=null, DATA={rows:[],eksekutors:[],stats:{},roleAnda:{}}, view='tabel', 
 const filter={q:'',kategori:'',provinsi:'',status:'',eksekutor:'',dari:'',sampai:''};
 
 
-const isGas=typeof google!=='undefined'&&google.script&&google.script.run;
-const Backend={ call(fn,...args){ return new Promise((res,rej)=>{
-  if(isGas){ google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e.message||e)))[fn](...args); }
-  else { setTimeout(()=>{ try{res(Demo[fn](...args))}catch(e){rej(e)} },320); }
-}); } };
+const API_URL = 'https://proxy-humas.makotoda999.workers.dev/';
+const Backend = {
+  async call(fn, ...args) {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: "payload=" + encodeURIComponent(JSON.stringify({ action: fn, args: args })),
+        redirect: 'follow',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      const result = await res.json();
+      if (result.status === 'success') return result.data;
+      throw new Error(result.message || 'Terjadi kesalahan pada server.');
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+};
 
 const Loader={
   pct:0, timer:null,
