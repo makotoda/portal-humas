@@ -481,7 +481,11 @@ const Backend = {
         credentials: 'omit',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
-      const result = await res.json();
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const el = doc.getElementById('api-response');
+      if(!el) throw new Error('Invalid HTML response from API: ' + html.substring(0,100));
+      const result = JSON.parse(el.textContent);
       if (result.status === 'success') return result.data;
       throw new Error(result.message || 'Terjadi kesalahan pada server.');
     } catch (err) {
@@ -1058,6 +1062,7 @@ console.info('[PKH-admin] Berjalan di GitHub Pages.');
 </script>
 </body>
 </html>
+
 
 
 
