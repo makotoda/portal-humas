@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="tema-gelap">
 <head>
 <meta charset="utf-8">
@@ -796,7 +796,7 @@ async function withLoader(promise,label){
   try{ const r=await promise; Loader.hide(); return r; }
   catch(e){ Loader.hide(); throw e; }
 }
-const API_URL = 'https://proxy-humas.makotoda999.workers.dev/';
+const API_URL = 'https://proxy-humas-v2.makotoda999.workers.dev/';
 const Backend = {
   async call(fn, ...args) {
     try {
