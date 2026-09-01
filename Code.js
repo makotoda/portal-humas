@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PORTAL KOMUNIKASI KEHUMASAN — Ditjen Bimas Hindu
  * Backend Google Apps Script. Google Sheets = database, Google Drive = berkas.
  *
@@ -12,8 +12,8 @@
 // Boleh diisi langsung di sini ATAU lewat Script Properties (kunci sama).
 // Script Properties menang bila diisi — berguna agar ID tak ikut ter-commit.
 const CONFIG_DEFAULT = {
-  SPREADSHEET_ID: '1j_tuEOaKeoUAdZXGhbwaTdnDL8zg87LCZ_GLIKrV3NI', // ID Google Sheet database
-  DRIVE_FOLDER_ID: 'GANTI_DENGAN_ID_FOLDER_DRIVE', // folder Drive induk untuk unggahan
+  SPREADSHEET_ID: '1VsElDaSoU2rpmecdXTX124qna-o6Bwj6bNj8eqnBOfc', // ID Google Sheet database
+  DRIVE_FOLDER_ID: '1EgIfAWE4b63-GpP7ooquhVyTiMEoSMNG', // folder Drive induk untuk unggahan
   ADMIN_SUPER_CODE: 'ubah-kode-super-ini'        // kode super admin awal (seed sheet Admins)
 };
 function cfg_(k) {
