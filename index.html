@@ -1788,12 +1788,72 @@ const Status={
   }
 };
 
+function mintaVerifikasiWA(tiket) {
+  return new Promise((resolve) => {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'modal-host';
+    dlg.innerHTML = `
+      <div class="modal" style="max-width:440px;text-align:left">
+        <h3 style="font-size:17px;display:flex;align-items:center;gap:8px">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:2">${IK.info}</svg>
+          Verifikasi Revisi
+        </h3>
+        <p style="font-size:13.5px;color:var(--ink-dim);margin:8px 0 16px">
+          Masukkan nomor WhatsApp yang digunakan saat mengirim tiket <b>${tiket}</b> untuk membuka formulir revisi:
+        </p>
+        <div style="margin-bottom:18px">
+          <input type="tel" class="inp" id="inpVerifWA" placeholder="08xxxxxxxxxx / +62..." style="width:100%;padding:11px 14px;font-size:14px">
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-ghost" id="btnBatalVerif" type="button">Batal</button>
+          <button class="btn btn-primary" id="btnLanjutVerif" type="button">Lanjutkan Revisi →</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dlg);
+    dlg.showModal();
+
+    const inp = dlg.querySelector('#inpVerifWA');
+    const btnBatal = dlg.querySelector('#btnBatalVerif');
+    const btnLanjut = dlg.querySelector('#btnLanjutVerif');
+
+    setTimeout(() => inp && inp.focus(), 60);
+
+    function selesai(val) {
+      dlg.close();
+      dlg.remove();
+      resolve(val);
+    }
+
+    btnBatal.addEventListener('click', () => selesai(null));
+    btnLanjut.addEventListener('click', () => {
+      const v = inp.value.trim();
+      if (!v) {
+        toast('Masukkan nomor WhatsApp terlebih dahulu.', 'err');
+        inp.focus();
+        return;
+      }
+      selesai(v);
+    });
+
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnLanjut.click();
+      } else if (e.key === 'Escape') {
+        selesai(null);
+      }
+    });
+  });
+}
+
 async function BukaRevisi(tiket, q, btn, fieldsStr){
   try{
-    let wa = q;
-    const isNumber = /^\d+$/.test(wa.replace(/\D/g, ''));
+    let wa = q ? q.trim() : '';
+    const digitsOnly = wa.replace(/\D/g, '');
+    const isNumber = digitsOnly.length >= 6;
     if(!isNumber || wa.toLowerCase().startsWith('pkh-')){
-      wa = prompt(`Verifikasi keamanan: Masukkan nomor WhatsApp Anda untuk merevisi tiket ${tiket}`);
+      wa = await mintaVerifikasiWA(tiket);
       if(!wa) return;
     }
     const orig=btn.innerHTML; btn.innerHTML='Memuat...'; btn.disabled=true;
@@ -1819,7 +1879,11 @@ async function BukaRevisi(tiket, q, btn, fieldsStr){
         $('#fFields').prepend(m);
       }, 100);
     }, 50);
-  }catch(e){ toast(e.message||'Gagal','err'); if(btn){btn.innerHTML='Revisi Inputan'; btn.disabled=false;} }
+  }catch(e){ 
+    toast(e.message||'Gagal','err'); 
+  }finally{ 
+    if(btn){btn.innerHTML='Revisi Inputan'; btn.disabled=false;} 
+  }
 }
 
 // ============================================================
