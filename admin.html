@@ -162,6 +162,18 @@ html.tema-terang .topbar{background:linear-gradient(to bottom,rgba(255,255,255,.
   opacity:0;transition:opacity .14s var(--ease)}
 .dd-opt.aktif .ck{opacity:1}
 .dd-panel::-webkit-scrollbar{width:9px} .dd-panel::-webkit-scrollbar-thumb{background:var(--glass-2);border-radius:9px;border:3px solid transparent;background-clip:padding-box}
+
+.kat-toggles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 0}
+.kat-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:100px;
+  background:var(--glass);border:1px solid var(--glass-brd);color:var(--ink-dim);font-family:inherit;
+  font-size:12.5px;font-weight:500;cursor:pointer;transition:all .18s var(--ease);white-space:nowrap;user-select:none}
+.kat-btn svg{width:15px;height:15px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.9;transition:stroke .18s}
+.kat-btn:hover{background:var(--glass-2);color:var(--ink);border-color:var(--glass-hi);transform:translateY(-1px)}
+.kat-btn.aktif{background:linear-gradient(135deg,rgba(212,175,55,.18),rgba(217,119,6,.22));border-color:var(--gold);color:var(--gold);font-weight:650;box-shadow:0 0 14px rgba(212,175,55,.18)}
+.kat-btn.aktif svg{stroke:var(--gold)}
+.kat-btn .badge-cnt{font-size:11px;padding:1px 6px;border-radius:100px;background:var(--glass-2);color:inherit;font-variant-numeric:tabular-nums}
+.kat-btn.aktif .badge-cnt{background:rgba(212,175,55,.25)}
+
 /* custom date picker */
 .dd-date{min-width:150px}
 .dd-datebtn{gap:9px}
@@ -366,8 +378,8 @@ html.tema-terang .loader-overlay{background:rgba(255,255,255,.6)}
           <button id="vKanban" onclick="setView('kanban')" title="Kanban"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="10"/><rect x="17" y="4" width="4" height="13"/></svg></button>
         </div>
       </div>
+      <div class="kat-toggles" id="katToggles"></div>
       <div class="filters-row">
-        <div class="dd" id="ddKat"></div>
         <div class="dd" id="ddProv"></div>
         <div class="dd" id="ddStatus"></div>
         <div class="dd" id="ddEks"></div>
@@ -413,7 +425,17 @@ const IK={check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
   edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
-  doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'};
+  doc:'<path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  berita:'<path d="M4 4h16v16H4zM4 9h16M9 9v11"/>',
+  widyalaya:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15zM8 7h8M8 11h6"/>',
+  kampus:'<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>',
+  mimbar:'<path d="M12 2v20M6 7l6-5 6 5M6 17l6 5 6-5M4 12h16"/>',
+  wisata:'<path d="M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z"/>',
+  pasraman:'<path d="M3 21h18M5 21V9l7-6 7 6v12M9 21v-6h6v6"/>',
+  medsos:'<rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>',
+  artikel:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>',
+  video:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>'};
 const ikon=(n)=>`<svg viewBox="0 0 24 24">${IK[n]||''}</svg>`;
 
 
@@ -738,19 +760,49 @@ function buatDatePicker(host,id,placeholder){
     const clr=panel.querySelector('.cal-clear'); if(clr) clr.addEventListener('click',hapus);
   }
 }
+function renderKatToggles(){
+  const container=$('#katToggles'); if(!container)return;
+  const counts={}; (DATA.rows||[]).forEach(r=>{ counts[r.kategori]=(counts[r.kategori]||0)+1; });
+  const kats=[
+    {key:'',label:'Semua',ico:'inbox',cnt:(DATA.rows||[]).length},
+    {key:'berita-daerah',label:'Berita Daerah',ico:'berita'},
+    {key:'berita-widyalaya',label:'Berita Widyalaya',ico:'widyalaya'},
+    {key:'berita-ptkh',label:'Berita PTKH',ico:'kampus'},
+    {key:'naskah-mimbar',label:'Naskah Mimbar',ico:'mimbar'},
+    {key:'wisata-religi',label:'Wisata Religi',ico:'wisata'},
+    {key:'berita-pasraman',label:'Berita Pasraman',ico:'pasraman'},
+    {key:'konten-medsos',label:'Konten Medsos',ico:'medsos'},
+    {key:'artikel-inspiratif',label:'Artikel Inspiratif',ico:'artikel'},
+    {key:'video-mimbar',label:'Video Mimbar',ico:'video'}
+  ];
+  container.innerHTML=kats.map(k=>{
+    const aktif=(filter.kategori===k.key);
+    const c=k.key===''?k.cnt:(counts[k.key]||0);
+    const svg=IK[k.ico]?`<svg viewBox="0 0 24 24">${IK[k.ico]}</svg>`:'';
+    return `<button class="kat-btn ${aktif?'aktif':''}" onclick="toggleKategori('${k.key}')">
+      ${svg}<span>${k.label}</span><span class="badge-cnt">${c}</span>
+    </button>`;
+  }).join('');
+}
+function toggleKategori(k){
+  if(filter.kategori===k){ filter.kategori=''; }
+  else { filter.kategori=k; }
+  paginationPage=1;
+  renderKatToggles();
+  render();
+}
 function populasiFilter(){
-  const kats=[...new Set(DATA.rows.map(r=>r.kategori))].map(k=>({value:k,label:katJudul(k)}));
+  renderKatToggles();
   const provs=[...new Set(DATA.rows.map(r=>r.provinsi).filter(Boolean))].sort().map(v=>({value:v,label:v}));
   const stats=['Direview','Revisi','Disetujui','Ditolak'].map(v=>({value:v,label:v}));
   const eks=(DATA.eksekutors||[]).map(v=>({value:v,label:v}));
-  buatDropdown($('#ddKat'),'fkat','Semua kategori',kats,filter.kategori);
   buatDropdown($('#ddProv'),'fprov','Semua provinsi',provs,filter.provinsi);
   buatDropdown($('#ddStatus'),'fstatus','Semua status',stats,filter.status);
   buatDropdown($('#ddEks'),'feks','Semua eksekutor',eks,filter.eksekutor);
   buatDatePicker($('#ddDari'),'fdari','Pilih tanggal');
   buatDatePicker($('#ddSampai'),'fsampai','Pilih tanggal');
 }
-function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim(); filter.kategori=$('#fkat').value;
+function applyFilter(){ filter.q=$('#fq').value.toLowerCase().trim();
   filter.provinsi=$('#fprov').value; filter.status=$('#fstatus').value; filter.eksekutor=$('#feks').value;
   filter.dari=$('#fdari').value; filter.sampai=$('#fsampai').value; paginationPage=1; render(); }
 function terfilter(){ return DATA.rows.filter(r=>{
@@ -778,7 +830,7 @@ const tglLokalISO=(iso)=>{ const d=new Date(iso); return isNaN(d)?'':d.getFullYe
 const statusFinal=(st)=>/setuju|selesai|tolak/i.test(st||'');
 const sudahPernahRevisi=(r)=>(r.riwayat||[]).some(x=>x.aksi==='Inputan Direvisi');
 
-function render(){ renderStats(); (view==='tabel'?renderTabel:renderKanban)(); renderAnalitik(); }
+function render(){ renderKatToggles(); renderStats(); (view==='tabel'?renderTabel:renderKanban)(); renderAnalitik(); }
 
 function paginate(rows, page, pageSize){
   const total=Math.ceil(rows.length/pageSize);
