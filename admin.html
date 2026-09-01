@@ -880,7 +880,14 @@ async function doAksi(tiket,aksi,extra){ try{
     render(); populasiFilter();
     const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',revisi:'Revisi diminta.',assign:'Eksekutor ditugaskan.'}[aksi];
     toast(pesan||'Tersimpan.','ok'); const m=$('#modal'); if(m.open)m.close();
-  }catch(err){ toast(err.message||'Gagal.','err'); } }
+  }catch(err){ 
+    toast(err.message||'Gagal.','err');
+    // Jika gagal (misal sudah diklaim orang lain), otomatis refresh data dari server agar tampilan sinkron seketika
+    try {
+      DATA=await Backend.call('adminData',KODE);
+      render(); populasiFilter();
+    } catch(e) {}
+  } }
 
 function openTolak(tiket){ const dlg=$('#modal');
   dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Tolak ${tiket}</span>
@@ -941,7 +948,7 @@ function kirimRevisi(tiket){
 // (bahkan di dalam string, bila pelacakan string-nya sudah desync). Rakit lewat konkatenasi.
 function drivePreview(url){ const m=String(url||'').match(/[-\w]{25,}/); return m?('https:'+'/'+'/'+'drive.google.com/file/d/'+m[0]+'/preview'):''; }
 
-function klaimEksekutor(tiket){ doAksi(tiket,'assign',{eksekutor:$('#whoNama').textContent}); }
+function klaimEksekutor(tiket){ doAksi(tiket,'assign',{eksekutor:$('#whoNama').textContent, isKlaim:true}); }
 
 function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)return; const dlg=$('#modal');
   const files=(r.files||[]).map((f,i)=>{ const img=/(jpg|jpeg|png|gif|webp)/i.test(f.name||'')||/=w\d+/.test(f.url||'');
@@ -980,7 +987,7 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
         ${r.namaPenulis?`<span class="k">Penulis</span><span class="v">${r.namaPenulis}</span>`:''}
         <span class="k">No. WhatsApp</span><span class="v">${r.noWA||'—'}</span>
         <span class="k">Dikirim</span><span class="v">${tgl(r.dibuat)}</span>
-        <span class="k">Eksekutor</span><span class="v">${r.eksekutor||'Belum ditugaskan'}</span>
+        <span class="k">Eksekutor</span><span class="v">${r.eksekutor || (`Belum ditugaskan <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:12px;margin-left:6px" onclick="klaimEksekutor('${r.tiket}')">Klaim</button>`)}</span>
       </div>
       ${catatanBox}
       <p class="sec-title">Berkas</p><div class="files">${files}</div>

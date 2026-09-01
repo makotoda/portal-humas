@@ -503,6 +503,23 @@ function adminAksi(kode, payload) {
     const idx = colIndex_();
     const rownum = findRow_(sh, tiket);
     if (!rownum) throw new Error('Tiket tidak ditemukan.');
+
+    // Validasi klaim konkuren: cek apakah sudah diklaim oleh admin lain di database
+    if (aksi === 'assign') {
+      const currentEks = String(sh.getRange(rownum, idx.Eksekutor + 1).getValue() || '').trim();
+      if (p.isKlaim && currentEks && currentEks.toLowerCase() !== eksekutor.toLowerCase()) {
+        throw new Error('Tiket ' + tiket + ' sudah diklaim oleh ' + currentEks + '.');
+      }
+    }
+
+    // Validasi status konkuren: cek apakah sudah diputuskan admin lain
+    if (aksi === 'setujui' || aksi === 'tolak' || aksi === 'revisi') {
+      const currentStatus = String(sh.getRange(rownum, idx.Status + 1).getValue() || '').trim();
+      if (currentStatus === 'Disetujui' || currentStatus === 'Ditolak') {
+        throw new Error('Tiket ini sudah berstatus ' + currentStatus + ' oleh admin lain.');
+      }
+    }
+
     if (aksi === 'revisi') {
       const riwTiket = riwayatMap_()[tiket] || [];
       if (riwTiket.some(x => x.aksi === 'Inputan Direvisi')) throw new Error('Tiket ini sudah pernah direvisi.');
