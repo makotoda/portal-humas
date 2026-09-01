@@ -764,7 +764,6 @@ function renderKatToggles(){
   const container=$('#katToggles'); if(!container)return;
   const counts={}; (DATA.rows||[]).forEach(r=>{ counts[r.kategori]=(counts[r.kategori]||0)+1; });
   const kats=[
-    {key:'',label:'Semua',ico:'inbox',cnt:(DATA.rows||[]).length},
     {key:'berita-daerah',label:'Berita Daerah',ico:'berita'},
     {key:'berita-widyalaya',label:'Berita Widyalaya',ico:'widyalaya'},
     {key:'berita-ptkh',label:'Berita PTKH',ico:'kampus'},
