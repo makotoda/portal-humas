@@ -187,6 +187,11 @@ html.tema-terang .topbar.scrolled{background:linear-gradient(to bottom, rgba(255
   color:var(--gold); font-weight:600; transform:translateZ(18px)}
 .kat .go svg{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2.2; transition:transform .25s var(--ease)}
 .kat:hover .go svg{transform:translateX(4px)}
+.kat.disabled{border-color:rgba(245,158,11,.35);background:linear-gradient(135deg,rgba(245,158,11,.04),transparent)}
+.kat.disabled .ico{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.12)}
+.kat.disabled .ico svg{stroke:var(--warn)}
+.kat.disabled .badge-pending{position:absolute;top:16px;right:16px;font-size:10.5px;font-weight:700;color:var(--warn);background:var(--warn-bg);padding:3px 9px;border-radius:100px;border:1px solid rgba(245,158,11,.35);letter-spacing:.02em}
+.kat.disabled .go{color:var(--warn)}
 
 /* ---------- Form view ---------- */
 .form-head{display:flex; align-items:flex-start; gap:16px; margin:26px 0 22px}
@@ -682,6 +687,8 @@ const KATEGORI={
       'Bahan berita tidak harus selalu kegiatan Pimpinan.',
       'Untuk berita penting/urgent wajib memberikan Pemberitahuan awal kepada tim humas melalui Group Whatsapp Publikasi Pusat Daerah (<b>Hanya Pemberitahuan</b>).']},
   'naskah-mimbar':{judul:'Naskah Mimbar Hindu',ico:'mimbar',desk:'Naskah renungan/uraian keagamaan untuk rubrik Mimbar Hindu.',
+    disabled:true,
+    disabledPesan:'Pemrosesan bahan berita Mimbar Hindu dipending sementara waktu. Saat ini antrean penayangan di website Kemenag masih penuh, ditambah adanya batasan kuota publikasi dari biro maksimal 1 berita per minggu. Bahan berita yang ada akan kami atur jadwal tayangnya secara bertahap.',
     fields:['provinsi','kabupaten','instansi','namaPenulis','noWA'],
     upload:[{key:'naskah',label:'Naskah Mimbar',accept:'.doc,.docx,.pdf',max:1},{key:'foto',label:'Foto Penulis (pose tangan di dada)',accept:IMG,max:1}],
     syarat:['Karya/Naskah Wajib Orisinal (Tulisan Sendiri).','Belum pernah di publikasikan di media manapun.']},
@@ -1426,11 +1433,12 @@ function toast(msg,tipe='info'){
 }
 function renderKategori(){
   $('#gridKat').innerHTML=Object.entries(KATEGORI).map(([id,k],i)=>`
-    <article class="kat reveal" data-tilt onclick="Form.buka('${id}')" style="--draw-delay:${(i*0.07).toFixed(2)}s">
+    <article class="kat reveal ${k.disabled?'disabled':''}" data-tilt onclick="Form.buka('${id}')" style="--draw-delay:${(i*0.07).toFixed(2)}s">
+      ${k.disabled ? '<span class="badge-pending">Dipending</span>' : ''}
       <div class="ico">${ikonDraw(k.ico)}</div>
       <h3>${k.judul}</h3>
       <p>${k.desk}</p>
-      <span class="go">Mulai kirim ${ikon('arrow')}</span>
+      <span class="go">${k.disabled ? 'Dipending Sementara' : 'Mulai kirim'} ${ikon('arrow')}</span>
     </article>`).join('');
   Tilt.bind();
 }
@@ -1527,10 +1535,53 @@ function formDDDisabled(host,bool){
   host.querySelector('input').disabled=!!bool;
   if(bool)host.classList.remove('open');
 }
+function tampilkanPesanPending(pesan, judul='Pemberitahuan Mimbar Hindu') {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'modal-host';
+  dlg.innerHTML = `
+    <div class="modal" style="max-width:480px;text-align:left">
+      <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);display:grid;place-items:center;flex-shrink:0">
+          <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:var(--warn);fill:none;stroke-width:2.2">${IK.info}</svg>
+        </div>
+        <div>
+          <h3 style="font-size:18px;margin:0 0 4px;color:var(--ink);font-weight:700">${judul}</h3>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;background:var(--warn-bg);color:var(--warn);display:inline-block">Dipending Sementara</span>
+        </div>
+      </div>
+      <p style="font-size:13.5px;line-height:1.65;color:var(--ink-dim);margin:0 0 20px">
+        ${pesan}
+      </p>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" id="btnTutupPending" type="button" style="padding:9px 22px">Mengerti</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(dlg);
+  dlg.showModal();
+
+  const btn = dlg.querySelector('#btnTutupPending');
+  btn.addEventListener('click', () => {
+    dlg.close();
+    dlg.remove();
+  });
+  dlg.addEventListener('click', (e) => {
+    if (e.target === dlg) {
+      dlg.close();
+      dlg.remove();
+    }
+  });
+}
+
 const Form={
   kat:null, files:{}, tiket_revisi:null, revisiFields:[],
   buka(kat){
-    this.kat=kat; const k=KATEGORI[kat];
+    const k=KATEGORI[kat];
+    if(k && k.disabled){
+      tampilkanPesanPending(k.disabledPesan || 'Pemrosesan bahan berita Mimbar Hindu dipending sementara waktu.');
+      return;
+    }
+    this.kat=kat;
     $('#fIco').innerHTML=ikon(k.ico); $('#fJudul').textContent=k.judul; $('#fDesk').textContent=k.desk;
     $('#fSyarat').innerHTML=`
       <details class="syarat" open>
