@@ -430,6 +430,7 @@ const SS={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},
           set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},
           del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
 const IK={check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/>',
+  undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
   info:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
   eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
@@ -634,6 +635,7 @@ const Demo={
     if(p.aksi==='setujui'){rec.status='Disetujui';label='Disetujui';}
     else if(p.aksi==='tolak'){ if(!p.catatan)throw new Error('Alasan penolakan wajib diisi.'); rec.status='Ditolak';rec.keterangan=p.catatan;label='Ditolak';}
     else if(p.aksi==='assign'){ if(!p.eksekutor)throw new Error('Pilih eksekutor.'); rec.eksekutor=p.eksekutor;label='Ditugaskan';}
+    else if(p.aksi==='kembalikan'){rec.status='Direview';rec.keterangan='';label='Dikembalikan ke Review';}
     rec.diperbarui=now; rec.riwayat=rec.riwayat||[];
     rec.riwayat.push({waktu:now,aksi:label,oleh:(this.codes[k]||{}).nama||'Admin',catatan:p.aksi==='tolak'?p.catatan:(p.aksi==='assign'?('Ditugaskan ke '+p.eksekutor):'')});
     this._save(a); return this.adminData(k);
@@ -891,9 +893,13 @@ function renderTabel(){ const allRows=terfilter();
       <td>${r.eksekutor||`<span class="t-sub klaim" onclick="klaimEksekutor('${r.tiket}')">Klaim</span>`}</td>
       <td>${badgeOf(r.status)}</td>
       <td><div class="rowact">
-        <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
-        <button class="icon-btn" ${statusFinal(r.status)?'disabled':''} title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
-        <button class="icon-btn" ${statusFinal(r.status)||sudahPernahRevisi(r)?'disabled':''} title="${sudahPernahRevisi(r)?'Tiket ini sudah pernah direvisi':'Revisi'}" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
+        ${statusFinal(r.status) ? `
+          <button class="icon-btn" title="Kembalikan status ke Direview" onclick="konfirmasiKembalikan('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2">${IK.undo}</svg></button>
+        ` : `
+          <button class="icon-btn" title="Setujui" onclick="doAksi('${r.tiket}','setujui')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.4">${IK.check}</svg></button>
+          <button class="icon-btn" title="Tolak" onclick="openTolak('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.4">${IK.x}</svg></button>
+          <button class="icon-btn" ${sudahPernahRevisi(r)?'disabled':''} title="${sudahPernahRevisi(r)?'Tiket ini sudah pernah direvisi':'Revisi'}" onclick="openRevisi('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2.4">${IK.edit}</svg></button>
+        `}
         <button class="icon-btn" title="Detail" onclick="openDetail('${r.tiket}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.eye}</svg></button>
       </div></td></tr>`).join('')}</tbody></table></div>${renderPagination(p)}`;
 }
@@ -946,10 +952,10 @@ function empty(){ return `<div class="card empty">${ikon('info')}<div>Tidak ada 
 
 async function doAksi(tiket,aksi,extra){ try{
     const payload=Object.assign({tiket,aksi},extra||{});
-    const label={setujui:'Menyetujui…',tolak:'Menolak…',revisi:'Mengirim revisi…',assign:'Menugaskan…'}[aksi]||'Menyimpan…';
+    const label={setujui:'Menyetujui…',tolak:'Menolak…',revisi:'Mengirim revisi…',assign:'Menugaskan…',kembalikan:'Mengembalikan status…'}[aksi]||'Menyimpan…';
     DATA=await withLoader(Backend.call('adminAksi',KODE,payload), label);
     render(); populasiFilter();
-    const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',revisi:'Revisi diminta.',assign:'Eksekutor ditugaskan.'}[aksi];
+    const pesan={setujui:'Bahan disetujui.',tolak:'Bahan ditolak.',revisi:'Revisi diminta.',assign:'Eksekutor ditugaskan.',kembalikan:'Status tiket dikembalikan ke Direview.'}[aksi];
     toast(pesan||'Tersimpan.','ok'); const m=$('#modal'); if(m.open)m.close();
   }catch(err){ 
     toast(err.message||'Gagal.','err');
@@ -959,6 +965,36 @@ async function doAksi(tiket,aksi,extra){ try{
       render(); populasiFilter();
     } catch(e) {}
   } }
+
+function konfirmasiKembalikan(tiket){
+  const dlg=$('#modal');
+  dlg.innerHTML=`<div class="sheet" style="max-width:440px">
+    <div class="sheet-h">
+      <span class="tid">Kembalikan Status ${tiket}</span>
+      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button>
+    </div>
+    <div class="sheet-b">
+      <p class="sec-title" style="margin-bottom:8px">Konfirmasi</p>
+      <p style="font-size:13.5px;color:var(--ink-dim);line-height:1.5;margin-bottom:14px">
+        Status tiket ini akan dikembalikan menjadi <b>Direview</b> sehingga dapat ditinjau atau diproses kembali.
+      </p>
+      <p class="sec-title">Catatan (opsional)</p>
+      <textarea class="inp" id="kembalikanCatatan" rows="3" placeholder="mis. Perlu peninjauan ulang data/berkas."></textarea>
+    </div>
+    <div class="sheet-f">
+      <button class="btn btn-ghost" onclick="$('#modal').close()">Batal</button>
+      <button class="btn btn-primary" style="background:linear-gradient(135deg,var(--gold),var(--amber));color:#1A1206;font-weight:700;display:inline-flex;align-items:center;gap:6px" onclick="kirimKembalikan('${tiket}')">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2">${IK.undo}</svg> Kembalikan ke Direview
+      </button>
+    </div>
+  </div>`;
+  dlg.showModal();
+  setTimeout(()=>$('#kembalikanCatatan').focus(),50);
+}
+function kirimKembalikan(tiket){
+  const c=$('#kembalikanCatatan').value.trim();
+  doAksi(tiket,'kembalikan',{catatan:c});
+}
 
 function openTolak(tiket){ const dlg=$('#modal');
   dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Tolak ${tiket}</span>
@@ -1066,6 +1102,11 @@ function openDetail(tiket){ const r=DATA.rows.find(x=>x.tiket===tiket); if(!r)re
       <p class="sec-title">Riwayat</p><div class="riw">${riw}</div>
     </div>
     <div class="sheet-f">
+      ${statusFinal(r.status) ? `
+        <button class="btn btn-ghost" style="color:var(--gold);margin-right:auto;display:inline-flex;align-items:center;gap:6px" onclick="konfirmasiKembalikan('${tiket}')">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2">${IK.undo}</svg> Kembalikan ke Direview
+        </button>
+      ` : ''}
       <button class="btn btn-ghost" ${statusFinal(r.status)||sudahPernahRevisi(r)?'disabled':''} style="color:var(--warn)" onclick="openRevisi('${tiket}')" title="${sudahPernahRevisi(r)?'Tiket ini sudah pernah direvisi':''}">Revisi</button>
       <button class="btn btn-bad" ${statusFinal(r.status)?'disabled':''} onclick="openTolak('${tiket}')">Tolak</button>
       <button class="btn btn-primary" ${statusFinal(r.status)?'disabled':''} onclick="doAksi('${tiket}','setujui')"><svg viewBox="0 0 24 24">${IK.check}</svg> Setujui</button>

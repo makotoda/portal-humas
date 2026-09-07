@@ -494,6 +494,7 @@ function adminAksi(kode, payload) {
   else if (aksi === 'tolak') { if (!catatan) throw new Error('Alasan penolakan wajib diisi.'); status = 'Ditolak'; }
   else if (aksi === 'revisi') { if (!catatan) throw new Error('Catatan revisi wajib diisi.'); status = 'Revisi'; }
   else if (aksi === 'assign') { if (!eksekutor) throw new Error('Pilih eksekutor.'); }
+  else if (aksi === 'kembalikan') { status = 'Direview'; }
   else throw new Error('Aksi tidak dikenal.');
 
   const lock = LockService.getScriptLock();
@@ -520,6 +521,13 @@ function adminAksi(kode, payload) {
       }
     }
 
+    if (aksi === 'kembalikan') {
+      const currentStatus = String(sh.getRange(rownum, idx.Status + 1).getValue() || '').trim();
+      if (currentStatus === 'Direview') {
+        throw new Error('Tiket ini sudah berstatus Direview.');
+      }
+    }
+
     if (aksi === 'revisi') {
       const riwTiket = riwayatMap_()[tiket] || [];
       if (riwTiket.some(x => x.aksi === 'Inputan Direvisi')) throw new Error('Tiket ini sudah pernah direvisi.');
@@ -527,10 +535,11 @@ function adminAksi(kode, payload) {
     const now = new Date();
     if (status) sh.getRange(rownum, idx.Status + 1).setValue(status);
     if (aksi === 'tolak' || aksi === 'revisi') sh.getRange(rownum, idx.Keterangan + 1).setValue(catatan);
+    else if (aksi === 'kembalikan') sh.getRange(rownum, idx.Keterangan + 1).setValue('');
     if (eksekutor) sh.getRange(rownum, idx.Eksekutor + 1).setValue(eksekutor);
     sh.getRange(rownum, idx.LastUpdated + 1).setValue(now);
-    const label = { setujui: 'Disetujui', tolak: 'Ditolak', revisi: 'Minta Revisi', assign: 'Ditugaskan' }[aksi];
-    const ket = (aksi === 'tolak' || aksi === 'revisi') ? catatan : (aksi === 'assign' ? ('Ditugaskan ke ' + eksekutor) : catatan);
+    const label = { setujui: 'Disetujui', tolak: 'Ditolak', revisi: 'Minta Revisi', assign: 'Ditugaskan', kembalikan: 'Dikembalikan ke Review' }[aksi];
+    const ket = (aksi === 'tolak' || aksi === 'revisi') ? catatan : (aksi === 'assign' ? ('Ditugaskan ke ' + eksekutor) : (aksi === 'kembalikan' ? (catatan || 'Status dikembalikan menjadi Direview.') : catatan));
     getSheet_(SHEET_RIWAYAT).appendRow([now, tiket, label, me.nama, ket]);
     return adminData(kode);
   } finally {
