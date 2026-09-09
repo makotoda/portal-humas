@@ -996,14 +996,69 @@ function kirimKembalikan(tiket){
   doAksi(tiket,'kembalikan',{catatan:c});
 }
 
-function openTolak(tiket){ const dlg=$('#modal');
-  dlg.innerHTML=`<div class="sheet"><div class="sheet-h"><span class="tid">Tolak ${tiket}</span>
-      <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button></div>
-    <div class="sheet-b"><p class="sec-title">Alasan penolakan (akan dilihat pengirim)</p>
-      <textarea class="inp" id="tolakAlasan" rows="4" placeholder="mis. Belum ada kutipan langsung narasumber."></textarea></div>
-    <div class="sheet-f"><button class="btn btn-ghost" onclick="$('#modal').close()">Batal</button>
-      <button class="btn btn-bad" onclick="kirimTolak('${tiket}')">Tolak Bahan</button></div></div>`;
-  dlg.showModal(); setTimeout(()=>$('#tolakAlasan').focus(),50); }
+function getCatatanRevisi(r){
+  if(!r) return '';
+  // 1. Jika ada di r.keterangan (saat tiket berstatus Revisi)
+  let ket = r.keterangan || '';
+  if(ket){
+    const m = ket.match(/^\[REVISI:([^\]]+)\](.*)$/is);
+    if(m && m[2].trim()) return m[2].trim();
+    if(/revisi/i.test(r.status || '')) return ket.trim();
+  }
+  // 2. Ambil dari riwayat aksi 'Minta Revisi'
+  const riws = (r.riwayat || []).slice().reverse();
+  const revItem = riws.find(x => /revisi/i.test(x.aksi || '') && x.aksi !== 'Inputan Direvisi');
+  if(revItem && revItem.catatan){
+    const m = revItem.catatan.match(/^\[REVISI:([^\]]+)\](.*)$/is);
+    return m ? m[2].trim() : revItem.catatan.trim();
+  }
+  return '';
+}
+
+function openTolak(tiket){
+  const r = DATA.rows.find(x => x.tiket === tiket);
+  const catRev = getCatatanRevisi(r);
+  const isStatusRevisi = r && /revisi/i.test(r.status || '');
+
+  let infoRevisi = '';
+  if(isStatusRevisi || catRev){
+    infoRevisi = `
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--ink);margin-bottom:12px;line-height:1.5">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:600;color:var(--warn);margin-bottom:3px">
+          <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2">${IK.info}</svg>
+          Tiket Pernah Diminta Revisi
+        </div>
+        Alasan penolakan di bawah otomatis terisi dari catatan revisi sebelumnya. Anda dapat langsung menolak atau menyesuaikan kalimatnya.
+      </div>
+    `;
+  }
+
+  const dlg = $('#modal');
+  dlg.innerHTML = `
+    <div class="sheet" style="max-width:480px">
+      <div class="sheet-h">
+        <span class="tid">Tolak ${tiket}</span>
+        <button class="icon-btn close" onclick="$('#modal').close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${IK.x}</svg></button>
+      </div>
+      <div class="sheet-b">
+        ${infoRevisi}
+        <p class="sec-title">Alasan penolakan (akan dilihat pengirim)</p>
+        <textarea class="inp" id="tolakAlasan" rows="4" placeholder="mis. Belum ada kutipan langsung narasumber."></textarea>
+      </div>
+      <div class="sheet-f">
+        <button class="btn btn-ghost" onclick="$('#modal').close()">Batal</button>
+        <button class="btn btn-bad" onclick="kirimTolak('${tiket}')">Tolak Bahan</button>
+      </div>
+    </div>
+  `;
+  dlg.showModal();
+  const txt = $('#tolakAlasan');
+  if(catRev) txt.value = catRev;
+  setTimeout(() => {
+    txt.focus();
+    if(catRev) txt.select();
+  }, 50);
+}
 function kirimTolak(tiket){ const a=$('#tolakAlasan').value.trim(); if(!a){toast('Isi alasan penolakan.','err');return;} doAksi(tiket,'tolak',{catatan:a}); }
 
 function openRevisi(tiket){ 
